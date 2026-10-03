@@ -20,6 +20,7 @@ White space: «Машина ждёт тебя, а время поездки ос
   - `concept-idea.md` — решения по концепту
   - `research.md` — ресерч рынка и сервисов
   - `customer-journey.md` — путь клиента, черновик
+  - `spec.md` — спецификация: экраны, состояния, данные
 - `course/` — материалы курса, в репозиторий не входят.
 - [Figma](https://www.figma.com/design/gVzet7tgqOTM63wWNlo2TB/Timur-Golotin-Concept) — черновая доска, смотреть только по запросу. Фрейм сдачи `20:2`.
 
