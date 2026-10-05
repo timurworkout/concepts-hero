@@ -1,0 +1,302 @@
+[
+  {
+    "id": "jetour-dashing",
+    "name": "Jetour Dashing",
+    "imageSm": "cars/sm/jetour-dashing.webp",
+    "imageLg": "cars/lg/jetour-dashing.webp"
+  },
+  {
+    "id": "omoda-c5",
+    "name": "Omoda C5",
+    "imageSm": "cars/sm/omoda-c5.webp",
+    "imageLg": "cars/lg/omoda-c5.webp"
+  },
+  {
+    "id": "changan-uni-s",
+    "name": "Changan UNI-S",
+    "imageSm": "cars/sm/changan-uni-s.webp",
+    "imageLg": "cars/lg/changan-uni-s.webp"
+  },
+  {
+    "id": "hyundai-tucson",
+    "name": "Hyundai Tucson",
+    "imageSm": "cars/sm/hyundai-tucson.webp",
+    "imageLg": "cars/lg/hyundai-tucson.webp"
+  },
+  {
+    "id": "jeland-j7",
+    "name": "Jeland J7",
+    "imageSm": "cars/sm/jeland-j7.webp",
+    "imageLg": "cars/lg/jeland-j7.webp"
+  },
+  {
+    "id": "volkswagen-t-roc",
+    "name": "Volkswagen T-Roc",
+    "imageSm": "cars/sm/volkswagen-t-roc.webp",
+    "imageLg": "cars/lg/volkswagen-t-roc.webp"
+  },
+  {
+    "id": "changan-cs35plus-new",
+    "name": "Changan CS35Plus New",
+    "imageSm": "cars/sm/changan-cs35plus-new.webp",
+    "imageLg": "cars/lg/changan-cs35plus-new.webp"
+  },
+  {
+    "id": "tenet-t4",
+    "name": "TENET T4",
+    "imageSm": "cars/sm/tenet-t4.webp",
+    "imageLg": "cars/lg/tenet-t4.webp"
+  },
+  {
+    "id": "toyota-rav4",
+    "name": "Toyota RAV4",
+    "imageSm": "cars/sm/toyota-rav4.webp",
+    "imageLg": "cars/lg/toyota-rav4.webp"
+  },
+  {
+    "id": "soueast-s06",
+    "name": "Soueast S06",
+    "imageSm": "cars/sm/soueast-s06.webp",
+    "imageLg": "cars/lg/soueast-s06.webp"
+  },
+  {
+    "id": "lada-granta-se",
+    "name": "LADA Granta SE",
+    "imageSm": "cars/sm/lada-granta-se.webp",
+    "imageLg": "cars/lg/lada-granta-se.webp"
+  },
+  {
+    "id": "lada-granta-lb",
+    "name": "LADA Granta LB",
+    "imageSm": "cars/sm/lada-granta-lb.webp",
+    "imageLg": "cars/lg/lada-granta-lb.webp"
+  },
+  {
+    "id": "tenet-t7",
+    "name": "TENET T7",
+    "imageSm": "cars/sm/tenet-t7.webp",
+    "imageLg": "cars/lg/tenet-t7.webp"
+  },
+  {
+    "id": "geely-coolray",
+    "name": "Geely Coolray",
+    "imageSm": "cars/sm/geely-coolray.webp",
+    "imageLg": "cars/lg/geely-coolray.webp"
+  },
+  {
+    "id": "lada-vesta",
+    "name": "LADA Vesta",
+    "imageSm": "cars/sm/lada-vesta.webp",
+    "imageLg": "cars/lg/lada-vesta.webp"
+  },
+  {
+    "id": "haval-f7",
+    "name": "Haval F7",
+    "imageSm": "cars/sm/haval-f7.webp",
+    "imageLg": "cars/lg/haval-f7.webp"
+  },
+  {
+    "id": "jaecoo-j7",
+    "name": "Jaecoo J7",
+    "imageSm": "cars/sm/jaecoo-j7.webp",
+    "imageLg": "cars/lg/jaecoo-j7.webp"
+  },
+  {
+    "id": "bmw-x3",
+    "name": "BMW X3",
+    "imageSm": "cars/sm/bmw-x3.webp",
+    "imageLg": "cars/lg/bmw-x3.webp"
+  },
+  {
+    "id": "lada-vesta-cross",
+    "name": "LADA Vesta CROSS",
+    "imageSm": "cars/sm/lada-vesta-cross.webp",
+    "imageLg": "cars/lg/lada-vesta-cross.webp"
+  },
+  {
+    "id": "lada-vesta-sw",
+    "name": "LADA Vesta SW",
+    "imageSm": "cars/sm/lada-vesta-sw.webp",
+    "imageLg": "cars/lg/lada-vesta-sw.webp"
+  },
+  {
+    "id": "lada-vesta-sw-cross",
+    "name": "LADA Vesta SW CROSS",
+    "imageSm": "cars/sm/lada-vesta-sw-cross.webp",
+    "imageLg": "cars/lg/lada-vesta-sw-cross.webp"
+  },
+  {
+    "id": "moskvich-3",
+    "name": "Москвич 3",
+    "imageSm": "cars/sm/moskvich-3.webp",
+    "imageLg": "cars/lg/moskvich-3.webp"
+  },
+  {
+    "id": "toyota-camry",
+    "name": "Toyota Camry",
+    "imageSm": "cars/sm/toyota-camry.webp",
+    "imageLg": "cars/lg/toyota-camry.webp"
+  },
+  {
+    "id": "lada-granta-cross",
+    "name": "LADA Granta Cross",
+    "imageSm": "cars/sm/lada-granta-cross.webp",
+    "imageLg": "cars/lg/lada-granta-cross.webp"
+  },
+  {
+    "id": "toyota-highlander",
+    "name": "Toyota Highlander",
+    "imageSm": "cars/sm/toyota-highlander.webp",
+    "imageLg": "cars/lg/toyota-highlander.webp"
+  },
+  {
+    "id": "lada-largus",
+    "name": "LADA Largus",
+    "imageSm": "cars/sm/lada-largus.webp",
+    "imageLg": "cars/lg/lada-largus.webp"
+  },
+  {
+    "id": "lada-largus-furgon",
+    "name": "LADA Largus фургон",
+    "imageSm": "cars/sm/lada-largus-furgon.webp",
+    "imageLg": "cars/lg/lada-largus-furgon.webp"
+  },
+  {
+    "id": "exeed-lx",
+    "name": "EXEED LX",
+    "imageSm": "cars/sm/exeed-lx.webp",
+    "imageLg": "cars/lg/exeed-lx.webp"
+  },
+  {
+    "id": "gac-gs8-traveller",
+    "name": "GAC GS8 Traveller",
+    "imageSm": "cars/sm/gac-gs8-traveller.webp",
+    "imageLg": "cars/lg/gac-gs8-traveller.webp"
+  },
+  {
+    "id": "geely-monjaro",
+    "name": "Geely Monjaro",
+    "imageSm": "cars/sm/geely-monjaro.webp",
+    "imageLg": "cars/lg/geely-monjaro.webp"
+  },
+  {
+    "id": "chery-arrizo-8",
+    "name": "Chery Arrizo 8",
+    "imageSm": "cars/sm/chery-arrizo-8.webp",
+    "imageLg": "cars/lg/chery-arrizo-8.webp"
+  },
+  {
+    "id": "jaecoo-j8",
+    "name": "Jaecoo J8",
+    "imageSm": "cars/sm/jaecoo-j8.webp",
+    "imageLg": "cars/lg/jaecoo-j8.webp"
+  },
+  {
+    "id": "changan-uni-v",
+    "name": "Changan UNI-V",
+    "imageSm": "cars/sm/changan-uni-v.webp",
+    "imageLg": "cars/lg/changan-uni-v.webp"
+  },
+  {
+    "id": "jetour-t2",
+    "name": "Jetour T2",
+    "imageSm": "cars/sm/jetour-t2.webp",
+    "imageLg": "cars/lg/jetour-t2.webp"
+  },
+  {
+    "id": "changan-uni-t",
+    "name": "Changan UNI-T",
+    "imageSm": "cars/sm/changan-uni-t.webp",
+    "imageLg": "cars/lg/changan-uni-t.webp"
+  },
+  {
+    "id": "changan-uni-k",
+    "name": "Changan UNI-K",
+    "imageSm": "cars/sm/changan-uni-k.webp",
+    "imageLg": "cars/lg/changan-uni-k.webp"
+  },
+  {
+    "id": "haval-dargo",
+    "name": "Haval Dargo",
+    "imageSm": "cars/sm/haval-dargo.webp",
+    "imageLg": "cars/lg/haval-dargo.webp"
+  },
+  {
+    "id": "voyah-free",
+    "name": "Voyah Free",
+    "imageSm": "cars/sm/voyah-free.webp",
+    "imageLg": "cars/lg/voyah-free.webp"
+  },
+  {
+    "id": "changan-eadoplus",
+    "name": "Changan EadoPlus",
+    "imageSm": "cars/sm/changan-eadoplus.webp",
+    "imageLg": "cars/lg/changan-eadoplus.webp"
+  },
+  {
+    "id": "haval-m6",
+    "name": "Haval M6",
+    "imageSm": "cars/sm/haval-m6.webp",
+    "imageLg": "cars/lg/haval-m6.webp"
+  },
+  {
+    "id": "haval-h9",
+    "name": "Haval H9",
+    "imageSm": "cars/sm/haval-h9.webp",
+    "imageLg": "cars/lg/haval-h9.webp"
+  },
+  {
+    "id": "baic-u5-plus",
+    "name": "BAIC U5 Plus",
+    "imageSm": "cars/sm/baic-u5-plus.webp",
+    "imageLg": "cars/lg/baic-u5-plus.webp"
+  },
+  {
+    "id": "voyah-dream",
+    "name": "Voyah Dream",
+    "imageSm": "cars/sm/voyah-dream.webp",
+    "imageLg": "cars/lg/voyah-dream.webp"
+  },
+  {
+    "id": "changan-cs95",
+    "name": "Changan CS95",
+    "imageSm": "cars/sm/changan-cs95.webp",
+    "imageLg": "cars/lg/changan-cs95.webp"
+  },
+  {
+    "id": "changan-alsvin",
+    "name": "Changan Alsvin",
+    "imageSm": "cars/sm/changan-alsvin.webp",
+    "imageLg": "cars/lg/changan-alsvin.webp"
+  },
+  {
+    "id": "changan-hunter-plus",
+    "name": "Changan Hunter Plus",
+    "imageSm": "cars/sm/changan-hunter-plus.webp",
+    "imageLg": "cars/lg/changan-hunter-plus.webp"
+  },
+  {
+    "id": "changan-lamore",
+    "name": "Changan Lamore",
+    "imageSm": "cars/sm/changan-lamore.webp",
+    "imageLg": "cars/lg/changan-lamore.webp"
+  },
+  {
+    "id": "geely-okavango",
+    "name": "Geely Okavango",
+    "imageSm": "cars/sm/geely-okavango.webp",
+    "imageLg": "cars/lg/geely-okavango.webp"
+  },
+  {
+    "id": "tank-300",
+    "name": "TANK 300",
+    "imageSm": "cars/sm/tank-300.webp",
+    "imageLg": "cars/lg/tank-300.webp"
+  },
+  {
+    "id": "jetour-x70-plus",
+    "name": "Jetour X70 Plus",
+    "imageSm": "cars/sm/jetour-x70-plus.webp",
+    "imageLg": "cars/lg/jetour-x70-plus.webp"
+  }
+]

@@ -36,7 +36,7 @@ h2 { font-size: 22px; font-weight: 500; letter-spacing: -0.44px; margin: 0 0 24p
 .photo-ski { background: linear-gradient(160deg, #9fb7c9, #4d6577); }
 .photo-sea { background: linear-gradient(160deg, #8fc3cf, #2f6f85); }
 .photo-weekend { background: linear-gradient(160deg, #a7c4a0, #4a6b52); }
-.photo-car { background: linear-gradient(160deg, #e4e6e8, #b9bec3); color: var(--body); }
+.photo-car { background: #e4e6e8 center / cover no-repeat; color: var(--body); }
 .hero-content { max-width: 880px; }
 
 /* Форма «Где и когда?» */
@@ -70,6 +70,12 @@ h2 { font-size: 22px; font-weight: 500; letter-spacing: -0.44px; margin: 0 0 24p
 /* Секции и карточки */
 .section { padding: 0 80px 64px; }
 .scroller { display: grid; grid-auto-flow: column; grid-auto-columns: minmax(240px, 1fr); gap: 24px; overflow-x: auto; padding-bottom: 8px; }
+.section-head { display: flex; align-items: center; justify-content: space-between; gap: 16px; }
+.arrows { display: flex; gap: 8px; }
+.arrow { width: 32px; height: 32px; border-radius: var(--r-full); border: 1px solid var(--hairline); background: var(--canvas); font-size: 18px; line-height: 1; }
+.arrow:hover:not(:disabled) { box-shadow: var(--shadow); }
+.arrow:disabled { opacity: 0.3; cursor: default; }
+.scroller.dragging { scroll-snap-type: none; cursor: grabbing; user-select: none; }
 .card { align-self: start; border: 0; background: var(--canvas); text-align: left; padding: 0; border-radius: var(--r-md); }
 .card:hover .card-photo { box-shadow: var(--shadow); }
 .card-photo { aspect-ratio: 4 / 3; border-radius: var(--r-md); display: flex; align-items: flex-end; padding: 12px; font-size: 14px; font-weight: 600; }

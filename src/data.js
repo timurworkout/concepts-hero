@@ -13,14 +13,14 @@ export const locationGroups = ['Аэропорт', 'Вокзал', 'Отель',
 // stock: number — сколько осталось (null — всегда в наличии, 0 — разобрали)
 // etaAdd — добавка к времени подачи локации в режиме «сейчас», мин
 export const cars = [
-  { id: 'rio', model: 'Kia Rio', kind: 'Седан', pricePerDay: 2900, seats: 5, drive: 'передний', trunk: 480, tags: ['без оклейки'], stock: null, etaAdd: 0 },
-  { id: 'jolion', model: 'Haval Jolion', kind: 'Кроссовер', pricePerDay: 3800, seats: 5, drive: 'полный', trunk: 337, tags: ['4×4', 'есть бокс'], stock: null, etaAdd: 10 },
-  { id: 'tiggo', model: 'Chery Tiggo 7 Pro', kind: 'Кроссовер', pricePerDay: 4200, seats: 5, drive: 'передний', trunk: 475, tags: ['багажник 475 л'], stock: 2, etaAdd: 15 },
-  { id: 'monjaro', model: 'Geely Monjaro', kind: 'Внедорожник', pricePerDay: 6500, seats: 5, drive: 'полный', trunk: 562, tags: ['4×4', 'есть бокс'], stock: 1, etaAdd: 25 },
-  { id: 'staria', model: 'Hyundai Staria', kind: 'Минивэн', pricePerDay: 7900, seats: 7, drive: 'передний', trunk: 831, tags: ['7 мест'], stock: 0, etaAdd: 40 },
+  { id: 'lada-vesta', model: 'LADA Vesta', kind: 'Седан', pricePerDay: 2900, seats: 5, drive: 'передний', trunk: 480, tags: ['без оклейки'], stock: null, etaAdd: 0 },
+  { id: 'haval-f7', model: 'Haval F7', kind: 'Кроссовер', pricePerDay: 3800, seats: 5, drive: 'полный', trunk: 440, tags: ['4×4', 'есть бокс'], stock: null, etaAdd: 10 },
+  { id: 'jaecoo-j7', model: 'Jaecoo J7', kind: 'Кроссовер', pricePerDay: 4200, seats: 5, drive: 'передний', trunk: 500, tags: ['багажник 500 л'], stock: 2, etaAdd: 15 },
+  { id: 'geely-monjaro', model: 'Geely Monjaro', kind: 'Внедорожник', pricePerDay: 6500, seats: 5, drive: 'полный', trunk: 562, tags: ['4×4', 'есть бокс'], stock: 1, etaAdd: 25 },
+  { id: 'lada-largus', model: 'LADA Largus', kind: 'Универсал', pricePerDay: 4500, seats: 7, drive: 'передний', trunk: 560, tags: ['7 мест'], stock: 0, etaAdd: 40 },
 ]
 
-export const kinds = ['Седан', 'Кроссовер', 'Внедорожник', 'Минивэн']
+export const kinds = ['Седан', 'Кроссовер', 'Внедорожник', 'Универсал']
 
 export const offers = [
   {
@@ -28,8 +28,8 @@ export const offers = [
     title: 'Горнолыжка в Красной Поляне',
     locationId: 'aer',
     route: 'Аэропорт Сочи → Роза Хутор',
-    car: 'Haval Jolion 4×4',
-    carId: 'jolion',
+    car: 'Haval F7 4×4',
+    carId: 'haval-f7',
     includes: ['бокс', 'лыжи в машине', 'скипасс'],
     chip: 'Горнолыжка: бокс + лыжи + скипасс',
     priceFrom: '6 400 ₽/сутки + скипасс',
@@ -39,8 +39,8 @@ export const offers = [
     title: 'Море и побережье',
     locationId: 'aer',
     route: 'Аэропорт Сочи',
-    car: 'Chery Tiggo 7 Pro',
-    carId: 'tiggo',
+    car: 'Jaecoo J7',
+    carId: 'jaecoo-j7',
     includes: ['сап в машине', 'маршрут по побережью'],
     chip: 'Море: сап + маршрут',
     priceFrom: '5 700 ₽/сутки',
@@ -50,8 +50,8 @@ export const offers = [
     title: 'Выходные: Рица и Абхазия',
     locationId: 'adler-rw',
     route: 'Вокзал Адлер',
-    car: 'Kia Rio',
-    carId: 'rio',
+    car: 'LADA Vesta',
+    carId: 'lada-vesta',
     includes: ['маршрут «Озеро Рица и Абхазия»'],
     chip: 'Выходные: маршрут Рица',
     priceFrom: '2 900 ₽/сутки',

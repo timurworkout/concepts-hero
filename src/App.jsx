@@ -1,6 +1,8 @@
 import { useEffect, useRef, useState } from 'react'
 import { locations, locationGroups, cars, kinds, offers, rub } from './data.js'
 
+const carPhoto = (c) => ({ backgroundImage: `url(${import.meta.env.BASE_URL}cars/sm/${c.id}.webp)` })
+
 const emptyQuery = {
   locationId: '',
   mode: 'dates', // 'dates' | 'now'
@@ -17,7 +19,7 @@ export default function App() {
   const [screen, setScreen] = useState('e1') // 'e1' | 'e2' | 'e3'
   const [pickedCarId, setPickedCarId] = useState(null)
 
-  useEffect(() => window.scrollTo(0, 0), [screen])
+  useEffect(() => { window.scrollTo(0, 0) }, [screen])
 
   if (screen === 'e3') return <StubE3 query={query} carId={pickedCarId} onBack={() => setScreen('e2')} />
   if (screen === 'e2') return (
@@ -59,8 +61,22 @@ function Landing({ query, setQuery, onSubmit }) {
       </section>
 
       <section className="section">
-        <h2>Сезонные предложения</h2>
-        <div className="scroller">
+        <Scroller title="Примеры машин">
+          {cars.map((c) => (
+            <button key={c.id} className="card car-card" onClick={() => pickCar(c)}>
+              <div className="card-photo photo-car" style={carPhoto(c)} />
+              <div className="card-body">
+                <div className="muted">{c.kind}</div>
+                <div className="card-title">{c.model}</div>
+                <div className="price">{rub(c.pricePerDay)} / сутки</div>
+              </div>
+            </button>
+          ))}
+        </Scroller>
+      </section>
+
+      <section className="section">
+        <Scroller title="Сезонные предложения">
           {offers.map((o) => (
             <button key={o.id} className="card offer-card" onClick={() => pickOffer(o)}>
               <div className={`card-photo photo-${o.id}`} />
@@ -72,23 +88,7 @@ function Landing({ query, setQuery, onSubmit }) {
               </div>
             </button>
           ))}
-        </div>
-      </section>
-
-      <section className="section">
-        <h2>Примеры машин</h2>
-        <div className="scroller">
-          {cars.map((c) => (
-            <button key={c.id} className="card car-card" onClick={() => pickCar(c)}>
-              <div className="card-photo photo-car"><span>{c.model}</span></div>
-              <div className="card-body">
-                <div className="muted">{c.kind}</div>
-                <div className="card-title">{c.model}</div>
-                <div className="price">{rub(c.pricePerDay)} / сутки</div>
-              </div>
-            </button>
-          ))}
-        </div>
+        </Scroller>
       </section>
 
       {!formVisible && (
@@ -295,7 +295,7 @@ function E2({ query, setQuery, onBack, onPick }) {
             return (
               <button key={c.id} className={`card car-item ${soldOut ? 'sold-out' : ''}`}
                 disabled={soldOut} onClick={() => onPick(c.id)}>
-                <div className="card-photo photo-car">
+                <div className="card-photo photo-car" style={carPhoto(c)}>
                   <div className="badges">
                     {offer?.carId === c.id && <span className="badge">В наборе</span>}
                     {soldOut && <span className="badge">Разобрали</span>}
@@ -335,5 +335,62 @@ function StubE3({ query, carId, onBack }) {
       </dl>
       <button className="btn-secondary" onClick={onBack}>← Назад к машинам</button>
     </main>
+  )
+}
+
+function Scroller({ title, children }) {
+  const ref = useRef(null)
+  const [edges, setEdges] = useState({ start: true, end: false })
+
+  const update = () => {
+    const el = ref.current
+    setEdges({ start: el.scrollLeft <= 1, end: el.scrollLeft + el.clientWidth >= el.scrollWidth - 1 })
+  }
+  useEffect(() => {
+    update()
+    window.addEventListener('resize', update)
+    return () => window.removeEventListener('resize', update)
+  }, [])
+
+  // Перетаскивание мышью; на тач-экранах лента листается нативно
+  const drag = useRef(null)
+  const onPointerDown = (e) => {
+    if (e.pointerType !== 'mouse' || e.button !== 0) return
+    drag.current = { x: e.clientX, left: ref.current.scrollLeft, moved: false }
+  }
+  const onPointerMove = (e) => {
+    const d = drag.current
+    if (!d || e.buttons !== 1) return
+    const dx = e.clientX - d.x
+    if (!d.moved && Math.abs(dx) > 5) {
+      d.moved = true
+      ref.current.classList.add('dragging')
+    }
+    if (d.moved) ref.current.scrollLeft = d.left - dx
+  }
+  const onPointerUp = () => {
+    if (drag.current?.moved) ref.current.classList.remove('dragging')
+  }
+  // Не открываем карточку, если её тянули
+  const onClickCapture = (e) => {
+    if (drag.current?.moved) { e.stopPropagation(); e.preventDefault() }
+    drag.current = null
+  }
+
+  const scrollBy = (dir) => ref.current.scrollBy({ left: dir * ref.current.clientWidth * 0.8, behavior: 'smooth' })
+
+  return (
+    <>
+      <div className="section-head">
+        <h2>{title}</h2>
+        <div className="arrows">
+          <button className="arrow" aria-label="Назад" disabled={edges.start} onClick={() => scrollBy(-1)}>‹</button>
+          <button className="arrow" aria-label="Вперёд" disabled={edges.end} onClick={() => scrollBy(1)}>›</button>
+        </div>
+      </div>
+      <div className="scroller" ref={ref} onScroll={update}
+        onPointerDown={onPointerDown} onPointerMove={onPointerMove} onPointerUp={onPointerUp} onPointerLeave={onPointerUp}
+        onClickCapture={onClickCapture} onDragStart={(e) => e.preventDefault()}>{children}</div>
+    </>
   )
 }
