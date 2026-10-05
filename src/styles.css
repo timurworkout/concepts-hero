@@ -28,18 +28,19 @@ h2 { font-size: 22px; font-weight: 500; letter-spacing: -0.44px; margin: 0 0 24p
 .body-sm { font-size: 14px; line-height: 1.43; color: var(--body); }
 
 /* Первый экран */
-.hero { padding: 48px 80px 64px; }
-.hero-photos { display: grid; grid-template-columns: 2fr 1fr 1fr; gap: 8px; margin-bottom: 32px; }
-.photo { height: 280px; border-radius: var(--r-md); display: flex; align-items: flex-end; padding: 16px; color: #fff; font-weight: 600; font-size: 14px; }
+.hero { margin: 24px 80px 64px; padding: 64px; border-radius: var(--r-md); color: #fff;
+  /* Плейсхолдер: заменить на фото локации */
+  background: linear-gradient(160deg, #9fb7c9, #4d6577); }
+.hero h1 { color: #fff; }
 /* Плейсхолдеры: заменить на фото локаций */
-.photo-mountains, .photo-ski { background: linear-gradient(160deg, #9fb7c9, #4d6577); }
+.photo-ski { background: linear-gradient(160deg, #9fb7c9, #4d6577); }
 .photo-sea { background: linear-gradient(160deg, #8fc3cf, #2f6f85); }
-.photo-lake, .photo-weekend { background: linear-gradient(160deg, #a7c4a0, #4a6b52); }
+.photo-weekend { background: linear-gradient(160deg, #a7c4a0, #4a6b52); }
 .photo-car { background: linear-gradient(160deg, #e4e6e8, #b9bec3); color: var(--body); }
 .hero-content { max-width: 880px; }
 
 /* Форма «Где и когда?» */
-.search { background: var(--canvas); border: 1px solid var(--hairline); border-radius: 32px; padding: 24px; box-shadow: var(--shadow); display: grid; gap: 16px; }
+.search { color: var(--ink); background: var(--canvas); border: 1px solid var(--hairline); border-radius: 32px; padding: 24px; box-shadow: var(--shadow); display: grid; gap: 16px; }
 .mode-toggle { display: inline-flex; background: var(--surface-strong); border-radius: var(--r-full); padding: 4px; justify-self: start; }
 .mode-toggle button { border: 0; background: transparent; padding: 8px 20px; border-radius: var(--r-full); font-size: 14px; font-weight: 500; color: var(--muted); }
 .mode-toggle button.active { background: var(--canvas); color: var(--ink); box-shadow: var(--shadow); }
@@ -86,10 +87,7 @@ h2 { font-size: 22px; font-weight: 500; letter-spacing: -0.44px; margin: 0 0 24p
 
 /* Мобайл */
 @media (max-width: 743px) {
-  .hero { padding: 16px 16px 48px; }
-  .hero-photos { grid-template-columns: 1fr; }
-  .hero-photos .photo:not(:first-child) { display: none; }
-  .photo { height: 180px; }
+  .hero { margin: 0 0 48px; padding: 32px 16px; border-radius: 0; }
   h1 { font-size: 24px; }
   .search { border-radius: 20px; padding: 16px; }
   .date-pair { grid-template-columns: 1fr; }

@@ -45,11 +45,6 @@ function Landing({ query, setQuery, onSubmit }) {
   return (
     <main>
       <section className="hero">
-        <div className="hero-photos" aria-hidden="true">
-          <div className="photo photo-mountains"><span>Красная Поляна</span></div>
-          <div className="photo photo-sea"><span>Побережье Сочи</span></div>
-          <div className="photo photo-lake"><span>Озеро Рица</span></div>
-        </div>
         <div className="hero-content">
           <h1>Машина ждёт тебя,<br />а время поездки остаётся на места</h1>
           <SearchForm ref={formRef} query={query} setQuery={setQuery} onSubmit={onSubmit} />
