@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from 'react'
 import { locations, locationGroups, cars, kinds, offers, rub } from './data.js'
 
-const carPhoto = (c) => ({ backgroundImage: `url(${import.meta.env.BASE_URL}cars/sm/${c.id}.webp)` })
+const carPhoto = (c, size = 'sm') => ({ backgroundImage: `url(${import.meta.env.BASE_URL}cars/${size}/${c.id}.webp)` })
 
 const emptyQuery = {
   locationId: '',
@@ -295,7 +295,7 @@ function E2({ query, setQuery, onBack, onPick }) {
             return (
               <button key={c.id} className={`card car-item ${soldOut ? 'sold-out' : ''}`}
                 disabled={soldOut} onClick={() => onPick(c.id)}>
-                <div className="card-photo photo-car" style={carPhoto(c)}>
+                <div className="card-photo photo-car" style={carPhoto(c, 'lg')}>
                   <div className="badges">
                     {offer?.carId === c.id && <span className="badge">В наборе</span>}
                     {soldOut && <span className="badge">Разобрали</span>}
