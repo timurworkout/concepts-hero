@@ -1,5 +1,5 @@
-import { useEffect, useRef, useState } from 'react'
-import { locations, locationGroups, cars, kinds, offers, rub } from './data.js'
+import { Fragment, useEffect, useRef, useState } from 'react'
+import { locations, locationGroups, cars, kinds, offers, rub, carDetails, rentTerms, extras } from './data.js'
 
 const carPhoto = (c, size = 'sm') => ({ backgroundImage: `url(${import.meta.env.BASE_URL}cars/${size}/${c.id}.webp)` })
 
@@ -11,25 +11,32 @@ const emptyQuery = {
   dateTo: '',
   timeTo: '12:00',
   offerId: null,
-  carId: null,
 }
 
 export default function App() {
   const [query, setQuery] = useState(emptyQuery)
-  const [screen, setScreen] = useState('e1') // 'e1' | 'e2' | 'e3'
+  const [screen, setScreen] = useState('e1') // 'e1' | 'e2' | 'e3' | 'e4'
   const [pickedCarId, setPickedCarId] = useState(null)
+  const [cameFrom, setCameFrom] = useState('e1') // откуда открыли Э3
+  const [booking, setBooking] = useState(null) // { extraIds, total } с Э3
 
-  useEffect(() => { window.scrollTo(0, 0) }, [screen])
+  useEffect(() => { window.scrollTo(0, 0) }, [screen, pickedCarId])
 
-  if (screen === 'e3') return <StubE3 query={query} carId={pickedCarId} onBack={() => setScreen('e2')} />
-  if (screen === 'e2') return (
-    <E2 query={query} setQuery={setQuery} onBack={() => setScreen('e1')}
-      onPick={(id) => { setPickedCarId(id); setScreen('e3') }} />
+  const openCar = (id, from) => { setPickedCarId(id); setCameFrom(from); setScreen('e3') }
+
+  if (screen === 'e4') return <StubE4 query={query} carId={pickedCarId} booking={booking} onBack={() => setScreen('e3')} />
+  if (screen === 'e3') return (
+    <E3 key={pickedCarId} query={query} setQuery={setQuery} carId={pickedCarId} cameFrom={cameFrom}
+      onBack={() => setScreen(cameFrom)} onOpenCar={(id) => openCar(id, cameFrom)}
+      onBook={(b) => { setBooking(b); setScreen('e4') }} />
   )
-  return <Landing query={query} setQuery={setQuery} onSubmit={() => setScreen('e2')} />
+  if (screen === 'e2') return (
+    <E2 query={query} setQuery={setQuery} onBack={() => setScreen('e1')} onPick={(id) => openCar(id, 'e2')} />
+  )
+  return <Landing query={query} setQuery={setQuery} onSubmit={() => setScreen('e2')} onPickCar={(id) => openCar(id, 'e1')} />
 }
 
-function Landing({ query, setQuery, onSubmit }) {
+function Landing({ query, setQuery, onSubmit, onPickCar }) {
   const formRef = useRef(null)
   const [formVisible, setFormVisible] = useState(true)
 
@@ -46,11 +53,6 @@ function Landing({ query, setQuery, onSubmit }) {
     scrollToForm()
   }
 
-  const pickCar = (car) => {
-    setQuery((q) => ({ ...q, carId: car.id }))
-    scrollToForm()
-  }
-
   return (
     <main>
       <section className="hero">
@@ -63,7 +65,7 @@ function Landing({ query, setQuery, onSubmit }) {
       <section className="section">
         <Scroller title="Примеры машин">
           {cars.map((c) => (
-            <button key={c.id} className="card car-card" onClick={() => pickCar(c)}>
+            <button key={c.id} className="card car-card" onClick={() => onPickCar(c.id)}>
               <div className="card-photo photo-car" style={carPhoto(c)} />
               <div className="card-body">
                 <div className="muted">{c.kind}</div>
@@ -100,14 +102,13 @@ function Landing({ query, setQuery, onSubmit }) {
   )
 }
 
-function SearchForm({ ref, query, setQuery, onSubmit }) {
+function SearchForm({ ref, query, setQuery, onSubmit, submitLabel = 'Подобрать машину', submitDisabled, children }) {
   const [errors, setErrors] = useState({})
   const [suggestOpen, setSuggestOpen] = useState(false)
   const [text, setText] = useState('')
 
   const location = locations.find((l) => l.id === query.locationId)
   const offer = offers.find((o) => o.id === query.offerId)
-  const car = cars.find((c) => c.id === query.carId)
   const set = (patch) => {
     setQuery((q) => ({ ...q, ...patch }))
     setErrors({})
@@ -190,18 +191,16 @@ function SearchForm({ ref, query, setQuery, onSubmit }) {
         <div className="field now-hint">Покажем ближайшие машины и время подачи</div>
       )}
 
-      {(offer || car) && (
+      {offer && (
         <div className="chips">
-          {offer && (
-            <span className="chip">{offer.chip}
-              <button type="button" aria-label="Убрать набор" onClick={() => set({ offerId: null })}>×</button>
-            </span>
-          )}
-          {car && <div className="hint">Укажите, где и когда, — покажем {car.model}</div>}
+          <span className="chip">{offer.chip}
+            <button type="button" aria-label="Убрать набор" onClick={() => set({ offerId: null })}>×</button>
+          </span>
         </div>
       )}
 
-      <button type="submit" className="btn-primary">Подобрать машину</button>
+      {children}
+      <button type="submit" className="btn-primary" disabled={submitDisabled}>{submitLabel}</button>
     </form>
   )
 }
@@ -236,7 +235,7 @@ function E2({ query, setQuery, onBack, onPick }) {
   const location = locations.find((l) => l.id === query.locationId)
   const offer = offers.find((o) => o.id === query.offerId)
   const days = rentDays(query)
-  const firstId = query.carId ?? offer?.carId
+  const firstId = offer?.carId
   const eta = (c) => location.etaMin + c.etaAdd
 
   const toggle = (id) => setFilters((f) => (f.includes(id) ? f.filter((x) => x !== id) : [...f, id]))
@@ -320,20 +319,184 @@ function E2({ query, setQuery, onBack, onPick }) {
   )
 }
 
-function StubE3({ query, carId, onBack }) {
-  const offer = offers.find((o) => o.id === query.offerId)
+const queryReady = (q) => q.locationId && (q.mode === 'now' || (q.dateFrom && q.dateTo && q.dateTo >= q.dateFrom))
+
+// 'ok' | 'sold' — разобрали везде | 'place' — нет в этой точке
+function availability(car, locationId) {
+  if (car.stock === 0) return 'sold'
+  if (carDetails[car.id].unavailableAt.includes(locationId)) return 'place'
+  return 'ok'
+}
+
+const extraCost = (x, days) => (x.per === 'day' ? x.price * days : x.price)
+
+function E3({ query, setQuery, carId, cameFrom, onBack, onOpenCar, onBook }) {
   const car = cars.find((c) => c.id === carId)
+  const d = carDetails[car.id]
+  const offer = offers.find((o) => o.id === query.offerId)
+  const location = locations.find((l) => l.id === query.locationId)
+  const [picked, setPicked] = useState(() => (offer?.carId === car.id ? offer.extraIds : []))
+  const widgetRef = useRef(null)
+
+  const ready = queryReady(query)
+  const days = rentDays(query)
+  const status = ready ? availability(car, query.locationId) : null
+  const rent = car.pricePerDay * days
+  const chosen = extras.filter((x) => picked.includes(x.id))
+  const total = rent + chosen.reduce((s, x) => s + extraCost(x, days), 0)
+
+  const otherPlaces = locations.filter((l) => l.id !== query.locationId && !d.unavailableAt.includes(l.id))
+  const similar = cars
+    .filter((c) => c.id !== car.id && c.stock !== 0 && (!ready || availability(c, query.locationId) === 'ok'))
+    .sort((a, b) => (b.kind === car.kind) - (a.kind === car.kind) || Math.abs(a.pricePerDay - car.pricePerDay) - Math.abs(b.pricePerDay - car.pricePerDay))
+    .slice(0, 3)
+
+  const toggle = (id) => setPicked((p) => (p.includes(id) ? p.filter((x) => x !== id) : [...p, id]))
+  const scrollToWidget = () => widgetRef.current.scrollIntoView({ behavior: 'smooth', block: 'center' })
+  const perLabel = (x) => (x.price === 0 ? 'бесплатно' : `${rub(x.price)}${x.per === 'day' ? ' / сутки' : ''}`)
+
+  const specs = [
+    ['Расход', d.fuel], ['Запас хода', d.range], ['Клиренс', d.clearance], ['Багаж', d.bags],
+    ['Привод', car.drive], ['Мест', car.seats], ['Резина', d.winter ? 'зимой — зимняя, шипы' : 'летняя'], ['Дороги', d.gravel],
+  ]
+
+  return (
+    <main className="e3">
+      <button className="link-back" onClick={onBack}>← {cameFrom === 'e2' ? 'Назад к машинам' : 'На главную'}</button>
+
+      <div className="e3-layout">
+        <div className="e3-main">
+          <div className="e3-head">
+            <div className="muted">{car.kind}</div>
+            <h1>{car.model}</h1>
+            <div className="tags">
+              {car.tags.map((t) => <span key={t} className="tag">{t}</span>)}
+              {car.stock > 0 && <span className="badge badge-hot">{car.stock === 1 ? 'Осталась 1' : `Осталось ${car.stock}`}</span>}
+              {car.stock === 0 && <span className="badge badge-muted">Разобрали</span>}
+            </div>
+          </div>
+          <div className="e3-photo photo-car" style={carPhoto(car, 'lg')} />
+
+          <section className="e3-section">
+            <h2>Для поездки</h2>
+            <dl className="specs">
+              {specs.map(([k, v]) => <div key={k}><dt>{k}</dt><dd>{v}</dd></div>)}
+            </dl>
+          </section>
+
+          <section className="e3-section">
+            <h2>Подходит для маршрутов</h2>
+            <div className="routes">{d.routes.map((r) => <span key={r} className="route">{r}</span>)}</div>
+          </section>
+
+          <section className="e3-section">
+            <h2>Как получите машину</h2>
+            <ol className="steps">
+              <li><b>Машина ждёт в точке</b>
+                <span>{location ? location.name : 'аэропорт, вокзал, отель или адрес'}{query.mode === 'now' && location ? ` — подадим через ${location.etaMin + car.etaAdd} мин` : ' — к вашему времени'}</span></li>
+              <li><b>Осмотр и ключи — 10 минут</b><span>Фото машины и акт в телефоне, без офиса и очереди</span></li>
+              <li><b>Сразу в путь</b><span>Бак полный, допы уже в машине</span></li>
+            </ol>
+          </section>
+
+          <section className="e3-section">
+            <h2>Условия</h2>
+            <dl className="terms">
+              <dt>Пробег</dt><dd>{rentTerms.mileage}</dd>
+              <dt>Водитель</dt><dd>{rentTerms.driver}</dd>
+              <dt>Куда можно</dt><dd>{rentTerms.regions}</dd>
+              <dt>Возврат</dt><dd>{rentTerms.dropoff}</dd>
+              <dt>Страховка</dt><dd>{rentTerms.insurance}</dd>
+              <dt>Депозит</dt><dd>{rub(d.deposit)}, блокируем на карте и возвращаем после возврата машины</dd>
+            </dl>
+          </section>
+
+          {[['car', 'Допы к машине'], ['trip', 'В машину для поездки']].map(([g, title]) => (
+            <section key={g} className="e3-section">
+              <h2>{title}</h2>
+              <div className="extras">
+                {extras.filter((x) => x.group === g).map((x) => (
+                  <label key={x.id} className={`extra ${picked.includes(x.id) ? 'on' : ''}`}>
+                    <input type="checkbox" checked={picked.includes(x.id)} onChange={() => toggle(x.id)} />
+                    <span className="extra-name">{x.name}{x.note && <span className="muted"> · {x.note}</span>}</span>
+                    <span className="extra-price">{perLabel(x)}</span>
+                  </label>
+                ))}
+              </div>
+            </section>
+          ))}
+        </div>
+
+        <aside className="e3-aside" ref={widgetRef}>
+          <div className="price-big">{rub(car.pricePerDay)} <span className="muted">/ сутки</span></div>
+          <SearchForm query={query} setQuery={setQuery} submitLabel={ready ? 'Забронировать' : 'Проверить наличие'}
+            submitDisabled={status === 'sold' || status === 'place'}
+            onSubmit={() => status === 'ok' && onBook({ extraIds: picked, total })}>
+            {status === 'ok' && (
+              <div className="avail ok">✓ Свободна{query.mode === 'now' ? `, подадим через ${location.etaMin + car.etaAdd} мин` : ' на эти даты'}</div>
+            )}
+            {status === 'place' && (
+              <div className="avail no">
+                <div>В точке «{location.name}» этой машины нет. Можно забрать здесь:</div>
+                <div className="avail-options">
+                  {otherPlaces.map((l) => (
+                    <button type="button" key={l.id} className="filter" onClick={() => setQuery((q) => ({ ...q, locationId: l.id }))}>{l.name}</button>
+                  ))}
+                </div>
+              </div>
+            )}
+            {status === 'sold' && <div className="avail no">Эту машину разобрали. Посмотрите похожие ниже</div>}
+            {status === 'ok' && (
+              <dl className="bill">
+                <dt>Аренда, {days} сут.</dt><dd>{rub(rent)}</dd>
+                {chosen.map((x) => <Fragment key={x.id}><dt>{x.name}</dt><dd>{rub(extraCost(x, days))}</dd></Fragment>)}
+                <dt className="bill-total">Итого</dt><dd className="bill-total">{rub(total)}</dd>
+                <dt className="muted">Депозит, вернём</dt><dd className="muted">{rub(d.deposit)}</dd>
+              </dl>
+            )}
+          </SearchForm>
+
+          {(status === 'sold' || status === 'place') && (
+            <div className="similar">
+              <div className="card-title">Похожие машины{location ? ` в точке «${location.name}»` : ''}</div>
+              {similar.map((c) => (
+                <button key={c.id} className="similar-item" onClick={() => onOpenCar(c.id)}>
+                  <span className="similar-photo photo-car" style={carPhoto(c)} />
+                  <span><b>{c.model}</b><br /><span className="muted">{rub(c.pricePerDay)} / сутки</span></span>
+                </button>
+              ))}
+            </div>
+          )}
+        </aside>
+      </div>
+
+      <div className="e3-bar">
+        <div>
+          <div className="price">{status === 'ok' ? rub(total) : `${rub(car.pricePerDay)} / сутки`}</div>
+          <div className="muted">{status === 'ok' ? `за ${days} сут., с допами` : status ? 'недоступна' : 'укажите, где и когда'}</div>
+        </div>
+        <button className="btn-primary" onClick={status === 'ok' ? () => onBook({ extraIds: picked, total }) : scrollToWidget}>
+          {status === 'ok' ? 'Забронировать' : 'Где и когда'}
+        </button>
+      </div>
+    </main>
+  )
+}
+
+function StubE4({ query, carId, booking, onBack }) {
+  const car = cars.find((c) => c.id === carId)
+  const chosen = extras.filter((x) => booking.extraIds.includes(x.id))
   return (
     <main className="stub">
-      <h1>Э3 в работе</h1>
-      <p className="muted">Э2 передал на оформление:</p>
+      <h1>Э4 в работе</h1>
+      <p className="muted">Э3 передал на оформление:</p>
       <dl>
         <dt>Запрос</dt><dd>{summary(query)}</dd>
-        <dt>Режим</dt><dd>{query.mode === 'now' ? 'Сейчас' : 'На даты'}</dd>
         <dt>Машина</dt><dd>{car.model}</dd>
-        <dt>Набор</dt><dd>{offer ? offer.chip : '—'}</dd>
+        <dt>Допы</dt><dd>{chosen.length ? chosen.map((x) => x.name).join(', ') : '—'}</dd>
+        <dt>Итого</dt><dd>{rub(booking.total)}</dd>
       </dl>
-      <button className="btn-secondary" onClick={onBack}>← Назад к машинам</button>
+      <button className="btn-secondary" onClick={onBack}>← Назад к машине</button>
     </main>
   )
 }
