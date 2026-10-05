@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from 'react'
-import { locations, locationGroups, cars, offers, rub } from './data.js'
+import { locations, locationGroups, cars, kinds, offers, rub } from './data.js'
 
 const emptyQuery = {
   locationId: '',
@@ -14,10 +14,17 @@ const emptyQuery = {
 
 export default function App() {
   const [query, setQuery] = useState(emptyQuery)
-  const [submitted, setSubmitted] = useState(null)
+  const [screen, setScreen] = useState('e1') // 'e1' | 'e2' | 'e3'
+  const [pickedCarId, setPickedCarId] = useState(null)
 
-  if (submitted) return <StubE2 query={submitted} onBack={() => setSubmitted(null)} />
-  return <Landing query={query} setQuery={setQuery} onSubmit={setSubmitted} />
+  useEffect(() => window.scrollTo(0, 0), [screen])
+
+  if (screen === 'e3') return <StubE3 query={query} carId={pickedCarId} onBack={() => setScreen('e2')} />
+  if (screen === 'e2') return (
+    <E2 query={query} setQuery={setQuery} onBack={() => setScreen('e1')}
+      onPick={(id) => { setPickedCarId(id); setScreen('e3') }} />
+  )
+  return <Landing query={query} setQuery={setQuery} onSubmit={() => setScreen('e2')} />
 }
 
 function Landing({ query, setQuery, onSubmit }) {
@@ -199,25 +206,134 @@ function SearchForm({ ref, query, setQuery, onSubmit }) {
   )
 }
 
-function StubE2({ query, onBack }) {
+const dayMs = 24 * 60 * 60 * 1000
+
+function rentDays(q) {
+  if (q.mode !== 'dates') return 1
+  const from = new Date(`${q.dateFrom}T${q.timeFrom}`)
+  const to = new Date(`${q.dateTo}T${q.timeTo}`)
+  return Math.max(1, Math.ceil((to - from) / dayMs))
+}
+
+const fmtDate = (d) => new Date(d).toLocaleDateString('ru-RU', { day: 'numeric', month: 'short' })
+
+function summary(q) {
+  const loc = locations.find((l) => l.id === q.locationId)?.name
+  if (q.mode === 'now') return `${loc} · сейчас`
+  return `${loc} · ${fmtDate(q.dateFrom)} – ${fmtDate(q.dateTo)}`
+}
+
+const filterChips = [
+  ...kinds.map((k) => ({ id: k, label: k, test: (c) => c.kind === k })),
+  { id: '4x4', label: '4×4', test: (c) => c.tags.includes('4×4') },
+  { id: 'box', label: 'есть бокс', test: (c) => c.tags.includes('есть бокс') },
+  { id: 'seats7', label: '7 мест', test: (c) => c.seats >= 7 },
+]
+
+function E2({ query, setQuery, onBack, onPick }) {
+  const [editing, setEditing] = useState(false)
+  const [filters, setFilters] = useState([])
   const location = locations.find((l) => l.id === query.locationId)
   const offer = offers.find((o) => o.id === query.offerId)
-  const car = cars.find((c) => c.id === query.carId)
+  const days = rentDays(query)
+  const firstId = query.carId ?? offer?.carId
+  const eta = (c) => location.etaMin + c.etaAdd
+
+  const toggle = (id) => setFilters((f) => (f.includes(id) ? f.filter((x) => x !== id) : [...f, id]))
+  const active = filterChips.filter((f) => filters.includes(f.id))
+
+  const list = cars
+    .filter((c) => active.every((f) => f.test(c)))
+    .sort((a, b) => {
+      // разобранные в конце, выбранная машина первой
+      if ((a.stock === 0) !== (b.stock === 0)) return a.stock === 0 ? 1 : -1
+      if (a.id === firstId) return -1
+      if (b.id === firstId) return 1
+      return query.mode === 'now' ? eta(a) - eta(b) : a.pricePerDay - b.pricePerDay
+    })
+
+  return (
+    <main className="e2">
+      <div className="e2-top">
+        <button className="link-back" onClick={onBack}>← На главную</button>
+        <div className="summary">
+          <span className="summary-text">{summary(query)}</span>
+          <button className="btn-secondary btn-sm" onClick={() => setEditing((v) => !v)}>
+            {editing ? 'Закрыть' : 'Изменить'}
+          </button>
+        </div>
+        {offer && !editing && (
+          <span className="chip">{offer.chip}
+            <button type="button" aria-label="Убрать набор" onClick={() => setQuery((q) => ({ ...q, offerId: null }))}>×</button>
+          </span>
+        )}
+        {editing && (
+          <div className="e2-edit">
+            <SearchForm query={query} setQuery={setQuery} onSubmit={() => setEditing(false)} />
+          </div>
+        )}
+      </div>
+
+      <div className="filters">
+        {filterChips.map((f) => (
+          <button key={f.id} className={`filter ${filters.includes(f.id) ? 'active' : ''}`}
+            aria-pressed={filters.includes(f.id)} onClick={() => toggle(f.id)}>
+            {f.label}
+          </button>
+        ))}
+      </div>
+
+      {list.length === 0 ? (
+        <div className="empty">
+          <p>Под эти фильтры машин нет</p>
+          <button className="btn-secondary" onClick={() => setFilters([])}>Сбросить фильтры</button>
+        </div>
+      ) : (
+        <div className="car-grid">
+          {list.map((c) => {
+            const soldOut = c.stock === 0
+            return (
+              <button key={c.id} className={`card car-item ${soldOut ? 'sold-out' : ''}`}
+                disabled={soldOut} onClick={() => onPick(c.id)}>
+                <div className="card-photo photo-car">
+                  <div className="badges">
+                    {offer?.carId === c.id && <span className="badge">В наборе</span>}
+                    {soldOut && <span className="badge">Разобрали</span>}
+                    {c.stock > 0 && <span className="badge badge-hot">{c.stock === 1 ? 'Осталась 1' : `Осталось ${c.stock}`}</span>}
+                  </div>
+                  <span>{c.model}</span>
+                </div>
+                <div className="card-body">
+                  <div className="muted">{c.kind}</div>
+                  <div className="card-title">{c.model}</div>
+                  <div className="tags">{c.tags.map((t) => <span key={t} className="tag">{t}</span>)}</div>
+                  {query.mode === 'now' && !soldOut && <div className="eta">Будет через {eta(c)} мин</div>}
+                  <div className="price">{rub(c.pricePerDay)} / сутки</div>
+                  {query.mode === 'dates' && <div className="muted">{rub(c.pricePerDay * days)} за {days} сут.</div>}
+                </div>
+              </button>
+            )
+          })}
+        </div>
+      )}
+    </main>
+  )
+}
+
+function StubE3({ query, carId, onBack }) {
+  const offer = offers.find((o) => o.id === query.offerId)
+  const car = cars.find((c) => c.id === carId)
   return (
     <main className="stub">
-      <h1>Э2 в работе</h1>
-      <p className="muted">Форма передала на подбор машины:</p>
+      <h1>Э3 в работе</h1>
+      <p className="muted">Э2 передал на оформление:</p>
       <dl>
-        <dt>Где</dt><dd>{location.name}</dd>
+        <dt>Запрос</dt><dd>{summary(query)}</dd>
         <dt>Режим</dt><dd>{query.mode === 'now' ? 'Сейчас' : 'На даты'}</dd>
-        {query.mode === 'dates' && (<>
-          <dt>Получение</dt><dd>{query.dateFrom} {query.timeFrom}</dd>
-          <dt>Возврат</dt><dd>{query.dateTo} {query.timeTo}</dd>
-        </>)}
+        <dt>Машина</dt><dd>{car.model}</dd>
         <dt>Набор</dt><dd>{offer ? offer.chip : '—'}</dd>
-        <dt>Машина</dt><dd>{car ? car.model : '—'}</dd>
       </dl>
-      <button className="btn-secondary" onClick={onBack}>← Назад на лендинг</button>
+      <button className="btn-secondary" onClick={onBack}>← Назад к машинам</button>
     </main>
   )
 }

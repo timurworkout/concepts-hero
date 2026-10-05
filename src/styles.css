@@ -98,3 +98,31 @@ h2 { font-size: 22px; font-weight: 500; letter-spacing: -0.44px; margin: 0 0 24p
   .sticky-cta { display: block; position: fixed; left: 0; right: 0; bottom: 0; padding: 12px 16px; background: var(--canvas); border-top: 1px solid var(--hairline); }
   .sticky-cta .btn-primary { width: 100%; }
 }
+
+/* Э2 Подбор машины */
+.e2 { padding: 24px 80px 64px; }
+.e2-top { display: grid; gap: 12px; margin-bottom: 24px; }
+.link-back { border: 0; background: none; padding: 0; justify-self: start; color: var(--muted); font-size: 14px; }
+.summary { display: flex; align-items: center; gap: 16px; flex-wrap: wrap; }
+.summary-text { font-size: 22px; font-weight: 500; letter-spacing: -0.44px; }
+.btn-sm { height: 36px; padding: 0 15px; font-size: 14px; }
+.e2-edit { max-width: 880px; }
+.filters { display: flex; gap: 8px; overflow-x: auto; padding-bottom: 8px; margin-bottom: 24px; }
+.filter { flex: none; height: 36px; padding: 0 16px; border: 1px solid var(--hairline); border-radius: var(--r-full); background: var(--canvas); font-size: 14px; }
+.filter.active { border-color: var(--ink); background: var(--ink); color: #fff; }
+.car-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: 24px; }
+.car-item .card-photo { position: relative; }
+.badges { position: absolute; top: 12px; left: 12px; display: flex; gap: 6px; }
+.badge { background: var(--canvas); color: var(--ink); border-radius: var(--r-full); padding: 4px 10px; font-size: 12px; font-weight: 600; }
+.badge-hot { background: var(--error); color: #fff; }
+.sold-out { opacity: 0.45; cursor: default; }
+.tags { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 4px; }
+.tag { background: var(--surface-strong); border-radius: var(--r-sm); padding: 2px 8px; font-size: 12px; }
+.eta { font-size: 14px; font-weight: 600; margin-top: 4px; }
+.empty { padding: 48px 0; display: grid; gap: 16px; justify-items: start; }
+
+@media (max-width: 743px) {
+  .e2 { padding: 16px 16px 48px; }
+  .summary-text { font-size: 18px; }
+  .car-grid { grid-template-columns: 1fr; gap: 16px; }
+}
