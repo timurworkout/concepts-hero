@@ -1,5 +1,5 @@
 import { Fragment, useEffect, useRef, useState } from 'react'
-import { locations, locationGroups, cars, kinds, offers, rub, carDetails, rentTerms, extras } from './data.js'
+import { locations, locationGroups, cars, scenarios, offers, rub, carDetails, rentTerms, extras } from './data.js'
 
 const carPhoto = (c, size = 'sm') => ({ backgroundImage: `url(${import.meta.env.BASE_URL}cars/${size}/${c.id}.webp)` })
 
@@ -223,29 +223,41 @@ function summary(q) {
 }
 
 const filterChips = [
-  ...kinds.map((k) => ({ id: k, label: k, test: (c) => c.kind === k })),
   { id: '4x4', label: '4×4', test: (c) => c.tags.includes('4×4') },
-  { id: 'box', label: 'есть бокс', test: (c) => c.tags.includes('есть бокс') },
   { id: 'seats7', label: '7 мест', test: (c) => c.seats >= 7 },
+  { id: 'box', label: 'бокс на крышу', test: (c) => c.tags.includes('есть бокс') },
+  { id: 'bags4', label: '4+ чемодана', test: (c) => c.trunk >= 520 },
+  { id: 'cheap', label: 'до 4 000 ₽/сутки', test: (c) => c.pricePerDay <= 4000 },
 ]
+
+const PAGE = 10
 
 function E2({ query, setQuery, onBack, onPick }) {
   const [editing, setEditing] = useState(false)
-  const [filters, setFilters] = useState([])
-  const location = locations.find((l) => l.id === query.locationId)
   const offer = offers.find((o) => o.id === query.offerId)
+  const [scenarioId, setScenarioId] = useState(offer?.scenarioId ?? 'all')
+  const [filters, setFilters] = useState([])
+  const [hideUnavailable, setHideUnavailable] = useState(false)
+  const [shown, setShown] = useState(PAGE)
+  const location = locations.find((l) => l.id === query.locationId)
   const days = rentDays(query)
   const firstId = offer?.carId
   const eta = (c) => location.etaMin + c.etaAdd
 
-  const toggle = (id) => setFilters((f) => (f.includes(id) ? f.filter((x) => x !== id) : [...f, id]))
+  const scenario = scenarios.find((x) => x.id === scenarioId)
+  const unavailable = (c) => availability(c, query.locationId) !== 'ok'
+  const pickScenario = (id) => { setScenarioId(id); setShown(PAGE) }
+  const toggle = (id) => { setFilters((f) => (f.includes(id) ? f.filter((x) => x !== id) : [...f, id])); setShown(PAGE) }
+  const resetFilters = () => { setScenarioId('all'); setFilters([]); setHideUnavailable(false); setShown(PAGE) }
   const active = filterChips.filter((f) => filters.includes(f.id))
 
   const list = cars
+    .filter((c) => !scenario.carIds || scenario.carIds.includes(c.id))
     .filter((c) => active.every((f) => f.test(c)))
+    .filter((c) => !hideUnavailable || !unavailable(c))
     .sort((a, b) => {
-      // разобранные в конце, выбранная машина первой
-      if ((a.stock === 0) !== (b.stock === 0)) return a.stock === 0 ? 1 : -1
+      // недоступные в конце, выбранная машина первой
+      if (unavailable(a) !== unavailable(b)) return unavailable(a) ? 1 : -1
       if (a.id === firstId) return -1
       if (b.id === firstId) return 1
       return query.mode === 'now' ? eta(a) - eta(b) : a.pricePerDay - b.pricePerDay
@@ -273,6 +285,15 @@ function E2({ query, setQuery, onBack, onPick }) {
         )}
       </div>
 
+      <div className="scenarios" role="tablist">
+        {scenarios.map((x) => (
+          <button key={x.id} role="tab" aria-selected={scenarioId === x.id}
+            className={`scenario ${scenarioId === x.id ? 'active' : ''}`} onClick={() => pickScenario(x.id)}>
+            {x.label}
+          </button>
+        ))}
+      </div>
+
       <div className="filters">
         {filterChips.map((f) => (
           <button key={f.id} className={`filter ${filters.includes(f.id) ? 'active' : ''}`}
@@ -280,43 +301,70 @@ function E2({ query, setQuery, onBack, onPick }) {
             {f.label}
           </button>
         ))}
+        <button className={`filter ${hideUnavailable ? 'active' : ''}`} aria-pressed={hideUnavailable}
+          onClick={() => { setHideUnavailable((v) => !v); setShown(PAGE) }}>
+          скрыть недоступные
+        </button>
       </div>
+
+      {(scenario.why || active.length > 0) && list.length > 0 && (
+        <div className="why">
+          <div className="why-title">Подобрали {list.length} {plural(list.length, 'машину', 'машины', 'машин')}</div>
+          {scenario.why && <p>{scenario.why}</p>}
+          {active.length > 0 && <p className="muted">С учётом: {active.map((f) => f.label).join(', ')}</p>}
+        </div>
+      )}
 
       {list.length === 0 ? (
         <div className="empty">
           <p>Под эти фильтры машин нет</p>
-          <button className="btn-secondary" onClick={() => setFilters([])}>Сбросить фильтры</button>
+          <button className="btn-secondary" onClick={resetFilters}>Сбросить фильтры</button>
         </div>
       ) : (
-        <div className="car-grid">
-          {list.map((c) => {
-            const soldOut = c.stock === 0
-            return (
-              <button key={c.id} className={`card car-item ${soldOut ? 'sold-out' : ''}`}
-                disabled={soldOut} onClick={() => onPick(c.id)}>
-                <div className="card-photo photo-car" style={carPhoto(c, 'lg')}>
-                  <div className="badges">
-                    {offer?.carId === c.id && <span className="badge">В наборе</span>}
-                    {soldOut && <span className="badge">Разобрали</span>}
-                    {c.stock > 0 && <span className="badge badge-hot">{c.stock === 1 ? 'Осталась 1' : `Осталось ${c.stock}`}</span>}
+        <>
+          <div className="car-grid">
+            {list.slice(0, shown).map((c) => {
+              const status = availability(c, query.locationId)
+              const off = status !== 'ok'
+              return (
+                <button key={c.id} className={`card car-item ${off ? 'sold-out' : ''}`}
+                  disabled={off} onClick={() => onPick(c.id)}>
+                  <div className="card-photo photo-car" style={carPhoto(c, 'lg')}>
+                    <div className="badges">
+                      {offer?.carId === c.id && <span className="badge">В наборе</span>}
+                      {status === 'sold' && <span className="badge">Разобрали</span>}
+                      {status === 'place' && <span className="badge">Нет в этой точке</span>}
+                      {!off && c.stock > 0 && <span className="badge badge-hot">{c.stock === 1 ? 'Осталась 1' : `Осталось ${c.stock}`}</span>}
+                    </div>
                   </div>
-                  <span>{c.model}</span>
-                </div>
-                <div className="card-body">
-                  <div className="muted">{c.kind}</div>
-                  <div className="card-title">{c.model}</div>
-                  <div className="tags">{c.tags.map((t) => <span key={t} className="tag">{t}</span>)}</div>
-                  {query.mode === 'now' && !soldOut && <div className="eta">Будет через {eta(c)} мин</div>}
-                  <div className="price">{rub(c.pricePerDay)} / сутки</div>
-                  {query.mode === 'dates' && <div className="muted">{rub(c.pricePerDay * days)} за {days} сут.</div>}
-                </div>
-              </button>
-            )
-          })}
-        </div>
+                  <div className="card-body">
+                    <div className="muted">{c.kind}</div>
+                    <div className="card-title">{c.model}</div>
+                    <div className="tags">{c.tags.map((t) => <span key={t} className="tag">{t}</span>)}</div>
+                    {query.mode === 'now' && !off && <div className="eta">Будет через {eta(c)} мин</div>}
+                    <div className="price">{rub(c.pricePerDay)} / сутки</div>
+                    {query.mode === 'dates' && <div className="muted">{rub(c.pricePerDay * days)} за {days} сут.</div>}
+                  </div>
+                </button>
+              )
+            })}
+          </div>
+          {list.length > shown && (
+            <button className="btn-secondary show-more" onClick={() => setShown((n) => n + PAGE)}>
+              Показать ещё {Math.min(PAGE, list.length - shown)}
+            </button>
+          )}
+        </>
       )}
     </main>
   )
+}
+
+const plural = (n, one, few, many) => {
+  const m10 = n % 10, m100 = n % 100
+  if (m10 === 1 && m100 !== 11) return one
+  if (m10 >= 2 && m10 <= 4 && (m100 < 12 || m100 > 14)) return few
+  return many
 }
 
 const queryReady = (q) => q.locationId && (q.mode === 'now' || (q.dateFrom && q.dateTo && q.dateTo >= q.dateFrom))
