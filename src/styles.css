@@ -195,3 +195,65 @@ h2 { font-size: 22px; font-weight: 500; letter-spacing: -0.44px; margin: 0 0 24p
 .why-title { font-size: 18px; font-weight: 600; }
 .why p { margin: 0; color: var(--body); line-height: 1.5; }
 .show-more { display: block; margin: 32px auto 0; }
+
+/* Э4 Оформление и оплата */
+.e4 .e3-layout { grid-template-columns: minmax(0, 640px) 380px; justify-content: space-between; }
+.e4-form { width: 100%; }
+.e4-form h1 { margin-bottom: 16px; }
+.step { border-bottom: 1px solid var(--hairline); padding: 20px 0; }
+.step-head { display: flex; align-items: center; gap: 12px; }
+.step-n { width: 28px; height: 28px; border-radius: var(--r-full); border: 1px solid var(--ink); display: grid; place-items: center; font-size: 14px; flex: none; }
+.step.done .step-n { background: var(--ink); color: #fff; }
+.step-title { flex: 1; font-size: 18px; font-weight: 600; }
+.step-title .muted { font-weight: 400; margin-top: 2px; }
+.step:not(.active):not(.done) .step-title { color: var(--muted); }
+.step-body { display: grid; gap: 16px; margin-top: 16px; }
+.login, .driver, .driver-fields { display: grid; gap: 12px; }
+.banks { display: grid; grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); gap: 8px; }
+.from-bank { margin-left: 8px; font-weight: 400; color: var(--muted); }
+.scan { display: grid; gap: 8px; justify-items: center; }
+.scan-frame { position: relative; width: 100%; max-width: 360px; aspect-ratio: 85.6 / 54; border: 2px dashed var(--ink); border-radius: var(--r-md); overflow: hidden; background: var(--surface-soft); }
+.scan-line { position: absolute; left: 0; right: 0; height: 2px; background: var(--ink); animation: scan 1.5s ease-in-out infinite; }
+@keyframes scan { 0% { top: 0 } 50% { top: calc(100% - 2px) } 100% { top: 0 } }
+.pay-split { font-size: 16px; }
+.pay-methods { justify-self: start; }
+.e4-pay { width: 100%; margin-top: 24px; }
+.hold { margin-top: 12px; padding: 10px 12px; border-radius: var(--r-sm); background: var(--surface-strong); font-weight: 600; font-size: 14px; }
+.hold.expired { background: #fbeceb; color: var(--error); }
+.e4-booking { display: grid; gap: 16px; border: 1px solid var(--hairline); border-radius: var(--r-md); padding: 20px; }
+.e4-car { display: flex; gap: 12px; align-items: center; }
+.e4-summary-line, .e4-summary-body { display: none; }
+
+/* Э6 Машина ждёт */
+.e6 { padding: 48px 80px 64px; }
+.e6-layout { max-width: 720px; margin: 0 auto; }
+.e6-check { width: 64px; height: 64px; }
+.e6-check circle { stroke: var(--ink); stroke-width: 2; stroke-dasharray: 151; stroke-dashoffset: 151; animation: draw 0.6s ease-out forwards; }
+.e6-check path { stroke: var(--ink); stroke-width: 3; stroke-linecap: round; stroke-linejoin: round; stroke-dasharray: 40; stroke-dashoffset: 40; animation: draw 0.4s 0.5s ease-out forwards; }
+@keyframes draw { to { stroke-dashoffset: 0 } }
+.e6-head { opacity: 0; animation: fade 0.5s 0.8s forwards; margin-top: 16px; }
+.e6-head h1 { margin-bottom: 4px; }
+.e6-when { font-size: 18px; margin: 12px 0 0; }
+@keyframes fade { from { opacity: 0; transform: translateY(8px) } to { opacity: 1; transform: none } }
+.e6-sms { opacity: 0; animation: fade 0.5s 2s forwards; margin: 32px 0 8px; }
+.phone { max-width: 340px; border: 2px solid var(--ink); border-radius: 28px; padding: 20px 16px 28px; display: grid; gap: 8px; }
+.bubble { background: var(--surface-strong); border-radius: 16px 16px 16px 4px; padding: 12px 14px; font-size: 14px; line-height: 1.45; }
+.sms-link { border: 0; background: none; padding: 0; text-decoration: underline; font-size: 14px; }
+.in-car { margin: 0; padding-left: 20px; display: grid; gap: 6px; }
+.e6-actions { display: flex; gap: 12px; flex-wrap: wrap; margin-top: 32px; }
+.stub ul { padding-left: 20px; }
+
+@media (min-width: 1024px) {
+  .e6-layout { max-width: 1040px; display: block; }
+  .e6-main { display: grid; grid-template-columns: minmax(0, 1fr) 340px; column-gap: 64px; }
+  .e6-main > * { grid-column: 1; }
+  .e6-main > .e6-sms { grid-column: 2; grid-row: 1 / span 4; margin: 0; align-self: start; position: sticky; top: 48px; }
+}
+
+@media (max-width: 743px) {
+  .e4-aside { display: none; }
+  .e4-summary-line { display: flex; justify-content: space-between; width: 100%; margin-top: 12px; padding: 12px; border: 1px solid var(--hairline); border-radius: var(--r-sm); background: var(--canvas); font-size: 14px; font-weight: 600; text-align: left; }
+  .e4-summary-body { display: block; margin-top: 8px; }
+  .e4 .e4-pay { display: none; }
+  .e6 { padding: 32px 16px 48px; }
+}

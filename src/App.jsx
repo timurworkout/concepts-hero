@@ -15,16 +15,24 @@ const emptyQuery = {
 
 export default function App() {
   const [query, setQuery] = useState(emptyQuery)
-  const [screen, setScreen] = useState('e1') // 'e1' | 'e2' | 'e3' | 'e4'
+  const [screen, setScreen] = useState('e1') // 'e1' | 'e2' | 'e3' | 'e4' | 'e6' | 'booking'
   const [pickedCarId, setPickedCarId] = useState(null)
   const [cameFrom, setCameFrom] = useState('e1') // откуда открыли Э3
   const [booking, setBooking] = useState(null) // { extraIds, total } с Э3
+  const [result, setResult] = useState(null) // оформленная бронь с Э4
 
   useEffect(() => { window.scrollTo(0, 0) }, [screen, pickedCarId])
 
   const openCar = (id, from) => { setPickedCarId(id); setCameFrom(from); setScreen('e3') }
 
-  if (screen === 'e4') return <StubE4 query={query} carId={pickedCarId} booking={booking} onBack={() => setScreen('e3')} />
+  const home = () => { setQuery(emptyQuery); setBooking(null); setResult(null); setScreen('e1') }
+
+  if (screen === 'booking') return <BookingStub result={result} onBack={() => setScreen('e6')} />
+  if (screen === 'e6') return <E6 result={result} onOpenBooking={() => setScreen('booking')} onHome={home} />
+  if (screen === 'e4') return (
+    <E4 query={query} carId={pickedCarId} booking={booking} onBack={() => setScreen('e3')}
+      onDone={(r) => { setResult(r); setScreen('e6') }} />
+  )
   if (screen === 'e3') return (
     <E3 key={pickedCarId} query={query} setQuery={setQuery} carId={pickedCarId} cameFrom={cameFrom}
       onBack={() => setScreen(cameFrom)} onOpenCar={(id) => openCar(id, cameFrom)}
@@ -531,20 +539,428 @@ function E3({ query, setQuery, carId, cameFrom, onBack, onOpenCar, onBook }) {
   )
 }
 
-function StubE4({ query, carId, booking, onBack }) {
-  const car = cars.find((c) => c.id === carId)
+const banks = ['Сбер', 'Т-Банк', 'Альфа-Банк', 'ВТБ', 'Точка']
+const bankClient = { phone: '+7 999 123-45-67', name: 'Иван Петров', birth: '12.04.1990' }
+const scannedLicense = { name: 'Иван Петров', birth: '12.04.1990', license: '99 12 345678', issued: '03.2015' }
+const HOLD_SEC = 600
+
+const fmtPhone = (digits) => {
+  const d = digits.padEnd(10, '_')
+  return `+7 ${d.slice(0, 3)} ${d.slice(3, 6)}-${d.slice(6, 8)}-${d.slice(8, 10)}`
+}
+const yearsSince = (month, year, day = 1) => {
+  const now = new Date()
+  let y = now.getFullYear() - year
+  if (now.getMonth() + 1 < month || (now.getMonth() + 1 === month && now.getDate() < day)) y -= 1
+  return y
+}
+
+// Сумма брони — одна для Э4 и Э6
+function bookingTotals(query, car, booking) {
+  const days = rentDays(query)
   const chosen = extras.filter((x) => booking.extraIds.includes(x.id))
+  const payNow = query.mode === 'now' ? booking.total : Math.round(booking.total * 0.2)
+  return { days, chosen, rent: car.pricePerDay * days, payNow, rest: booking.total - payNow, deposit: carDetails[car.id].deposit }
+}
+
+function Step({ n, title, active, done, summary: doneText, onEdit, children }) {
+  return (
+    <section className={`step ${active ? 'active' : ''} ${done ? 'done' : ''}`}>
+      <div className="step-head">
+        <span className="step-n">{done ? '✓' : n}</span>
+        <div className="step-title">{title}{done && !active && <div className="muted">{doneText}</div>}</div>
+        {done && !active && onEdit && <button type="button" className="link-back" onClick={onEdit}>Изменить</button>}
+      </div>
+      {active && <div className="step-body">{children}</div>}
+    </section>
+  )
+}
+
+function E4({ query, carId, booking, onBack, onDone }) {
+  const car = cars.find((c) => c.id === carId)
+  const location = locations.find((l) => l.id === query.locationId)
+  const t = bookingTotals(query, car, booking)
+  const needDriver2 = booking.extraIds.includes('driver2')
+
+  const [step, setStep] = useState('login') // 'login' | 'driver' | 'pay'
+  const [user, setUser] = useState(null) // { phone, viaBank }
+  const [driver, setDriver] = useState({ name: '', birth: '', license: '', issued: '', fromBank: false })
+  const [driverOk, setDriverOk] = useState(false)
+  const [driver2, setDriver2] = useState(false)
+  const [payMethod, setPayMethod] = useState('card')
+  const [paying, setPaying] = useState(false)
+  const [summaryOpen, setSummaryOpen] = useState(false)
+
+  // Режим «Сейчас»: машина закреплена 10 минут
+  const [left, setLeft] = useState(HOLD_SEC)
+  const [expired, setExpired] = useState(false)
+  useEffect(() => {
+    if (query.mode !== 'now') return
+    const id = setInterval(() => setLeft((s) => Math.max(0, s - 1)), 1000)
+    return () => clearInterval(id)
+  }, [query.mode])
+  useEffect(() => {
+    if (query.mode !== 'now' || left > 0) return
+    setExpired(true)
+    const id = setTimeout(() => { setExpired(false); setLeft(HOLD_SEC) }, 1000)
+    return () => clearTimeout(id)
+  }, [left, query.mode])
+
+  const login = (u) => {
+    setUser(u)
+    if (u.viaBank) setDriver((d) => ({ ...d, name: bankClient.name, birth: bankClient.birth, fromBank: true }))
+    setStep(driverOk ? 'pay' : 'driver')
+  }
+
+  const pay = () => {
+    setPaying(true)
+    setTimeout(() => onDone({
+      id: '7KQ2', phone: user.phone, name: driver.name, carId, query, extraIds: booking.extraIds,
+      total: booking.total, paidNow: t.payNow, rest: t.rest, deposit: t.deposit,
+    }), 1500)
+  }
+
+  const ready = user && driverOk
+  const payLabel = paying ? 'Оплачиваем…' : `Оплатить ${rub(t.payNow)} и забронировать`
+  const when = query.mode === 'now' ? `подадим через ${location.etaMin + car.etaAdd} мин после оплаты` : summary(query)
+  const mm = String(Math.floor(left / 60)), ss = String(left % 60).padStart(2, '0')
+
+  const bookingCard = (
+    <div className="e4-booking">
+      <div className="e4-car">
+        <span className="similar-photo photo-car" style={carPhoto(car)} />
+        <div><b>{car.model}</b><div className="muted">{location.name}</div><div className="muted">{when}</div></div>
+      </div>
+      <dl className="bill">
+        <dt>Аренда, {t.days} сут.</dt><dd>{rub(t.rent)}</dd>
+        {t.chosen.map((x) => <Fragment key={x.id}><dt>{x.name}</dt><dd>{rub(extraCost(x, t.days))}</dd></Fragment>)}
+        <dt className="bill-total">Итого</dt><dd className="bill-total">{rub(booking.total)}</dd>
+        <dt className="muted">Депозит, вернём</dt><dd className="muted">{rub(t.deposit)}</dd>
+      </dl>
+      <button type="button" className="link-back" onClick={onBack}>Изменить</button>
+    </div>
+  )
+
+  return (
+    <main className="e3 e4">
+      <button className="link-back" onClick={onBack}>← Назад к машине</button>
+
+      {query.mode === 'now' && (
+        <div className={`hold ${expired ? 'expired' : ''}`}>
+          {expired ? 'Время вышло — проверяем машину заново' : `Машина закреплена за вами ещё ${mm}:${ss}`}
+        </div>
+      )}
+
+      <button type="button" className="e4-summary-line" onClick={() => setSummaryOpen((v) => !v)}>
+        <span>{car.model} · {query.mode === 'now' ? 'сейчас' : summary(query).split(' · ')[1]} · {rub(booking.total)}</span>
+        <span>{summaryOpen ? '▴' : '▾'}</span>
+      </button>
+      {summaryOpen && <div className="e4-summary-body">{bookingCard}</div>}
+
+      <div className="e3-layout">
+        <div className="e4-form">
+          <h1>Оформление</h1>
+
+          <Step n={1} title="Вход" active={step === 'login'} done={!!user}
+            summary={`${user?.phone ?? ''}${user?.viaBank ? ' · через банк' : ''}`} onEdit={() => setStep('login')}>
+            <Login onLogin={login} />
+          </Step>
+
+          <Step n={2} title="Водитель" active={step === 'driver'} done={driverOk}
+            summary={`${driver.name} · права проверены`} onEdit={user ? () => setStep('driver') : null}>
+            <Driver driver={driver} setDriver={setDriver} needDriver2={needDriver2} driver2={driver2} setDriver2={setDriver2}
+              onOk={() => { setDriverOk(true); setStep('pay') }} />
+          </Step>
+
+          <Step n={3} title="Оплата" active={step === 'pay'} done={false}>
+            <dl className="bill pay-split">
+              {query.mode === 'now' ? (
+                <><dt>Сейчас — вся аренда</dt><dd>{rub(t.payNow)}</dd></>
+              ) : (
+                <><dt>Сейчас — предоплата 20%</dt><dd>{rub(t.payNow)}</dd>
+                  <dt>При получении — остаток</dt><dd>{rub(t.rest)}</dd></>
+              )}
+            </dl>
+            <p className="muted">Депозит {rub(t.deposit)} заблокируем на карте при получении — это не списание.</p>
+            <div className="mode-toggle pay-methods">
+              <button type="button" className={payMethod === 'card' ? 'active' : ''} onClick={() => setPayMethod('card')}>Картой</button>
+              <button type="button" className={payMethod === 'sbp' ? 'active' : ''} onClick={() => setPayMethod('sbp')}>СБП</button>
+            </div>
+            <p className="muted">Бесплатная отмена за 24 часа до подачи.</p>
+          </Step>
+
+          <button className="btn-primary e4-pay" disabled={!ready || paying} onClick={pay}>{payLabel}</button>
+          {!ready && <p className="muted">Войдите и добавьте права, чтобы оплатить</p>}
+        </div>
+
+        <aside className="e3-aside e4-aside">{bookingCard}</aside>
+      </div>
+
+      <div className="e3-bar">
+        <div>
+          <div className="price">{rub(t.payNow)}</div>
+          <div className="muted">{query.mode === 'now' ? 'вся аренда' : 'предоплата 20%'}</div>
+        </div>
+        <button className="btn-primary" disabled={!ready || paying} onClick={pay}>{paying ? 'Оплачиваем…' : 'Оплатить'}</button>
+      </div>
+    </main>
+  )
+}
+
+function Login({ onLogin }) {
+  const [way, setWay] = useState('sms') // 'sms' | 'bank'
+  const [digits, setDigits] = useState('')
+  const [codeSent, setCodeSent] = useState(false)
+  const [code, setCode] = useState('')
+  const [resend, setResend] = useState(0)
+  const [error, setError] = useState('')
+  const [bankLoading, setBankLoading] = useState(null)
+
+  useEffect(() => {
+    if (resend <= 0) return
+    const id = setTimeout(() => setResend((s) => s - 1), 1000)
+    return () => clearTimeout(id)
+  }, [resend])
+
+  const onPhone = (e) => {
+    let d = e.target.value.replace(/\D/g, '')
+    if (d.startsWith('7') || d.startsWith('8')) d = d.slice(1)
+    setDigits(d.slice(0, 10))
+    setError('')
+  }
+  const sendCode = () => {
+    if (digits.length < 10) { setError('Введите номер полностью'); return }
+    setCodeSent(true); setResend(59)
+  }
+  const onCode = (e) => {
+    const c = e.target.value.replace(/\D/g, '').slice(0, 4)
+    setCode(c)
+    if (c.length === 4) onLogin({ phone: fmtPhone(digits), viaBank: false })
+  }
+  const viaBank = (b) => {
+    setBankLoading(b)
+    setTimeout(() => onLogin({ phone: bankClient.phone, viaBank: true, bank: b }), 1000)
+  }
+
+  return (
+    <div className="login">
+      <div className="mode-toggle">
+        <button type="button" className={way === 'sms' ? 'active' : ''} onClick={() => setWay('sms')}>По SMS</button>
+        <button type="button" className={way === 'bank' ? 'active' : ''} onClick={() => setWay('bank')}>Через банк</button>
+      </div>
+
+      {way === 'sms' ? (
+        <>
+          <div className={`field ${error ? 'has-error' : ''}`}>
+            <label htmlFor="phone">Телефон</label>
+            <input id="phone" inputMode="tel" placeholder="+7 ___ ___-__-__" value={digits ? fmtPhone(digits).replace(/[_ -]+$/, '') : ''}
+              onChange={onPhone} disabled={codeSent} />
+            {error && <div className="error">{error}</div>}
+          </div>
+          {!codeSent ? (
+            <button type="button" className="btn-primary" onClick={sendCode}>Получить код</button>
+          ) : (
+            <div className="field">
+              <label htmlFor="code">Код из SMS</label>
+              <input id="code" inputMode="numeric" autoFocus placeholder="4 цифры, подойдёт любой" value={code} onChange={onCode} />
+              <div className="muted">
+                {resend > 0 ? `Отправить ещё раз через 0:${String(resend).padStart(2, '0')}` :
+                  <button type="button" className="link-back" onClick={() => setResend(59)}>Отправить ещё раз</button>}
+              </div>
+            </div>
+          )}
+        </>
+      ) : (
+        <>
+          <p className="muted">Банк передаст имя и дату рождения — не придётся вводить вручную.</p>
+          <div className="banks">
+            {banks.map((b) => (
+              <button type="button" key={b} className="btn-secondary" disabled={!!bankLoading} onClick={() => viaBank(b)}>
+                {bankLoading === b ? 'Входим…' : b}
+              </button>
+            ))}
+          </div>
+        </>
+      )}
+    </div>
+  )
+}
+
+function Driver({ driver, setDriver, needDriver2, driver2, setDriver2, onOk }) {
+  const [scanning, setScanning] = useState(false)
+  const [manual, setManual] = useState(false)
+  const [errors, setErrors] = useState({})
+  const [checked, setChecked] = useState(false)
+
+  const set = (patch) => { setDriver((d) => ({ ...d, ...patch })); setErrors({}); setChecked(false) }
+
+  const scan = () => {
+    setScanning(true)
+    setTimeout(() => {
+      setScanning(false)
+      // Каскад: поля заполняются по очереди
+      const keys = driver.fromBank ? ['license', 'issued'] : ['name', 'birth', 'license', 'issued']
+      keys.forEach((k, i) => setTimeout(() => setDriver((d) => ({ ...d, [k]: scannedLicense[k] })), i * 250))
+      setTimeout(() => { setChecked(true); if (!needDriver2) setTimeout(onOk, 600) }, keys.length * 250)
+    }, 1500)
+  }
+
+  const validate = () => {
+    const err = {}
+    const [bd, bm, by] = driver.birth.split('.').map(Number)
+    const [im, iy] = driver.issued.split('.').map(Number)
+    if (!driver.name.trim()) err.name = 'Укажите имя и фамилию'
+    if (!by || !bm || !bd) err.birth = 'Дата в формате ДД.ММ.ГГГГ'
+    else if (yearsSince(bm, by, bd) < 21) err.birth = 'Арендовать можно с 21 года'
+    if (driver.license.replace(/\D/g, '').length !== 10) err.license = 'Номер ВУ — 10 цифр'
+    if (!iy || !im) err.issued = 'Месяц и год в формате ММ.ГГГГ'
+    else if (yearsSince(im, iy) < 2) err.issued = 'Для этой машины нужен стаж от 2 лет'
+    setErrors(err)
+    if (Object.keys(err).length === 0) onOk()
+  }
+
+  const showFields = manual || checked || driver.license || driver.fromBank
+  const stage = driver.issued ? yearsSince(...driver.issued.split('.').map(Number)) : 0
+  const fields = [
+    ['name', 'Имя и фамилия', 'Иван Петров'],
+    ['birth', 'Дата рождения', 'ДД.ММ.ГГГГ'],
+    ['license', 'Водительское удостоверение', '99 12 345678'],
+    ['issued', 'Выдано', 'ММ.ГГГГ'],
+  ]
+
+  return (
+    <div className="driver">
+      {scanning ? (
+        <div className="scan"><div className="scan-frame"><div className="scan-line" /></div><div className="muted">Наведите камеру на права</div></div>
+      ) : !checked && (
+        <>
+          <button type="button" className="btn-primary" onClick={scan}>Сфотографировать ВУ</button>
+          {!manual && <button type="button" className="link-back" onClick={() => setManual(true)}>Ввести вручную</button>}
+        </>
+      )}
+
+      {checked && <div className="avail ok">✓ Права проверены, стаж {stage} {plural(stage, 'год', 'года', 'лет')}</div>}
+
+      {showFields && !scanning && (
+        <div className="driver-fields">
+          {fields.map(([k, label, ph]) => (
+            <div key={k} className={`field ${errors[k] ? 'has-error' : ''}`}>
+              <label htmlFor={k}>{label}{driver.fromBank && (k === 'name' || k === 'birth') && <span className="from-bank">из банка</span>}</label>
+              <input id={k} placeholder={ph} value={driver[k]} onChange={(e) => set({ [k]: e.target.value })} />
+              {errors[k] && <div className="error">{errors[k]}</div>}
+            </div>
+          ))}
+        </div>
+      )}
+
+      {needDriver2 && (
+        <label className="extra"><input type="checkbox" checked={driver2} onChange={(e) => setDriver2(e.target.checked)} />
+          <span className="extra-name">Добавить второго водителя<span className="muted"> · права сфотографируем при получении</span></span></label>
+      )}
+
+      {showFields && !scanning && (checked ? needDriver2 : manual || driver.license) && <button type="button" className="btn-secondary" onClick={checked ? onOk : validate}>Продолжить</button>}
+    </div>
+  )
+}
+
+function E6({ result, onOpenBooking, onHome }) {
+  const car = cars.find((c) => c.id === result.carId)
+  const location = locations.find((l) => l.id === result.query.locationId)
+  const now = result.query.mode === 'now'
+  const chosen = extras.filter((x) => result.extraIds.includes(x.id))
+  const inCar = chosen.filter((x) => x.group === 'trip' || x.id === 'child-seat')
+
+  const [eta, setEta] = useState(location.etaMin + car.etaAdd)
+  useEffect(() => {
+    if (!now) return
+    const id = setInterval(() => setEta((m) => Math.max(1, m - 1)), 60000)
+    return () => clearInterval(id)
+  }, [now])
+
+  const q = result.query
+  const whenText = now ? `через ${eta} мин` : `${fmtDate(q.dateFrom)} ${q.timeFrom}`
+  const sms = `Машина ждёт вас: ${car.model}, ${location.name}, ${whenText}.${inCar.length ? ` ${inCar.map((x) => x.name.split(' — ')[0]).join(', ')} — уже внутри.` : ''} Всё о брони: rent.ru/b/${result.id}`
+
+  return (
+    <main className="e6">
+      <div className="e6-layout">
+        <div className="e6-main">
+          <svg className="e6-check" viewBox="0 0 52 52" aria-hidden="true">
+            <circle cx="26" cy="26" r="24" fill="none" />
+            <path d="M15 27l7 7 15-15" fill="none" />
+          </svg>
+          <div className="e6-head">
+            <h1>Машина ждёт вас</h1>
+            <div className="muted">Бронь {result.id}</div>
+            <p className="e6-when">{now ? `${car.model} — подадим через ${eta} мин` : `${car.model} — ${location.name}, ${fmtDate(q.dateFrom)}, ${q.timeFrom}`}</p>
+          </div>
+
+          <div className="e6-sms">
+            <div className="phone">
+              <div className="muted">SMS · сейчас</div>
+              <div className="bubble">{sms.split(`rent.ru/b/${result.id}`)[0]}
+                <button type="button" className="sms-link" onClick={onOpenBooking}>rent.ru/b/{result.id}</button></div>
+            </div>
+          </div>
+
+          <section className="e3-section">
+            <h2>Что дальше</h2>
+            <ol className="steps">
+              <li><b>Машина ждёт в точке</b><span>{location.name}{now ? `, через ${eta} мин` : `, ${fmtDate(q.dateFrom)} к ${q.timeFrom}`}</span></li>
+              <li><b>Осмотр и ключи — 10 минут</b><span>Фото машины и акт в телефоне, без офиса и очереди</span></li>
+              <li><b>Сразу в путь</b><span>Бак полный, допы уже в машине</span></li>
+            </ol>
+          </section>
+
+          <section className="e3-section">
+            <h2>Взять с собой</h2>
+            <p className="body-sm">Водительское удостоверение и карту, с которой платили, — на ней заблокируем депозит.</p>
+          </section>
+
+          <section className="e3-section">
+            <h2>Оплата</h2>
+            <dl className="bill">
+              <dt>Оплачено</dt><dd>{rub(result.paidNow)}</dd>
+              {result.rest > 0 && <><dt>При получении</dt><dd>{rub(result.rest)}</dd></>}
+              <dt className="muted">Депозит — заблокируем при получении</dt><dd className="muted">{rub(result.deposit)}</dd>
+            </dl>
+          </section>
+
+          {inCar.length > 0 && (
+            <section className="e3-section">
+              <h2>Что в машине</h2>
+              <ul className="in-car">{inCar.map((x) => <li key={x.id}>{x.name}</li>)}</ul>
+            </section>
+          )}
+
+          <div className="e6-actions">
+            <button className="btn-primary" onClick={onOpenBooking}>Открыть бронь</button>
+            <button className="btn-secondary" onClick={onHome}>На главную</button>
+          </div>
+        </div>
+      </div>
+    </main>
+  )
+}
+
+function BookingStub({ result, onBack }) {
+  const car = cars.find((c) => c.id === result.carId)
   return (
     <main className="stub">
-      <h1>Э4 в работе</h1>
-      <p className="muted">Э3 передал на оформление:</p>
+      <button className="link-back" onClick={onBack}>← Назад</button>
+      <h1>Моя бронь — скоро</h1>
       <dl>
-        <dt>Запрос</dt><dd>{summary(query)}</dd>
+        <dt>Бронь</dt><dd>{result.id}</dd>
         <dt>Машина</dt><dd>{car.model}</dd>
-        <dt>Допы</dt><dd>{chosen.length ? chosen.map((x) => x.name).join(', ') : '—'}</dd>
-        <dt>Итого</dt><dd>{rub(booking.total)}</dd>
+        <dt>Где и когда</dt><dd>{summary(result.query)}</dd>
+        <dt>Оплачено</dt><dd>{rub(result.paidNow)}</dd>
       </dl>
-      <button className="btn-secondary" onClick={onBack}>← Назад к машине</button>
+      <p className="muted">Здесь появятся:</p>
+      <ul className="body-sm">
+        <li>статус подачи и водитель</li>
+        <li>продление аренды</li>
+        <li>партнёры рядом: маршруты, скипасс, прокат снаряжения</li>
+      </ul>
     </main>
   )
 }
