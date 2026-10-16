@@ -28,11 +28,11 @@ export const locations = [
 ]
 
 export const locationGroups = [
-  { type: 'Аэропорт', label: 'Аэропорты', icon: '✈' },
-  { type: 'Вокзал', label: 'Вокзалы', icon: '🚆' },
-  { type: 'Отель', label: 'Отели', icon: '🏨' },
-  { type: 'Парковка', label: 'Парковки и центры проката', icon: 'P' },
-  { type: 'Адрес', label: 'К дому', icon: '⌂' },
+  { type: 'Аэропорт', label: 'Аэропорты' },
+  { type: 'Вокзал', label: 'Вокзалы' },
+  { type: 'Отель', label: 'Отели' },
+  { type: 'Парковка', label: 'Парковки и центры проката' },
+  { type: 'Адрес', label: 'К дому' },
 ]
 
 // stock: number — сколько осталось (null — всегда в наличии, 0 — разобрали)

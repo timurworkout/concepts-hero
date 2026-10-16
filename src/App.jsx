@@ -1,4 +1,5 @@
 import { Fragment, useEffect, useRef, useState } from 'react'
+import { createPortal } from 'react-dom'
 import { locations, locationGroups, cars, scenarios, rub, carDetails, rentTerms, cities, extras, plans, prefOptions, promises, faq } from './data.js'
 
 const carPhoto = (c, size = 'sm') => ({ backgroundImage: `url(${import.meta.env.BASE_URL}cars/${size}/${c.id}.webp)` })
@@ -124,8 +125,8 @@ function Header({ dark, user, favs, onHome, onFavs, onLogin, onProfile }) {
           <span className="header-label">Избранное{favs.length > 0 && ` · ${favs.length}`}</span>
         </button>
         <button className="header-btn" onClick={user ? onProfile : onLogin}>
-          <span className="avatar">{user ? user.phone.slice(-2) : '◯'}</span>
-          <span className="header-label">{user ? 'Моя бронь' : 'Войти'}</span>
+          <span className={`avatar ${user ? 'avatar-user' : ''}`}>{user ? user.phone.slice(-2) : '◯'}</span>
+          <span className="header-label">{user ? user.phone : 'Войти'}</span>
         </button>
       </nav>
     </header>
@@ -156,10 +157,11 @@ function Sheet({ className = '', onClose, children }) {
     window.addEventListener('keydown', onKey)
     return () => window.removeEventListener('keydown', onKey)
   }, [onClose])
-  return (
+  return createPortal(
     <div className="overlay" onClick={onClose}>
       <div className={`sheet ${className}`} role="dialog" aria-modal="true" onClick={(e) => e.stopPropagation()}>{children}</div>
-    </div>
+    </div>,
+    document.body
   )
 }
 
@@ -208,6 +210,24 @@ function LoginSheet({ onLogin, onClose }) {
 
 /* ---------- Выбор места ---------- */
 
+// Линейные иконки точек: штрих в тон тексту
+const placeIcons = {
+  'Аэропорт': <path d="M10.5 3.5c0-.8.7-1.5 1.5-1.5s1.5.7 1.5 1.5V9l7.5 4.5v2l-7.5-2.3v4.5l2.5 1.8v1.5L12 20l-4 1v-1.5l2.5-1.8v-4.5L3 15.5v-2L10.5 9z" />,
+  'Вокзал': <><rect x="5" y="3" width="14" height="13" rx="3" /><path d="M5 10h14M9 13h.01M15 13h.01M8 16l-2 4M16 16l2 4M7 19h10" /></>,
+  'Отель': <><path d="M3 19V5M3 15h18v4M21 15v-3a3 3 0 0 0-3-3h-7v6" /><circle cx="7" cy="11" r="2" /></>,
+  'Парковка': <><rect x="3.5" y="3.5" width="17" height="17" rx="4" /><path d="M10 17V7h3a3 3 0 0 1 0 6h-3" /></>,
+  'Адрес': <><path d="M4 11l8-7 8 7" /><path d="M6 9.5V20h12V9.5M10 20v-5h4v5" /></>,
+  'Город': <><path d="M3 21h18M5 21V8l6-3v16M11 21V10h8v11" /><path d="M8 10h.01M8 14h.01M15 14h.01M15 17h.01" /></>,
+}
+
+function PlaceIcon({ type }) {
+  return (
+    <svg className="place-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+      {placeIcons[type]}
+    </svg>
+  )
+}
+
 function PlacePicker({ query, group, onPick, onClose }) {
   const [cityId, setCityId] = useState(query.cityId)
   const [text, setText] = useState('')
@@ -221,7 +241,7 @@ function PlacePicker({ query, group, onPick, onClose }) {
   const items = t ? locations.filter((l) => `${l.name} ${cities[l.city].name}`.toLowerCase().includes(t)) : locations.filter((l) => l.city === cityId)
 
   return (
-    <Sheet className="sheet-full" onClose={onClose}>
+    <Sheet className="sheet-full sheet-modal" onClose={onClose}>
       <div className="picker-head">
         <button className="icon-btn" aria-label="Назад" onClick={onClose}>←</button>
         <h2>Выберите место получения</h2>
@@ -237,7 +257,7 @@ function PlacePicker({ query, group, onPick, onClose }) {
               <div className={`picker-group ${group === g.type ? 'active' : ''}`}>{g.label}</div>
               {list.map((l) => (
                 <button key={l.id} className="picker-item" onClick={() => onPick(l)}>
-                  <span className="picker-icon">{g.icon}</span>
+                  <span className="picker-icon"><PlaceIcon type={g.type} /></span>
                   <span>{l.name}{t && <span className="muted"> · {cities[l.city].name}</span>}
                     <span className="picker-meet">{l.meet}</span></span>
                 </button>
@@ -250,7 +270,7 @@ function PlacePicker({ query, group, onPick, onClose }) {
           <div className="picker-group">Россия</div>
           {Object.entries(cities).filter(([id]) => id !== cityId || t).map(([id, c]) => (
             <button key={id} className="picker-item" onClick={() => { setCityId(id); setText('') }}>
-              <span className="picker-icon">▦</span><span>{c.name}</span>
+              <span className="picker-icon"><PlaceIcon type="Город" /></span><span>{c.name}</span>
             </button>
           ))}
         </div>
@@ -348,6 +368,7 @@ function carDiff(prev, cur, q) {
 
 function SearchForm({ ref, query, setQuery, onSubmit, openPicker, layout = 'stack', submitLabel = 'Подобрать машину', submitDisabled, children }) {
   const [errors, setErrors] = useState({})
+  const [datesOpen, setDatesOpen] = useState(false)
   const location = locations.find((l) => l.id === query.locationId)
   const set = (patch) => { setQuery((q) => ({ ...q, ...patch })); setErrors({}) }
 
@@ -381,21 +402,19 @@ function SearchForm({ ref, query, setQuery, onSubmit, openPicker, layout = 'stac
 
         {query.mode === 'days' ? (
           <>
-            <label className={`field ${errors.dates ? 'has-error' : ''}`}>
+            <div className={`field ${errors.dates ? 'has-error' : ''}`}>
               <span className="field-label">Получение</span>
-              <span className="field-pair">
-                <input type="date" value={query.dateFrom} onChange={(e) => set({ dateFrom: e.target.value })} />
-                <input type="time" value={query.timeFrom} onChange={(e) => set({ timeFrom: e.target.value })} />
-              </span>
+              <button type="button" className="field-btn" onClick={() => setDatesOpen(true)}>
+                {query.dateFrom ? `${fmtDay(query.dateFrom)}, ${query.timeFrom}` : <span className="placeholder">Дата и время</span>}
+              </button>
               {errors.dates && <div className="error">{errors.dates}</div>}
-            </label>
-            <label className={`field ${errors.dates ? 'has-error' : ''}`}>
+            </div>
+            <div className={`field ${errors.dates ? 'has-error' : ''}`}>
               <span className="field-label">Возврат</span>
-              <span className="field-pair">
-                <input type="date" value={query.dateTo} min={query.dateFrom} onChange={(e) => set({ dateTo: e.target.value })} />
-                <input type="time" value={query.timeTo} onChange={(e) => set({ timeTo: e.target.value })} />
-              </span>
-            </label>
+              <button type="button" className="field-btn" onClick={() => setDatesOpen(true)}>
+                {query.dateTo ? `${fmtDay(query.dateTo)}, ${query.timeTo}` : <span className="placeholder">Дата и время</span>}
+              </button>
+            </div>
           </>
         ) : (
           <>
@@ -419,15 +438,79 @@ function SearchForm({ ref, query, setQuery, onSubmit, openPicker, layout = 'stac
 
       {children}
       {layout !== 'row' && <button type="submit" className="btn-primary" disabled={submitDisabled}>{submitLabel}</button>}
+      {datesOpen && <DatePicker query={query} onApply={(patch) => { set(patch); setDatesOpen(false) }} onClose={() => setDatesOpen(false)} />}
     </form>
+  )
+}
+
+/* ---------- Выбор дат ---------- */
+
+const isoDay = (d) => `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`
+const fmtDay = (iso) => new Date(`${iso}T00:00`).toLocaleDateString('ru-RU', { day: 'numeric', month: 'short' })
+const timeSlots = Array.from({ length: 48 }, (_, i) => `${String(Math.floor(i / 2)).padStart(2, '0')}:${i % 2 ? '30' : '00'}`)
+
+function DatePicker({ query, onApply, onClose }) {
+  const [from, setFrom] = useState(query.dateFrom)
+  const [to, setTo] = useState(query.dateTo)
+  const [timeFrom, setTimeFrom] = useState(query.timeFrom)
+  const [timeTo, setTimeTo] = useState(query.timeTo)
+  const today = isoDay(new Date())
+  const now = new Date()
+  const months = [0, 1, 2].map((i) => new Date(now.getFullYear(), now.getMonth() + i, 1))
+
+  // Первый клик — начало, второй — конец; клик раньше начала начинает заново
+  const pick = (d) => {
+    if (!from || to || d < from) { setFrom(d); setTo('') } else setTo(d)
+  }
+  const days = from && to ? Math.round((new Date(to) - new Date(from)) / 864e5) : 0
+
+  return (
+    <Sheet className="sheet-dates" onClose={onClose}>
+      <h2 className="dates-title">Выберите даты</h2>
+      <div className="dates-times">
+        <label className="dates-time"><span>Время получения</span>
+          <select value={timeFrom} onChange={(e) => setTimeFrom(e.target.value)}>{timeSlots.map((t) => <option key={t}>{t}</option>)}</select>
+        </label>
+        <label className="dates-time"><span>Время возврата</span>
+          <select value={timeTo} onChange={(e) => setTimeTo(e.target.value)}>{timeSlots.map((t) => <option key={t}>{t}</option>)}</select>
+        </label>
+      </div>
+      <div className="dates-scroll">
+        {months.map((m) => {
+          const lead = (m.getDay() + 6) % 7
+          const count = new Date(m.getFullYear(), m.getMonth() + 1, 0).getDate()
+          return (
+            <div key={m.getMonth()} className="month">
+              <div className="month-name">{m.toLocaleDateString('ru-RU', { month: 'long', year: 'numeric' }).replace(' г.', '')}</div>
+              <div className="month-grid">
+                {['Пн', 'Вт', 'Ср', 'Чт', 'Пт', 'Сб', 'Вс'].map((w) => <span key={w} className="wd">{w}</span>)}
+                {Array.from({ length: lead }, (_, i) => <span key={`e${i}`} />)}
+                {Array.from({ length: count }, (_, i) => {
+                  const d = isoDay(new Date(m.getFullYear(), m.getMonth(), i + 1))
+                  const edge = d === from || d === to
+                  const inRange = from && to && d > from && d < to
+                  const cls = ['day', d < today && 'past', d === today && 'today', inRange && 'in', edge && 'edge',
+                    from && to && d === from && 'start', from && to && d === to && 'end'].filter(Boolean).join(' ')
+                  return <button key={d} type="button" className={cls} disabled={d < today} onClick={() => pick(d)}>{i + 1}</button>
+                })}
+              </div>
+            </div>
+          )
+        })}
+      </div>
+      <div className="dates-foot">
+        <button type="button" className="btn-secondary" onClick={onClose}>Отмена</button>
+        <button type="button" className="btn-primary btn-accent" disabled={!days}
+          onClick={() => onApply({ dateFrom: from, dateTo: to, timeFrom, timeTo })}>
+          {days ? `Готово · ${days} ${plural(days, 'сутки', 'суток', 'суток')}` : 'Выберите возврат'}
+        </button>
+      </div>
+    </Sheet>
   )
 }
 
 /* ---------- Э1 Лендинг ---------- */
 
-const priceMin = Math.min(...cars.map((c) => c.pricePerDay))
-const priceMax = Math.max(...cars.map((c) => c.pricePerDay))
-const hourMin = Math.min(...cars.map((c) => c.pricePerHour))
 
 function Landing({ query, setQuery, fav, onSubmit, onPickCar, openPicker }) {
   const formRef = useRef(null)
@@ -454,12 +537,10 @@ function Landing({ query, setQuery, fav, onSubmit, onPickCar, openPicker }) {
   return (
     <main className="landing">
       <section className="hero">
-        <div className="hero-bg photo-car" style={carPhoto({ id: 'toyota-rav4' }, 'lg')} />
+        <div className="hero-bg" style={{ '--hero-d': `url(${import.meta.env.BASE_URL}hero/d.webp)`, '--hero-m': `url(${import.meta.env.BASE_URL}hero/m.webp)` }} />
         <div className="hero-inner">
-          <h1 className="hero-title">Машина под поездку {city.in}</h1>
-          <p className="hero-sub">Расскажите, что в планах, — подберём одну машину и объясним почему</p>
+          <h1 className="hero-title">Расскажите, что в планах, — подберём лучшую машину для твоей цели</h1>
           <SearchForm ref={formRef} layout="row" query={query} setQuery={setQuery} onSubmit={submit} openPicker={openPicker} />
-          <p className="hero-range">Машины от {rub(priceMin)} до {rub(priceMax)} в сутки · почасово от {rub(hourMin)}</p>
         </div>
       </section>
 
@@ -610,7 +691,7 @@ function WhereYouAre({ openPicker }) {
           const g = locationGroups.find((x) => x.type === type)
           return (
             <button key={type} className="where-tile" onClick={() => openPicker(type)}>
-              <span className="where-icon">{g.icon}</span>
+              <span className="where-icon"><PlaceIcon type={g.type} /></span>
               <b>{g.label}</b>
               <span className="muted">{whereCopy[type]}</span>
               <span className="where-go">Выбрать точку →</span>
