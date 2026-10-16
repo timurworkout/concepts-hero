@@ -1,14 +1,39 @@
 // Моки из project/mock-data.md
 
+// meet — где именно ждёт машина
 export const locations = [
-  { id: 'aer', name: 'Аэропорт Сочи (Адлер)', type: 'Аэропорт', etaMin: 20 },
-  { id: 'adler-rw', name: 'Вокзал Адлер', type: 'Вокзал', etaMin: 25 },
-  { id: 'sochi-rw', name: 'Вокзал Сочи', type: 'Вокзал', etaMin: 35 },
-  { id: 'rosa', name: 'Красная Поляна, Роза Хутор', type: 'Отель', etaMin: 50 },
-  { id: 'center', name: 'Сочи, центр', type: 'Адрес', etaMin: 30 },
+  { id: 'aer', city: 'sochi', name: 'Аэропорт Сочи (Адлер)', type: 'Аэропорт', etaMin: 20, meet: 'Парковка P1 у терминала, 2-й ряд. Сотрудник ждёт с табличкой' },
+  { id: 'adler-rw', city: 'sochi', name: 'Вокзал Адлер', type: 'Вокзал', etaMin: 25, meet: 'Парковка у главного входа, справа от такси' },
+  { id: 'sochi-rw', city: 'sochi', name: 'Вокзал Сочи', type: 'Вокзал', etaMin: 35, meet: 'Привокзальная площадь, парковка у часов' },
+  { id: 'rosa', city: 'sochi', name: 'Красная Поляна, Роза Хутор', type: 'Отель', etaMin: 50, meet: 'У входа в ваш отель — напишем номер машины в SMS' },
+  { id: 'adler-hotel', city: 'sochi', name: 'Ваш отель в Адлере или Сочи', type: 'Отель', etaMin: 40, meet: 'У входа в отель — договоримся с ресепшеном о парковке' },
+  { id: 'sochi-park', city: 'sochi', name: 'Центр проката у Морпорта', type: 'Парковка', etaMin: 0, meet: 'Наш офис на парковке Морпорта, работаем 8:00–23:00' },
+  { id: 'center', city: 'sochi', name: 'Сочи: к вашему адресу', type: 'Адрес', etaMin: 30, meet: 'К подъезду по адресу, который укажете' },
+  { id: 'spb-led', city: 'spb', name: 'Аэропорт Пулково', type: 'Аэропорт', etaMin: 25, meet: 'Парковка P2, 1-й уровень. Сотрудник ждёт с табличкой' },
+  { id: 'spb-rw', city: 'spb', name: 'Московский вокзал', type: 'Вокзал', etaMin: 30, meet: 'Парковка со стороны Гончарной улицы' },
+  { id: 'spb-park', city: 'spb', name: 'Центр проката на Петроградской', type: 'Парковка', etaMin: 0, meet: 'Наш офис во дворе, вход с Большого проспекта' },
+  { id: 'spb-north', city: 'spb', name: 'Петербург: у вашего дома', type: 'Адрес', etaMin: 40, meet: 'К подъезду по адресу, который укажете' },
+  { id: 'msk-svo', city: 'msk', name: 'Аэропорт Шереметьево', type: 'Аэропорт', etaMin: 30, meet: 'Парковка P1 у терминала B. Сотрудник ждёт с табличкой' },
+  { id: 'msk-rw', city: 'msk', name: 'Ленинградский вокзал', type: 'Вокзал', etaMin: 35, meet: 'Парковка на Комсомольской площади' },
+  { id: 'msk-hotel', city: 'msk', name: 'Ваш отель в Москве', type: 'Отель', etaMin: 40, meet: 'У входа в отель — номер машины пришлём в SMS' },
+  { id: 'msk-park', city: 'msk', name: 'Центр проката у Белорусской', type: 'Парковка', etaMin: 0, meet: 'Подземный паркинг, −1 этаж, места 101–120' },
+  { id: 'msk-home', city: 'msk', name: 'Москва: у вашего дома', type: 'Адрес', etaMin: 45, meet: 'К подъезду по адресу, который укажете' },
+  { id: 'kgd', city: 'kgd', name: 'Аэропорт Калининграда (Храброво)', type: 'Аэропорт', etaMin: 20, meet: 'Парковка у терминала, 1-й ряд' },
+  { id: 'kgd-home', city: 'kgd', name: 'Калининград: к вашему адресу', type: 'Адрес', etaMin: 35, meet: 'К подъезду по адресу, который укажете' },
+  { id: 'mmk', city: 'mmk', name: 'Аэропорт Мурманска', type: 'Аэропорт', etaMin: 20, meet: 'Парковка у терминала — машина уже прогрета' },
+  { id: 'mmk-home', city: 'mmk', name: 'Мурманск: к вашему адресу', type: 'Адрес', etaMin: 35, meet: 'К подъезду — машина приедет прогретой' },
+  { id: 'kzn-rw', city: 'kzn', name: 'Вокзал Казани', type: 'Вокзал', etaMin: 25, meet: 'Парковка у главного входа' },
+  { id: 'kzn-air', city: 'kzn', name: 'Аэропорт Казани', type: 'Аэропорт', etaMin: 25, meet: 'Парковка P1 у терминала 1A' },
+  { id: 'kzn-home', city: 'kzn', name: 'Казань: к вашему адресу', type: 'Адрес', etaMin: 35, meet: 'К подъезду по адресу, который укажете' },
 ]
 
-export const locationGroups = ['Аэропорт', 'Вокзал', 'Отель', 'Адрес']
+export const locationGroups = [
+  { type: 'Аэропорт', label: 'Аэропорты', icon: '✈' },
+  { type: 'Вокзал', label: 'Вокзалы', icon: '🚆' },
+  { type: 'Отель', label: 'Отели', icon: '🏨' },
+  { type: 'Парковка', label: 'Парковки и центры проката', icon: 'P' },
+  { type: 'Адрес', label: 'К дому', icon: '⌂' },
+]
 
 // stock: number — сколько осталось (null — всегда в наличии, 0 — разобрали)
 // etaAdd — добавка к времени подачи локации в режиме «сейчас», мин
@@ -39,9 +64,29 @@ export const carDetails = {
 export const rentTerms = {
   mileage: '300 км в сутки, сверх — 10 ₽/км',
   driver: 'от 21 года, стаж от 2 лет',
-  regions: 'Краснодарский край и Адыгея; в Абхазию — с доверенностью, 1 000 ₽',
-  dropoff: 'возврат в другой точке Сочи — бесплатно',
-  insurance: 'ОСАГО и КАСКО с франшизой 30 000 ₽',
+  fuel: 'Верните с тем же уровнем топлива, что получили, — или вычтем из депозита по цене АЗС',
+  insurance: 'ОСАГО и КАСКО. Если повредите машину, заплатите не больше 30 000 ₽ — остальное покроет страховка. С полной страховкой — 0 ₽',
+}
+
+// Условия и маршруты по городу подачи (допущение). routes: null — маршруты машины (Сочи)
+export const cities = {
+  sochi: { name: 'Сочи', in: 'в Сочи', regions: 'Краснодарский край и Адыгея; в Абхазию — с доверенностью, 1 000 ₽',
+    dropoff: 'возврат в другой точке Сочи — бесплатно', routes: null },
+  spb: { name: 'Петербург', in: 'в Петербурге', regions: 'Ленинградская область и Карелия',
+    dropoff: 'возврат у дома или в любой точке Петербурга — бесплатно',
+    routes: ['Выборг и Монрепо', 'Карелия: Рускеала и Сортавала', 'Финский залив: Зеленогорск'] },
+  msk: { name: 'Москва', in: 'в Москве', regions: 'Московская, Владимирская, Ярославская и Тверская области',
+    dropoff: 'возврат у дома или в любой точке Москвы — бесплатно',
+    routes: ['На дачу', 'Суздаль и Владимир', 'Переславль и Ростов Великий'] },
+  kgd: { name: 'Калининград', in: 'в Калининграде', regions: 'Калининградская область',
+    dropoff: 'возврат в аэропорту или в Калининграде — бесплатно',
+    routes: ['Куршская коса', 'Зеленоградск и Светлогорск', 'Балтийск'] },
+  mmk: { name: 'Мурманск', in: 'в Мурманске', regions: 'Мурманская область',
+    dropoff: 'возврат в аэропорту или в Мурманске — бесплатно',
+    routes: ['Териберка', 'Хибины и Кировск', 'Охота за северным сиянием'] },
+  kzn: { name: 'Казань', in: 'в Казани', regions: 'Татарстан, Марий Эл и Чувашия',
+    dropoff: 'возврат на вокзале или в аэропорту Казани — бесплатно',
+    routes: ['Свияжск', 'Раифский монастырь', 'Йошкар-Ола'] },
 }
 
 // per: 'day' — за сутки, 'once' — за аренду
@@ -49,13 +94,16 @@ export const extras = [
   { id: 'child-seat', group: 'car', name: 'Детское кресло', price: 300, per: 'day' },
   { id: 'driver2', group: 'car', name: 'Второй водитель', price: 500, per: 'once' },
   { id: 'full-ins', group: 'car', name: 'Полная страховка без франшизы', price: 900, per: 'day' },
-  { id: 'delivery', group: 'car', name: 'Доставка к отелю', price: 1500, per: 'once' },
+  { id: 'delivery', group: 'calc', name: 'Доставка к адресу', price: 1500, per: 'once' },
+  { id: 'unlimited', group: 'calc', name: 'Безлимитный пробег', price: 700, per: 'day' },
   { id: 'box', group: 'trip', name: 'Бокс на крышу', price: 600, per: 'day' },
   { id: 'ski-rack', group: 'trip', name: 'Крепление для лыж / сноуборда', price: 400, per: 'day' },
   { id: 'bike-rack', group: 'trip', name: 'Крепление для велосипеда', price: 400, per: 'day' },
   { id: 'skis', group: 'trip', name: 'Лыжи или сноуборд — уже в машине', note: 'прокат «Горки»', price: 2000, per: 'day' },
   { id: 'sup', group: 'trip', name: 'Сап — уже в машине', note: 'прокат «Волна»', price: 1500, per: 'day' },
   { id: 'skipass', group: 'trip', name: 'Скипасс Роза Хутор', note: 'Роза Хутор', price: 4500, per: 'day' },
+  { id: 'grill', group: 'trip', name: 'Мангал и набор для шашлыка', price: 700, per: 'once' },
+  { id: 'tent', group: 'trip', name: 'Палатка и коврики', price: 800, per: 'day' },
   { id: 'route-ritsa', group: 'trip', name: 'Маршрут «Озеро Рица и Абхазия»', note: 'свой гайд', price: 0, per: 'once' },
 ]
 
@@ -161,46 +209,101 @@ export const scenarios = [
     carIds: ['tank-300', 'jetour-t2', 'changan-hunter-plus', 'haval-h9'] },
 ]
 
-export const offers = [
-  {
-    id: 'ski',
-    title: 'Горнолыжка в Красной Поляне',
-    locationId: 'aer',
-    route: 'Аэропорт Сочи → Роза Хутор',
-    car: 'Haval F7 4×4',
-    carId: 'haval-f7',
-    scenarioId: 'mountains',
-    includes: ['бокс', 'лыжи в машине', 'скипасс'],
-    extraIds: ['box', 'skis', 'skipass'],
-    chip: 'Горнолыжка: бокс + лыжи + скипасс',
-    priceFrom: '6 400 ₽/сутки + скипасс',
-  },
-  {
-    id: 'sea',
-    title: 'Море и побережье',
-    locationId: 'aer',
-    route: 'Аэропорт Сочи',
-    car: 'Jaecoo J7',
-    carId: 'jaecoo-j7',
-    scenarioId: 'city',
-    includes: ['сап в машине', 'маршрут по побережью'],
-    extraIds: ['sup'],
-    chip: 'Море: сап + маршрут',
-    priceFrom: '5 700 ₽/сутки',
-  },
-  {
-    id: 'weekend',
-    title: 'Выходные: Рица и Абхазия',
-    locationId: 'adler-rw',
-    route: 'Вокзал Адлер',
-    car: 'LADA Vesta',
-    carId: 'lada-vesta',
-    scenarioId: 'city',
-    includes: ['маршрут «Озеро Рица и Абхазия»'],
-    extraIds: ['route-ritsa'],
-    chip: 'Выходные: маршрут Рица',
-    priceFrom: '2 900 ₽/сутки',
-  },
+// Характеристики для подбора и карточки (оценка): коробка, мотор, топливо, цена за час
+const manual = ['lada-granta-se', 'lada-granta-lb', 'lada-granta-cross', 'lada-largus', 'lada-largus-furgon', 'lada-vesta-sw']
+const diesel = ['haval-h9', 'changan-hunter-plus']
+for (const c of cars) {
+  const d = carDetails[c.id]
+  const hybrid = d.fuel.startsWith('гибрид')
+  c.clearance = parseInt(d.clearance)
+  c.range = parseInt(d.range)
+  c.fuelUse = hybrid ? 0 : parseFloat(d.fuel.replace(',', '.'))
+  c.gearbox = manual.includes(c.id) ? 'механика' : 'автомат'
+  c.fuelType = hybrid ? 'гибрид' : diesel.includes(c.id) ? 'дизель' : 'бензин'
+  c.engine = hybrid ? '1,5 л + электромотор' : c.pricePerDay < 3000 ? '1,6 л, 106 л. с.' : c.pricePerDay < 4000 ? '1,5 л турбо, 147 л. с.'
+    : c.pricePerDay < 5500 ? '2,0 л, 150–190 л. с.' : '2,0 л турбо, от 200 л. с.'
+  c.pricePerHour = Math.round(c.pricePerDay / 6 / 10) * 10
+}
+
+// Планы поездки на лендинге. level — строгость: при нескольких планах подбор идёт по самому строгому
+// test — какие машины подходят; cities — где показываем (нет — везде); local — «вы могли не знать»
+const awd = (c) => c.drive === 'полный'
+const cityCar = (c) => ['Седан', 'Кроссовер'].includes(c.kind) && c.fuelUse <= 8
+export const plans = [
+  { id: 'mountains', label: 'В горы', hint: 'Полный привод и клиренс от 180 мм, зимой шипы', level: 3, cities: ['sochi', 'mmk'],
+    test: (c) => awd(c) && c.clearance >= 180 },
+  { id: 'sea', label: 'На море', hint: 'Багажник под пляжные вещи, экономичный расход', level: 1, cities: ['sochi', 'kgd'],
+    test: (c) => c.trunk >= 420 && c.kind !== 'Фургон' && c.fuelUse <= 8, extraIds: ['sup'] },
+  { id: 'city', label: 'Покатать по городу', hint: 'Компактная, расход до 8 л, легко парковаться', level: 1, test: cityCar },
+  { id: 'dacha', label: 'На дачу', hint: 'Вместительный багажник и клиренс для грунтовки на последних километрах', level: 2, cities: ['msk', 'spb'],
+    test: (c) => c.trunk >= 480 && c.clearance >= 175, extraIds: ['grill'] },
+  { id: 'business', label: 'Деловая поездка', hint: 'Седан бизнес-класса, без оклейки', level: 1.5, test: (c) => c.kind === 'Седан' && c.pricePerDay >= 3600 },
+  { id: 'highway', label: 'По трассам', hint: 'Автомат, запас хода от 650 км, мотор от 147 л. с.', level: 1.5,
+    test: (c) => c.gearbox === 'автомат' && c.range >= 650 && c.pricePerDay >= 3500 && c.kind !== 'Фургон' },
+
+  { id: 'sochi-ski', city: 'sochi', local: true, label: 'Горнолыжка в Красной Поляне', hint: 'Лыжи и бокс уже в машине, полный привод на шипах', level: 3.5,
+    test: (c) => awd(c) && c.clearance >= 190, extraIds: ['box', 'skis'] },
+  { id: 'sochi-ritsa', city: 'sochi', local: true, label: 'Абхазия, озеро Рица', hint: 'Оформим доверенность на выезд, маршрут в подарок', level: 2,
+    test: (c) => c.clearance >= 170 && c.kind !== 'Фургон', extraIds: ['route-ritsa'] },
+  { id: 'sochi-lagonaki', city: 'sochi', local: true, label: 'Плато Лаго-Наки', hint: 'Грунтовка на подъёме — полный привод и клиренс от 200 мм', level: 4,
+    test: (c) => awd(c) && c.clearance >= 200 },
+  { id: 'spb-karelia', city: 'spb', local: true, label: 'Карелия, Рускеала', hint: '280 км и грунтовки — клиренс от 190 мм, запас хода от 600 км', level: 3,
+    test: (c) => c.clearance >= 190 && c.range >= 600 },
+  { id: 'spb-vyborg', city: 'spb', local: true, label: 'Выборг на выходные', hint: '140 км по трассе — экономичная и с автоматом', level: 1,
+    test: (c) => cityCar(c) && c.gearbox === 'автомат' },
+  { id: 'spb-ladoga', city: 'spb', local: true, label: 'Ладога с палаткой', hint: 'Палатка, коврики и мангал уже в машине', level: 2,
+    test: (c) => c.trunk >= 480 && c.clearance >= 180, extraIds: ['tent', 'grill'] },
+  { id: 'msk-ring', city: 'msk', local: true, label: 'Золотое кольцо за выходные', hint: '600+ км — расход до 8 л и запас хода от 650 км', level: 1.5,
+    test: (c) => c.fuelUse > 0 && c.fuelUse <= 8 && c.range >= 650 },
+  { id: 'msk-yakhroma', city: 'msk', local: true, label: 'Горнолыжка в Яхроме', hint: 'Бокс и крепление для лыж, клиренс от 180 мм', level: 2,
+    test: (c) => c.clearance >= 180 && c.kind !== 'Фургон', extraIds: ['box', 'ski-rack'] },
+  { id: 'msk-ikea', city: 'msk', local: true, label: 'Дача, рассада и IKEA', hint: 'Универсал или фургон — багажник от 560 л', level: 2,
+    test: (c) => c.trunk >= 560 },
+  { id: 'kgd-spit', city: 'kgd', local: true, label: 'Куршская коса', hint: 'Экосбор за въезд оплатим заранее — без очереди на КПП', level: 1, test: cityCar },
+  { id: 'kgd-castles', city: 'kgd', local: true, label: 'Замки Пруссии', hint: 'Грунтовки к руинам — клиренс от 190 мм', level: 2,
+    test: (c) => c.clearance >= 190 },
+  { id: 'kgd-coast', city: 'kgd', local: true, label: 'Светлогорск и Зеленоградск', hint: 'Крепление для велосипеда — катайтесь по променаду', level: 1,
+    test: cityCar, extraIds: ['bike-rack'] },
+  { id: 'mmk-teriberka', city: 'mmk', local: true, label: 'Териберка', hint: 'Снег и сопки — только полный привод на шипах и клиренс от 200 мм', level: 4,
+    test: (c) => awd(c) && c.clearance >= 200 },
+  { id: 'mmk-aurora', city: 'mmk', local: true, label: 'Охота за северным сиянием', hint: 'Ночью в тундру — полный привод и запас хода от 600 км', level: 3,
+    test: (c) => awd(c) && c.range >= 600 },
+  { id: 'mmk-khibiny', city: 'mmk', local: true, label: 'Хибины, Кировск', hint: 'Горнолыжка — крепление для лыж и полный привод', level: 3,
+    test: awd, extraIds: ['ski-rack'] },
+  { id: 'kzn-sviyazhsk', city: 'kzn', local: true, label: 'Свияжск и Иннополис', hint: 'Остров-град и город будущего за один день', level: 1, test: cityCar },
+  { id: 'kzn-raifa', city: 'kzn', local: true, label: 'Раифский монастырь', hint: 'Лес и озеро в 30 км — лёгкая грунтовка на парковке', level: 1,
+    test: (c) => c.clearance >= 170 && cityCar(c) },
+  { id: 'kzn-bolgar', city: 'kzn', local: true, label: 'Болгар', hint: '200 км по трассе — автомат и запас хода от 650 км', level: 1.5,
+    test: (c) => c.gearbox === 'автомат' && c.range >= 650 && c.kind !== 'Фургон' },
+]
+
+// Переключатели на Э2
+export const prefOptions = [
+  { id: 'awd', label: 'Полный привод', test: awd },
+  { id: 'auto', label: 'Автомат', test: (c) => c.gearbox === 'автомат' },
+  { id: 'seats7', label: 'Нас больше 5', test: (c) => c.seats >= 7 },
+  { id: 'bigTrunk', label: 'Много багажа', test: (c) => c.trunk >= 560 },
+  { id: 'premium', label: 'Классом повыше', test: (c) => c.pricePerDay >= 5500 },
+]
+
+export const promises = [
+  { title: 'Машина проверена', text: 'Перед каждой арендой — мойка, осмотр и фото. Никаких «ведёр с гайками»' },
+  { title: '10 минут на выдачу', text: 'Документы — заранее онлайн. На месте только осмотр и ключи' },
+  { title: 'Залог — блокировка на карте', text: 'Не списываем и не берём наличными. Вернём в день возврата машины' },
+  { title: 'Поддержка 24/7', text: 'Сломалась — привезём подменную машину туда, где вы' },
+]
+
+export const faq = [
+  { q: 'А если подобранная машина мне не нравится?',
+    a: 'Переключите параметры под машиной — «полный привод», «автомат», «классом повыше». Подбор пересоберётся, и мы покажем, что стало лучше, что хуже и сколько это стоит.' },
+  { q: 'А если я сам знаю, какую машину хочу?',
+    a: 'Нажмите на неё в блоке «Парк» — откроется карточка с ценой за ваши даты. Понравившиеся машины сохраняйте сердечком, чтобы быстро вернуться.' },
+  { q: 'Откуда вы знаете, что мне нужно?',
+    a: 'Мы не гадаем — мы спрашиваем цель. Серпантин — значит, нужен клиренс, Карелия — запас хода. На экране подбора видно, что именно мы учли.' },
+  { q: 'Что, если машина окажется в плохом состоянии?',
+    a: 'Каждая машина проходит мойку и осмотр перед арендой. Если на месте что-то не так — заменим машину или вернём деньги.' },
+  { q: 'Как вернуть залог и не спорить о царапинах?',
+    a: 'При получении фотографируем машину вместе с вами, акт приходит в телефон. Залог — блокировка на карте, снимаем её в день возврата.' },
 ]
 
 export const rub = (n) => n.toLocaleString('ru-RU') + ' ₽'
