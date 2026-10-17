@@ -225,7 +225,7 @@ for (const c of cars) {
   c.pricePerHour = Math.round(c.pricePerDay / 6 / 10) * 10
 }
 
-// Планы поездки на лендинге. level — строгость: при нескольких планах подбор идёт по самому строгому
+// Планы поездки. Базовые (без local) — основная цель, одна; local — уточнения «куда», до двух
 // test — какие машины подходят; cities — где показываем (нет — везде); local — «вы могли не знать»
 const awd = (c) => c.drive === 'полный'
 const cityCar = (c) => ['Седан', 'Кроссовер'].includes(c.kind) && c.fuelUse <= 8
@@ -241,12 +241,19 @@ export const plans = [
   { id: 'highway', label: 'По трассам', hint: 'Автомат, запас хода от 650 км, мотор от 147 л. с.', level: 1.5,
     test: (c) => c.gearbox === 'автомат' && c.range >= 650 && c.pricePerDay >= 3500 && c.kind !== 'Фургон' },
 
-  { id: 'sochi-ski', city: 'sochi', local: true, label: 'Горнолыжка в Красной Поляне', hint: 'Лыжи и бокс уже в машине, полный привод на шипах', level: 3.5,
+  { id: 'sochi-ski', goal: 'mountains', city: 'sochi', local: true, label: 'Горнолыжка в Красной Поляне', hint: 'Лыжи и бокс уже в машине, полный привод на шипах', level: 3.5,
     test: (c) => awd(c) && c.clearance >= 190, extraIds: ['box', 'skis'] },
-  { id: 'sochi-ritsa', city: 'sochi', local: true, label: 'Абхазия, озеро Рица', hint: 'Оформим доверенность на выезд, маршрут в подарок', level: 2,
+  { id: 'sochi-ritsa', goal: 'mountains', city: 'sochi', local: true, label: 'Абхазия, озеро Рица', hint: 'Оформим доверенность на выезд, маршрут в подарок', level: 2,
     test: (c) => c.clearance >= 170 && c.kind !== 'Фургон', extraIds: ['route-ritsa'] },
-  { id: 'sochi-lagonaki', city: 'sochi', local: true, label: 'Плато Лаго-Наки', hint: 'Грунтовка на подъёме — полный привод и клиренс от 200 мм', level: 4,
+  { id: 'sochi-lagonaki', goal: 'mountains', city: 'sochi', local: true, label: 'Плато Лаго-Наки', hint: 'Грунтовка на подъёме — полный привод и клиренс от 200 мм', level: 4,
     test: (c) => awd(c) && c.clearance >= 200 },
+  { id: 'sochi-imereti', goal: 'sea', city: 'sochi', local: true, label: 'Имеретинская набережная', hint: 'Парковка у пляжа и багажник под зонт и шезлонги', level: 1, test: cityCar },
+  { id: 'sochi-gagra', goal: 'sea', city: 'sochi', local: true, label: 'Гагра и Пицунда', hint: 'Оформим доверенность на выезд в Абхазию', level: 1.5,
+    test: (c) => c.kind !== 'Фургон' && c.fuelUse <= 8 },
+  { id: 'sochi-lazarevskoe', goal: 'sea', city: 'sochi', local: true, label: 'Лазаревское', hint: '70 км по серпантину — автомат и экономичный расход', level: 1.5,
+    test: (c) => c.gearbox === 'автомат' && c.fuelUse <= 8 },
+  { id: 'sochi-dzhubga', goal: 'sea', city: 'sochi', local: true, label: 'Джубга и Ольгинка', hint: '150 км вдоль побережья — запас хода от 600 км', level: 1.5,
+    test: (c) => c.range >= 600 },
   { id: 'spb-karelia', city: 'spb', local: true, label: 'Карелия, Рускеала', hint: '280 км и грунтовки — клиренс от 190 мм, запас хода от 600 км', level: 3,
     test: (c) => c.clearance >= 190 && c.range >= 600 },
   { id: 'spb-vyborg', city: 'spb', local: true, label: 'Выборг на выходные', hint: '140 км по трассе — экономичная и с автоматом', level: 1,
@@ -259,16 +266,17 @@ export const plans = [
     test: (c) => c.clearance >= 180 && c.kind !== 'Фургон', extraIds: ['box', 'ski-rack'] },
   { id: 'msk-ikea', city: 'msk', local: true, label: 'Дача, рассада и IKEA', hint: 'Универсал или фургон — багажник от 560 л', level: 2,
     test: (c) => c.trunk >= 560 },
-  { id: 'kgd-spit', city: 'kgd', local: true, label: 'Куршская коса', hint: 'Экосбор за въезд оплатим заранее — без очереди на КПП', level: 1, test: cityCar },
+  { id: 'kgd-spit', goal: 'sea', city: 'kgd', local: true, label: 'Куршская коса', hint: 'Экосбор за въезд оплатим заранее — без очереди на КПП', level: 1, test: cityCar },
   { id: 'kgd-castles', city: 'kgd', local: true, label: 'Замки Пруссии', hint: 'Грунтовки к руинам — клиренс от 190 мм', level: 2,
     test: (c) => c.clearance >= 190 },
-  { id: 'kgd-coast', city: 'kgd', local: true, label: 'Светлогорск и Зеленоградск', hint: 'Крепление для велосипеда — катайтесь по променаду', level: 1,
+  { id: 'kgd-coast', goal: 'sea', city: 'kgd', local: true, label: 'Светлогорск и Зеленоградск', hint: 'Крепление для велосипеда — катайтесь по променаду', level: 1,
     test: cityCar, extraIds: ['bike-rack'] },
-  { id: 'mmk-teriberka', city: 'mmk', local: true, label: 'Териберка', hint: 'Снег и сопки — только полный привод на шипах и клиренс от 200 мм', level: 4,
+  { id: 'kgd-yantarny', goal: 'sea', city: 'kgd', local: true, label: 'Пляж в Янтарном', hint: 'Широкий пляж и сосны — багажник под пляжные вещи', level: 1, test: cityCar },
+  { id: 'mmk-teriberka', goal: 'mountains', city: 'mmk', local: true, label: 'Териберка', hint: 'Снег и сопки — только полный привод на шипах и клиренс от 200 мм', level: 4,
     test: (c) => awd(c) && c.clearance >= 200 },
   { id: 'mmk-aurora', city: 'mmk', local: true, label: 'Охота за северным сиянием', hint: 'Ночью в тундру — полный привод и запас хода от 600 км', level: 3,
     test: (c) => awd(c) && c.range >= 600 },
-  { id: 'mmk-khibiny', city: 'mmk', local: true, label: 'Хибины, Кировск', hint: 'Горнолыжка — крепление для лыж и полный привод', level: 3,
+  { id: 'mmk-khibiny', goal: 'mountains', city: 'mmk', local: true, label: 'Хибины, Кировск', hint: 'Горнолыжка — крепление для лыж и полный привод', level: 3,
     test: awd, extraIds: ['ski-rack'] },
   { id: 'kzn-sviyazhsk', city: 'kzn', local: true, label: 'Свияжск и Иннополис', hint: 'Остров-град и город будущего за один день', level: 1, test: cityCar },
   { id: 'kzn-raifa', city: 'kzn', local: true, label: 'Раифский монастырь', hint: 'Лес и озеро в 30 км — лёгкая грунтовка на парковке', level: 1,
@@ -277,11 +285,18 @@ export const plans = [
     test: (c) => c.gearbox === 'автомат' && c.range >= 650 && c.kind !== 'Фургон' },
 ]
 
-// Переключатели на Э2
+// С кем едем на Э2 — мягкое уточнение подбора
+export const companions = [
+  { id: 'two', label: 'Для двоих', hint: 'вдвоём хватит компактной', test: (c) => c.seats <= 5 && c.pricePerDay <= 5000 },
+  { id: 'family', label: 'Семьёй', hint: 'семья с вещами — багажник от 480 л', test: (c) => c.trunk >= 480 && c.kind !== 'Пикап' },
+  { id: 'friends', label: 'С друзьями', hint: 'компания — от 5 мест и места под сумки', test: (c) => c.trunk >= 450 && c.kind !== 'Пикап' },
+]
+
+// Теги «Авто» на Э2 — жёсткие фильтры
 export const prefOptions = [
-  { id: 'awd', label: 'Полный привод', test: awd },
+  { id: 'awd', label: '4×4', test: awd },
   { id: 'auto', label: 'Автомат', test: (c) => c.gearbox === 'автомат' },
-  { id: 'seats7', label: 'Нас больше 5', test: (c) => c.seats >= 7 },
+  { id: 'seats7', label: '6+ мест', test: (c) => c.seats >= 6 },
   { id: 'bigTrunk', label: 'Много багажа', test: (c) => c.trunk >= 560 },
   { id: 'premium', label: 'Классом повыше', test: (c) => c.pricePerDay >= 5500 },
 ]
@@ -295,7 +310,7 @@ export const promises = [
 
 export const faq = [
   { q: 'А если подобранная машина мне не нравится?',
-    a: 'Переключите параметры под машиной — «полный привод», «автомат», «классом повыше». Подбор пересоберётся, и мы покажем, что стало лучше, что хуже и сколько это стоит.' },
+    a: 'Отметьте, что важно, в тегах «Авто» — «4×4», «автомат», «классом повыше» — или возьмите одну из альтернатив под машиной. Покажем, что стало лучше, что хуже и сколько это стоит.' },
   { q: 'А если я сам знаю, какую машину хочу?',
     a: 'Нажмите на неё в блоке «Парк» — откроется карточка с ценой за ваши даты. Понравившиеся машины сохраняйте сердечком, чтобы быстро вернуться.' },
   { q: 'Откуда вы знаете, что мне нужно?',

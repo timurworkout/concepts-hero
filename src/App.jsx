@@ -1,6 +1,6 @@
 import { Fragment, useEffect, useRef, useState } from 'react'
 import { createPortal } from 'react-dom'
-import { locations, locationGroups, cars, scenarios, rub, carDetails, rentTerms, cities, extras, plans, prefOptions, promises, faq } from './data.js'
+import { locations, locationGroups, cars, scenarios, rub, carDetails, rentTerms, cities, extras, plans, prefOptions, companions, promises, faq } from './data.js'
 
 const carPhoto = (c, size = 'sm') => ({ backgroundImage: `url(${import.meta.env.BASE_URL}cars/${size}/${c.id}.webp)` })
 
@@ -14,7 +14,8 @@ const emptyQuery = {
   timeTo: '12:00',
   start: 'now', // почасово: 'now' | 'HH:MM' сегодня
   hours: 4,
-  planIds: [],
+  planIds: [], // одна базовая цель + до двух local-уточнений
+  companion: '', // с кем едем: two | family | friends
   prefs: [], // переключатели Э2
   extraIds: [], // допы живут в запросе — переживают смену машины
   address: '',
@@ -218,6 +219,7 @@ const placeIcons = {
   'Парковка': <><rect x="3.5" y="3.5" width="17" height="17" rx="4" /><path d="M10 17V7h3a3 3 0 0 1 0 6h-3" /></>,
   'Адрес': <><path d="M4 11l8-7 8 7" /><path d="M6 9.5V20h12V9.5M10 20v-5h4v5" /></>,
   'Город': <><path d="M3 21h18M5 21V8l6-3v16M11 21V10h8v11" /><path d="M8 10h.01M8 14h.01M15 14h.01M15 17h.01" /></>,
+  'Даты': <><rect x="3.5" y="5" width="17" height="15" rx="3" /><path d="M3.5 10h17M8 3v4M16 3v4" /></>,
 }
 
 function PlaceIcon({ type }) {
@@ -340,14 +342,39 @@ function hourSlots() {
 
 const cityPlans = (cityId) => plans.filter((p) => (p.city ? p.city === cityId : !p.cities || p.cities.includes(cityId)))
 
-// Оптимальная машина: подходит под самый строгий план и переключатели, из подходящих — самая выгодная
+// Одна базовая цель (взаимоисключающие) + до двух уточнений «куда»
+function togglePlanIds(ids, id) {
+  const byId = (x) => plans.find((p) => p.id === x)
+  const isLocal = (x) => byId(x)?.local
+  // снимаем цель — уходят и её подсказки
+  if (ids.includes(id)) return ids.filter((x) => x !== id && byId(x)?.goal !== id)
+  if (!isLocal(id)) return [...ids.filter((x) => isLocal(x) && (!byId(x).goal || byId(x).goal === id)), id]
+  const places = ids.filter(isLocal)
+  const drop = places.length >= 2 ? places[0] : null // третье уточнение вытесняет самое раннее
+  const next = [...ids.filter((x) => x !== drop), id]
+  // место с целью (горнолыжка → «В горы») включает свою цель
+  const goal = byId(id).goal
+  if (!goal || next.includes(goal)) return next
+  return [...next.filter((x) => isLocal(x) && (!byId(x).goal || byId(x).goal === goal)), goal]
+}
+
+// Подбор: фильтр по основной цели и тегам «Авто», уточнения сужают, только если остаются машины; из подходящих — самая выгодная
 function pickCar(q, prefs = q.prefs) {
   const chosen = plans.filter((p) => q.planIds.includes(p.id))
-  const lead = chosen.reduce((a, p) => (!a || p.level > a.level ? p : a), null)
+  const goal = chosen.find((p) => !p.local) ?? null
+  const places = chosen.filter((p) => p.local)
+  const companion = companions.find((c) => c.id === q.companion) ?? null
   const active = prefOptions.filter((o) => prefs.includes(o.id))
   const pool = cars.filter((c) => availability(c, q.locationId) === 'ok')
-  const fit = pool.filter((c) => (!lead || lead.test(c)) && active.every((o) => o.test(c))).sort((a, b) => a.pricePerDay - b.pricePerDay)
-  return { car: fit[0], lead, chosen, active, count: fit.length, total: pool.length }
+  let fit = pool.filter((c) => (!goal || goal.test(c)) && active.every((o) => o.test(c)))
+  const skipped = []
+  for (const s of [...places, companion].filter(Boolean)) {
+    const narrow = fit.filter(s.test)
+    if (narrow.length) fit = narrow
+    else skipped.push(s)
+  }
+  fit.sort((a, b) => a.pricePerDay - b.pricePerDay)
+  return { car: fit[0], fit, goal, places, companion, active, skipped, count: fit.length, total: pool.length }
 }
 
 // Что изменилось при смене машины: + лучше, − хуже
@@ -369,6 +396,7 @@ function carDiff(prev, cur, q) {
 function SearchForm({ ref, query, setQuery, onSubmit, openPicker, layout = 'stack', submitLabel = 'Подобрать машину', submitDisabled, children }) {
   const [errors, setErrors] = useState({})
   const [datesOpen, setDatesOpen] = useState(false)
+  const [hoursOpen, setHoursOpen] = useState(false)
   const location = locations.find((l) => l.id === query.locationId)
   const set = (patch) => { setQuery((q) => ({ ...q, ...patch })); setErrors({}) }
 
@@ -418,19 +446,18 @@ function SearchForm({ ref, query, setQuery, onSubmit, openPicker, layout = 'stac
           </>
         ) : (
           <>
-            <label className="field">
+            <div className="field">
               <span className="field-label">Начало</span>
-              <select value={query.start} onChange={(e) => set({ start: e.target.value })}>
-                <option value="now">Сейчас{location ? ` — подадим за ${location.etaMin || 5} мин` : ''}</option>
-                {hourSlots().map((t) => <option key={t} value={t}>Сегодня, {t}</option>)}
-              </select>
-            </label>
-            <label className="field">
+              <button type="button" className="field-btn" onClick={() => setHoursOpen(true)}>
+                {query.start === 'now' ? 'Сейчас' : `Сегодня, ${query.start}`}
+              </button>
+            </div>
+            <div className="field">
               <span className="field-label">На сколько</span>
-              <select value={query.hours} onChange={(e) => set({ hours: Number(e.target.value) })}>
-                {[2, 4, 8, 12].map((h) => <option key={h} value={h}>{h} {plural(h, 'час', 'часа', 'часов')}</option>)}
-              </select>
-            </label>
+              <button type="button" className="field-btn" onClick={() => setHoursOpen(true)}>
+                {query.hours} {plural(query.hours, 'час', 'часа', 'часов')}
+              </button>
+            </div>
           </>
         )}
         {layout === 'row' && <button type="submit" className="btn-primary btn-accent" disabled={submitDisabled}>{submitLabel}</button>}
@@ -439,6 +466,7 @@ function SearchForm({ ref, query, setQuery, onSubmit, openPicker, layout = 'stac
       {children}
       {layout !== 'row' && <button type="submit" className="btn-primary" disabled={submitDisabled}>{submitLabel}</button>}
       {datesOpen && <DatePicker query={query} onApply={(patch) => { set(patch); setDatesOpen(false) }} onClose={() => setDatesOpen(false)} />}
+      {hoursOpen && <HoursPicker query={query} location={location} onApply={(patch) => { set(patch); setHoursOpen(false) }} onClose={() => setHoursOpen(false)} />}
     </form>
   )
 }
@@ -448,6 +476,38 @@ function SearchForm({ ref, query, setQuery, onSubmit, openPicker, layout = 'stac
 const isoDay = (d) => `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`
 const fmtDay = (iso) => new Date(`${iso}T00:00`).toLocaleDateString('ru-RU', { day: 'numeric', month: 'short' })
 const timeSlots = Array.from({ length: 48 }, (_, i) => `${String(Math.floor(i / 2)).padStart(2, '0')}:${i % 2 ? '30' : '00'}`)
+
+function HoursPicker({ query, location, onApply, onClose }) {
+  const [start, setStart] = useState(query.start)
+  const [hours, setHours] = useState(query.hours)
+  const starts = [['now', `Сейчас${location ? ` · за ${location.etaMin || 5} мин` : ''}`], ...hourSlots().map((t) => [t, t])]
+
+  return (
+    <Sheet className="sheet-dates" onClose={onClose}>
+      <h2 className="dates-title">Когда и на сколько</h2>
+      <div className="dates-scroll">
+        <div className="chips-label">На сколько</div>
+        <div className="chips">
+          {[2, 4, 8, 12].map((h) => (
+            <button key={h} type="button" className={`chip ${hours === h ? 'active' : ''}`} onClick={() => setHours(h)}>
+              {h} {plural(h, 'час', 'часа', 'часов')}
+            </button>
+          ))}
+        </div>
+        <div className="chips-label">Начало, сегодня</div>
+        <div className="chips">
+          {starts.map(([v, label]) => (
+            <button key={v} type="button" className={`chip ${start === v ? 'active' : ''}`} onClick={() => setStart(v)}>{label}</button>
+          ))}
+        </div>
+      </div>
+      <div className="dates-foot">
+        <button type="button" className="btn-secondary" onClick={onClose}>Отмена</button>
+        <button type="button" className="btn-primary btn-accent" onClick={() => onApply({ start, hours })}>Готово</button>
+      </div>
+    </Sheet>
+  )
+}
 
 function DatePicker({ query, onApply, onClose }) {
   const [from, setFrom] = useState(query.dateFrom)
@@ -532,7 +592,12 @@ function Landing({ query, setQuery, fav, onSubmit, onPickCar, openPicker }) {
     setQuery((q) => ({ ...q, extraIds: union(q.extraIds, plans.filter((p) => q.planIds.includes(p.id)).flatMap((p) => p.extraIds ?? [])) }))
     onSubmit()
   }
-  const submitFromBelow = () => { scrollToForm(); formRef.current.requestSubmit() }
+  // Клик по цели или месту — сразу на подбор с этим планом
+  const pickPlan = (p) => {
+    const ids = p.local && p.goal ? [p.goal, p.id] : [p.id]
+    setQuery((q) => ({ ...q, planIds: ids, extraIds: union(q.extraIds, plans.filter((x) => ids.includes(x.id)).flatMap((x) => x.extraIds ?? [])) }))
+    onSubmit()
+  }
 
   return (
     <main className="landing">
@@ -544,7 +609,7 @@ function Landing({ query, setQuery, fav, onSubmit, onPickCar, openPicker }) {
         </div>
       </section>
 
-      <Plans ref={plansRef} query={query} setQuery={setQuery} onSubmit={submitFromBelow} />
+      <Plans ref={plansRef} query={query} setQuery={setQuery} onPick={pickPlan} />
       <Manifest onGoal={scrollToPlans} />
       <Park query={query} setQuery={setQuery} fav={fav} onPickCar={onPickCar} onSubmit={scrollToForm} />
       <WhereYouAre openPicker={openPicker} />
@@ -575,44 +640,55 @@ function Landing({ query, setQuery, fav, onSubmit, onPickCar, openPicker }) {
 }
 
 function CitySelect({ query, setQuery }) {
-  const change = (cityId) => setQuery((q) => ({
-    ...q, cityId,
-    locationId: locations.find((l) => l.id === q.locationId)?.city === cityId ? q.locationId : '',
-    planIds: q.planIds.filter((id) => cityPlans(cityId).some((p) => p.id === id)),
-  }))
+  const [open, setOpen] = useState(false)
+  const change = (cityId) => {
+    setQuery((q) => ({
+      ...q, cityId,
+      locationId: locations.find((l) => l.id === q.locationId)?.city === cityId ? q.locationId : '',
+      planIds: q.planIds.filter((id) => cityPlans(cityId).some((p) => p.id === id)),
+    }))
+    setOpen(false)
+  }
   return (
-    <span className="city-select">
-      <select value={query.cityId} onChange={(e) => change(e.target.value)} aria-label="Город">
-        {Object.entries(cities).map(([id, c]) => <option key={id} value={id}>{c.name}</option>)}
-      </select>
-      <span aria-hidden="true">▾</span>
-    </span>
+    <>
+      <button type="button" className="city-select" onClick={() => setOpen(true)}>
+        {cities[query.cityId].name}<span aria-hidden="true">▾</span>
+      </button>
+      {open && (
+        <Sheet className="sheet-dates" onClose={() => setOpen(false)}>
+          <h2 className="dates-title">Выберите город</h2>
+          <div className="dates-scroll">
+            {Object.entries(cities).map(([id, c]) => (
+              <button key={id} type="button" className={`row-cell ${id === query.cityId ? 'on' : ''}`} onClick={() => change(id)}>
+                <span className="plan-label">{c.name}</span>
+                {id === query.cityId && <span className="row-arrow">✓</span>}
+              </button>
+            ))}
+          </div>
+        </Sheet>
+      )}
+    </>
   )
 }
 
-function Plans({ ref, query, setQuery, onSubmit }) {
+function Plans({ ref, query, setQuery, onPick }) {
   const list = cityPlans(query.cityId)
-  const toggle = (id) => setQuery((q) => ({ ...q, planIds: q.planIds.includes(id) ? q.planIds.filter((x) => x !== id) : [...q.planIds, id] }))
-  const card = (p) => {
-    const on = query.planIds.includes(p.id)
-    return (
-      <button key={p.id} type="button" className={`plan ${on ? 'on' : ''} ${p.local ? 'plan-local' : ''}`} aria-pressed={on} onClick={() => toggle(p.id)}>
-        {p.local && <span className="plan-badge">вы могли не знать</span>}
+  const row = (p) => (
+    <button key={p.id} type="button" className="row-cell" onClick={() => onPick(p)}>
+      <span className="row-text">
         <span className="plan-label">{p.label}</span>
         <span className="plan-hint">{p.hint}</span>
-      </button>
-    )
-  }
+      </span>
+      <span className="row-arrow" aria-hidden="true">→</span>
+    </button>
+  )
   return (
     <section ref={ref} className="section plans-section">
       <h2 className="plans-title">Какие планы <CitySelect query={query} setQuery={setQuery} />?</h2>
-      <p className="muted">Выберите одну или несколько целей — подберём машину под самую требовательную</p>
-      <div className="plans">{list.filter((p) => !p.local).map(card)}</div>
-      <h3 className="plans-sub">Только {cities[query.cityId].in}</h3>
-      <div className="plans">{list.filter((p) => p.local).map(card)}</div>
-      <button className="btn-primary plans-go" onClick={onSubmit}>
-        {query.planIds.length ? `Подобрать под ${query.planIds.length} ${plural(query.planIds.length, 'цель', 'цели', 'целей')}` : 'Подобрать машину'}
-      </button>
+      <p className="muted">Выберите цель или место — сразу подберём машину</p>
+      <div className="rows">{list.filter((p) => !p.local).map(row)}</div>
+      <h3 className="plans-sub">Рекомендуем {cities[query.cityId].in}</h3>
+      <div className="rows">{list.filter((p) => p.local).map(row)}</div>
     </section>
   )
 }
@@ -705,70 +781,117 @@ function WhereYouAre({ openPicker }) {
 
 /* ---------- Э2 Одна машина + переключатели ---------- */
 
+const stockText = (n) => (n === 1 ? 'Осталась 1' : `Осталось ${n}`)
+const goods = (prev, cur, q) => carDiff(prev, cur, q).filter((d) => d.good && !d.text.includes('₽')).map((d) => d.text)
+const priceDelta = (base, c, q) => { const d = tripTotal(c, q) - tripTotal(base, q); return d ? `${d > 0 ? '+' : '−'}${rub(Math.abs(d))}` : 'та же цена' }
+
 function E2({ query, setQuery, fav, onBack, onPick, openPicker }) {
-  const [editing, setEditing] = useState(false)
   const [prev, setPrev] = useState(null) // машина до последнего переключения
+  const [pickedId, setPickedId] = useState(null) // выбрал из альтернатив вручную
+  const [datesOpen, setDatesOpen] = useState(false)
+  const [moreOpen, setMoreOpen] = useState(false)
   const res = pickCar(query)
-  const { car, lead, chosen, active } = res
+  const { goal, places, companion, active, skipped, fit } = res
+  const car = fit.find((c) => c.id === pickedId) ?? res.car
   const location = locations.find((l) => l.id === query.locationId)
+  const cityId = location?.city ?? query.cityId
+  const goalsList = cityPlans(cityId).filter((p) => !p.local)
+  const [hintsAll, setHintsAll] = useState(false)
 
   const change = (patch) => {
     if (car) setPrev(car)
+    setPickedId(null)
     setQuery((q) => ({ ...q, ...patch }))
   }
+  const choose = (id) => { setPrev(car); setPickedId(id); setMoreOpen(false); window.scrollTo({ top: 0, behavior: 'smooth' }) }
   const togglePref = (id) => change({ prefs: query.prefs.includes(id) ? query.prefs.filter((x) => x !== id) : [...query.prefs, id] })
-  const togglePlan = (id) => change({ planIds: query.planIds.includes(id) ? query.planIds.filter((x) => x !== id) : [...query.planIds, id] })
+  const togglePlan = (id) => change({ planIds: togglePlanIds(query.planIds, id) })
 
   const reasons = []
-  if (lead) reasons.push(<><b>{lead.label}</b> → {lead.hint.toLowerCase()}</>)
-  else reasons.push(<>Цель не указана — берём просто самую выгодную машину</>)
-  const others = chosen.filter((p) => p !== lead)
-  if (others.length) reasons.push(<>Ещё учли: {others.map((p) => p.label.toLowerCase()).join(', ')} — допы для них уже в брони</>)
-  active.forEach((o) => reasons.push(<>Вы попросили: <b>{o.label.toLowerCase()}</b></>))
+  if (goal) reasons.push(<><b>{goal.label}</b> → {goal.hint.toLowerCase()}</>)
+  else reasons.push(<>Цель не выбрана — берём самую выгодную машину</>)
+  places.filter((p) => !skipped.includes(p)).forEach((p) => reasons.push(<><b>{p.label}</b> → {p.hint.toLowerCase()}</>))
+  if (companion && !skipped.includes(companion)) reasons.push(<><b>{companion.label}</b> → {companion.hint}</>)
+  skipped.forEach((s) => reasons.push(<>Под «{s.label.toLowerCase()}» отдельно машин не нашлось — учли остальное</>))
+  active.forEach((o) => reasons.push(<>Авто: <b>{o.label}</b></>))
   if (car) reasons.push(<>Подходят {res.count} из {res.total} машин — взяли самую выгодную</>)
 
+  // Две альтернативы: похожая по цене и с улучшением
+  const rest = car ? fit.filter((c) => c.id !== car.id) : []
+  const better = rest.find((c) => c.pricePerDay > car.pricePerDay && goods(car, c, query).length >= 2)
+  const similar = rest.find((c) => c !== better)
+  const tiles = [
+    similar && { car: similar, note: goods(car, similar, query)[0] ? `похожая, ${goods(car, similar, query)[0]}` : 'похожая' },
+    better && { car: better, note: goods(car, better, query).slice(0, 2).join(', ') },
+  ].filter(Boolean)
+
+  // «Ещё 7»: та же цель и теги, включая разобранные — они внизу
+  const shown = [car, ...tiles.map((t) => t.car)].filter(Boolean).map((c) => c.id)
+  const same = cars
+    .filter((c) => !shown.includes(c.id) && (!goal || goal.test(c)) && active.every((o) => o.test(c)))
+    .map((c) => ({ car: c, av: availability(c, query.locationId) }))
+    .sort((a, b) => a.car.pricePerDay - b.car.pricePerDay)
+  const gone = same.filter((x) => x.av !== 'ok').slice(0, 2) // разобранные показываем всегда, но не больше двух
+  const more = [...same.filter((x) => x.av === 'ok').slice(0, 7 - gone.length), ...gone]
+
   const diff = prev && car && prev.id !== car.id ? carDiff(prev, car, query) : null
-  // Что даст каждый переключатель — до нажатия
-  const preview = (o) => {
-    const next = query.prefs.includes(o.id) ? query.prefs.filter((x) => x !== o.id) : [...query.prefs, o.id]
-    const r = pickCar(query, next)
-    if (!r.car) return { off: true, text: 'нет машин' }
-    if (!car || r.car.id === car.id) return { text: 'та же машина' }
-    const d = tripTotal(r.car, query) - tripTotal(car, query)
-    return { text: d ? `${d > 0 ? '+' : '−'}${rub(Math.abs(d))}` : 'та же цена' }
-  }
   const fixes = !car ? active.filter((o) => pickCar(query, query.prefs.filter((x) => x !== o.id)).car) : []
+  const chip = (on, label, onClick, disabled) => (
+    <button key={label} type="button" className={`filter ${on ? 'active' : ''}`} aria-pressed={on} disabled={disabled} onClick={onClick}>{label}</button>
+  )
+
+  const cells = (cls) => (
+    <div className={`cells ${cls}`}>
+      <button type="button" className="cell" onClick={() => openPicker('all')}>
+        <PlaceIcon type={location?.type ?? 'Адрес'} />
+        <span className="cell-text"><span className="cell-label">Где забрать</span>{location ? location.name : 'Выберите место'}</span>
+        <span className="cell-arrow" aria-hidden="true">›</span>
+      </button>
+      <button type="button" className="cell" onClick={() => setDatesOpen(true)}>
+        <PlaceIcon type="Даты" />
+        <span className="cell-text"><span className="cell-label">Когда</span>{whenText(query)}</span>
+        <span className="cell-arrow" aria-hidden="true">›</span>
+      </button>
+    </div>
+  )
 
   return (
     <main className="e2">
-      <div className="e2-top">
-        <button className="link-back" onClick={onBack}>← На главную</button>
-        <div className="summary">
-          <span className="summary-text">{summary(query)}</span>
-          <button className="btn-secondary btn-sm" onClick={() => setEditing((v) => !v)}>{editing ? 'Закрыть' : 'Изменить'}</button>
-        </div>
-        {editing && (
-          <div className="e2-edit">
-            <SearchForm query={query} setQuery={(f) => change(typeof f === 'function' ? f(query) : f)} openPicker={openPicker}
-              onSubmit={() => setEditing(false)} submitLabel="Пересобрать подбор" />
-          </div>
-        )}
-        <div className="plan-chips">
-          <span className="muted">Цели:</span>
-          {cityPlans(location?.city ?? query.cityId).map((p) => (
-            <button key={p.id} className={`filter ${query.planIds.includes(p.id) ? 'active' : ''}`} aria-pressed={query.planIds.includes(p.id)}
-              onClick={() => togglePlan(p.id)}>{p.label}</button>
-          ))}
-        </div>
-      </div>
+      <button className="link-back" onClick={onBack}>← На главную</button>
 
       <div className="e2-layout">
         <div className="e2-main">
-          {diff && (
+          {cells('cells-inline')}
+
+          <div className="tags">
+            <div className="tags-row"><span className="tags-label">Еду</span>
+              {goalsList.map((p) => chip(query.planIds.includes(p.id), p.label, () => togglePlan(p.id)))}</div>
+            {(() => {
+              const g = goalsList.find((p) => query.planIds.includes(p.id))
+              const hints = g ? cityPlans(cityId).filter((p) => p.goal === g.id) : []
+              if (!hints.length) return null
+              const shown = hintsAll ? hints : hints.slice(0, 3)
+              return (
+                <div className="tags-row tags-hints"><span className="tags-label">Например</span>
+                  {shown.map((p) => chip(query.planIds.includes(p.id), p.label, () => togglePlan(p.id)))}
+                  {hints.length > 3 && <button type="button" className="link-more" onClick={() => setHintsAll(!hintsAll)}>{hintsAll ? 'Свернуть' : `Ещё ${hints.length - 3}`}</button>}
+                </div>
+              )
+            })()}
+            <div className="tags-row"><span className="tags-label">С кем</span>
+              {companions.map((c) => chip(query.companion === c.id, c.label, () => change({ companion: query.companion === c.id ? '' : c.id })))}</div>
+            <div className="tags-row"><span className="tags-label">Авто</span>
+              {prefOptions.map((o) => {
+                const on = query.prefs.includes(o.id)
+                return chip(on, o.label, () => togglePref(o.id), !on && !pickCar(query, [...query.prefs, o.id]).car)
+              })}</div>
+          </div>
+
+          {car && diff && (
             <div className="diff" key={`diff-${car.id}`}>
               <span className="diff-title">Вместо {prev.model}:</span>
               {diff.map((d) => <span key={d.text} className={`diff-item ${d.good ? 'good' : 'bad'}`}>{d.good ? '▲' : '▼'} {d.text}</span>)}
-              {query.prefs.length > 0 && <button className="link" onClick={() => change({ prefs: [] })}>Сбросить переключатели</button>}
+              {query.prefs.length > 0 && <button className="link" onClick={() => change({ prefs: [] })}>Сбросить «Авто»</button>}
             </div>
           )}
 
@@ -779,21 +902,10 @@ function E2({ query, setQuery, fav, onBack, onPick, openPicker }) {
                 <FavToggle id={car.id} fav={fav} />
               </div>
               <div className="pick-body">
-                <div>
-                  <div className="muted">{car.kind}</div>
-                  <h1 className="pick-title">{car.model}</h1>
-                </div>
-                <dl className="pick-specs">
-                  {[['Привод', car.drive], ['Коробка', car.gearbox], ['Мест', car.seats], ['Багажник', `${car.trunk} л`], ['Клиренс', `${car.clearance} мм`], ['Мотор', car.engine]]
-                    .map(([k, v]) => <div key={k}><dt>{k}</dt><dd>{v}</dd></div>)}
-                </dl>
-                <div className="pick-foot">
-                  <div>
-                    <div className="price-big">{rub(tripTotal(car, query))}</div>
-                    <div className="muted">за {unitsText(query)}{query.extraIds.length ? ', с допами' : ''}{isNow(query) && location ? ` · подадим через ${location.etaMin + car.etaAdd} мин` : ''}</div>
-                  </div>
-                  <button className="btn-primary" onClick={() => onPick(car.id)}>Оформить</button>
-                </div>
+                <div className="muted">{car.gearbox[0].toUpperCase() + car.gearbox.slice(1)} · {car.kind}{car.stock > 0 ? ` · ${stockText(car.stock).toLowerCase()}` : ''}</div>
+                <h1 className="pick-title">{car.model}</h1>
+                <div className="pick-specs">{car.seats} мест · багажник {car.trunk} л · {car.drive} · клиренс {car.clearance} мм · {car.engine}</div>
+                <button type="button" className="link pick-more" onClick={() => onPick(car.id)}>Информация об автомобиле</button>
               </div>
             </div>
           ) : (
@@ -801,36 +913,74 @@ function E2({ query, setQuery, fav, onBack, onPick, openPicker }) {
               <h2>Под всё сразу машины нет</h2>
               {fixes.length > 0 ? (
                 <div className="avail-options">
-                  {fixes.map((o) => <button key={o.id} className="btn-secondary btn-sm" onClick={() => togglePref(o.id)}>Выключить «{o.label}»</button>)}
+                  {fixes.map((o) => <button key={o.id} className="btn-secondary btn-sm" onClick={() => togglePref(o.id)}>Убрать «{o.label}»</button>)}
                 </div>
               ) : (
-                <button className="btn-secondary" onClick={() => change({ prefs: [], planIds: [] })}>Сбросить цели и переключатели</button>
+                <button className="btn-secondary" onClick={() => change({ prefs: [], planIds: [], companion: '' })}>Сбросить цели и теги</button>
               )}
+            </div>
+          )}
+
+          {car && tiles.length > 0 && (
+            <div className="alts">
+              <div className="why-title">Или посмотрите</div>
+              <div className="alt-grid">
+                {tiles.map((t) => (
+                  <button key={t.car.id} type="button" className="alt" onClick={() => choose(t.car.id)}>
+                    <span className="alt-photo photo-car" style={carPhoto(t.car)} />
+                    <b>{t.car.model}</b>
+                    <span className="muted">{t.note}</span>
+                    <span className="alt-foot">{priceDelta(car, t.car, query)}
+                      {t.car.stock > 0 && <span className="badge badge-hot">{stockText(t.car.stock)}</span>}</span>
+                  </button>
+                ))}
+              </div>
+              {more.length > 0 && <button type="button" className="btn-secondary alts-more" onClick={() => setMoreOpen(true)}>Показать ещё {more.length}</button>}
             </div>
           )}
         </div>
 
         <aside className="e2-aside">
+          {car && (
+            <div className="book-card">
+              {cells('cells-card')}
+              <div className="book-sum">
+                <div className="price-big">{rub(tripTotal(car, query))}</div>
+                <div className="muted">за {unitsText(query)}{query.extraIds.length ? ', с допами' : ''}{isNow(query) && location ? ` · подадим через ${location.etaMin + car.etaAdd} мин` : ''}</div>
+              </div>
+              <button className="btn-primary" onClick={() => onPick(car.id)}>Оформить</button>
+              <div className="book-note muted">✓ Бесплатная отмена за 48 ч</div>
+            </div>
+          )}
           <div className="why">
             <div className="why-title">Что учли</div>
             <ul className="why-list">{reasons.map((r, i) => <li key={i}>{r}</li>)}</ul>
           </div>
-          <div className="switches">
-            <div className="why-title">Здесь мне важнее</div>
-            {prefOptions.map((o) => {
-              const on = query.prefs.includes(o.id)
-              const p = preview(o)
-              return (
-                <button key={o.id} className={`switch ${on ? 'on' : ''}`} aria-pressed={on} disabled={p.off && !on} onClick={() => togglePref(o.id)}>
-                  <span className="switch-knob" />
-                  <span className="switch-label">{o.label}</span>
-                  <span className="switch-delta">{on ? 'вкл' : p.text}</span>
-                </button>
-              )
-            })}
-          </div>
         </aside>
       </div>
+
+      {datesOpen && <DatePicker query={query} onClose={() => setDatesOpen(false)}
+        onApply={(patch) => { change({ ...patch, mode: 'days' }); setDatesOpen(false) }} />}
+      {moreOpen && (
+        <Sheet className="sheet-full sheet-modal" onClose={() => setMoreOpen(false)}>
+          <div className="picker-head">
+            <button className="icon-btn" aria-label="Закрыть" onClick={() => setMoreOpen(false)}>←</button>
+            <h2>{goal ? `Ещё под «${goal.label.toLowerCase()}»` : 'Ещё машины'}</h2>
+          </div>
+          <div className="more-list">
+            {more.map(({ car: c, av }) => (
+              <button key={c.id} type="button" className={`more-row ${av !== 'ok' ? 'off' : ''}`} disabled={av !== 'ok'} onClick={() => choose(c.id)}>
+                <span className="more-photo photo-car" style={carPhoto(c)} />
+                <span className="more-text"><b>{c.model}</b>
+                  <span className="muted">{av === 'sold' ? 'Разобрали на ваши даты' : av === 'place' ? 'Нет в этой точке' : goods(car, c, query).slice(0, 2).join(', ') || c.kind}</span></span>
+                <span className="more-side">{av === 'ok' ? priceDelta(car, c, query) : '—'}
+                  {av === 'ok' && c.stock > 0 && <span className="badge badge-hot">{stockText(c.stock)}</span>}
+                  {av === 'sold' && <span className="badge badge-muted">Разобрали</span>}</span>
+              </button>
+            ))}
+          </div>
+        </Sheet>
+      )}
     </main>
   )
 }
