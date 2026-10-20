@@ -10,11 +10,10 @@
 /* ---------- Общее: переключатель вариантов ---------- */
 * { box-sizing: border-box; margin: 0; }
 body { font-family: system-ui, sans-serif; }
-.switcher { position: fixed; bottom: 16px; left: 50%; transform: translateX(-50%); z-index: 10;
-  display: flex; gap: 4px; padding: 6px; background: #111; border-radius: 999px; box-shadow: 0 6px 24px rgba(0,0,0,.25); }
+.switcher { display: flex; justify-content: center; gap: 4px; padding: 6px; background: #111; }
 .switcher button { border: 0; background: transparent; color: #aaa; font: 600 13px system-ui; padding: 8px 12px; border-radius: 999px; cursor: pointer; }
 .switcher button.on { background: #fff; color: #111; }
-.v { display: none; min-height: 100vh; padding-bottom: 96px; }
+.v { display: none; min-height: 100vh; }
 .v.on { display: block; }
 .photo { background-size: contain; background-repeat: no-repeat; background-position: center; }
 
@@ -352,6 +351,7 @@ body { font-family: system-ui, sans-serif; }
 </style>
 </head>
 <body>
+<nav class="switcher" id="sw"></nav>
 
 <!-- ===== Вариант 1 — Calm ===== -->
 <section class="v v1" data-v="1">
@@ -779,7 +779,6 @@ body { font-family: system-ui, sans-serif; }
   </div>
 </section>
 
-<nav class="switcher" id="sw"></nav>
 <script>
   const vs = [...document.querySelectorAll('.v')]
   const sw = document.getElementById('sw')
