@@ -755,7 +755,7 @@ function Landing({ query, setQuery, fav, onSubmit, onPickCar, openPicker }) {
 
       <Plans ref={plansRef} query={query} setQuery={setQuery} onPick={pickPlan} />
       <Manifest onGoal={scrollToPlans} />
-      <Park query={query} setQuery={setQuery} fav={fav} onPickCar={onPickCar} onSubmit={scrollToForm} />
+      <Park query={query} setQuery={setQuery} fav={fav} onPickCar={onPickCar} />
       <WhereYouAre openPicker={openPicker} />
 
       <section className="section">
@@ -785,6 +785,16 @@ function Landing({ query, setQuery, fav, onSubmit, onPickCar, openPicker }) {
 
 function CitySelect({ query, setQuery, inCity }) {
   const [open, setOpen] = useState(false)
+  const ref = useRef(null)
+  // Список закрывается кликом мимо и по Esc
+  useEffect(() => {
+    if (!open) return
+    const onClick = (e) => !ref.current?.contains(e.target) && setOpen(false)
+    const onKey = (e) => e.key === 'Escape' && setOpen(false)
+    document.addEventListener('mousedown', onClick)
+    window.addEventListener('keydown', onKey)
+    return () => { document.removeEventListener('mousedown', onClick); window.removeEventListener('keydown', onKey) }
+  }, [open])
   const change = (cityId) => {
     setQuery((q) => ({
       ...q, cityId,
@@ -794,24 +804,21 @@ function CitySelect({ query, setQuery, inCity }) {
     setOpen(false)
   }
   return (
-    <>
-      <button type="button" className="city-select" onClick={() => setOpen(true)}>
-        {inCity ? cities[query.cityId].in : cities[query.cityId].name}<span aria-hidden="true">▾</span>
+    <span className="city-wrap" ref={ref}>
+      <button type="button" className="city-select" aria-expanded={open} onClick={() => setOpen(!open)}>
+        {inCity ? cities[query.cityId].in : cities[query.cityId].name}
+        <svg className="city-chevron" viewBox="0 0 12 12" aria-hidden="true"><path d="M2 4.5l4 4 4-4" /></svg>
       </button>
       {open && (
-        <Sheet className="sheet-dates" onClose={() => setOpen(false)}>
-          <h2 className="dates-title">Выберите город</h2>
-          <div className="dates-scroll">
-            {Object.entries(cities).map(([id, c]) => (
-              <button key={id} type="button" className={`row-cell ${id === query.cityId ? 'on' : ''}`} onClick={() => change(id)}>
-                <span className="plan-label">{c.name}</span>
-                {id === query.cityId && <span className="row-arrow">✓</span>}
-              </button>
-            ))}
-          </div>
-        </Sheet>
+        <span className="city-pop" role="listbox">
+          {Object.entries(cities).map(([id, c]) => (
+            <button key={id} type="button" role="option" aria-selected={id === query.cityId} className="city-option" onClick={() => change(id)}>
+              {c.name}{id === query.cityId && <span aria-hidden="true">✓</span>}
+            </button>
+          ))}
+        </span>
       )}
-    </>
+    </span>
   )
 }
 
@@ -855,7 +862,7 @@ function Manifest({ onGoal }) {
   )
 }
 
-function Park({ query, setQuery, fav, onPickCar, onSubmit }) {
+function Park({ query, setQuery, fav, onPickCar }) {
   const tabs = scenarios.filter((s) => s.carIds)
   const [tab, setTab] = useState(tabs[0].id)
   const ids = tabs.find((t) => t.id === tab).carIds
@@ -881,9 +888,6 @@ function Park({ query, setQuery, fav, onPickCar, onSubmit }) {
             </div>
           </div>
         ))}
-      </div>
-      <div className="park-foot">
-        <button className="btn-primary" onClick={onSubmit}>Подобрать {cities[query.cityId].in}</button>
       </div>
     </section>
   )
