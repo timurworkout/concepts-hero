@@ -36,12 +36,14 @@ const union = (a, b) => [...new Set([...a, ...b])]
 
 export default function App() {
   const [query, setQuery] = useState(emptyQuery)
-  const [screen, setScreen] = useState('e1') // 'e1' | 'e2' | 'e3' | 'final'
+  const [screen, setScreen] = useState('e1') // 'e1' | 'e2' | 'e3' | 'final' | 'bookings'
   const [pickedCarId, setPickedCarId] = useState(null)
   const [cameFrom, setCameFrom] = useState('e1') // откуда открыли Э3
   const [user, setUser] = useState(() => load('user', null))
   const [favs, setFavs] = useState(() => load('favs', []))
-  const [sheet, setSheet] = useState(null) // 'favs' | 'login' | { picker: группа }
+  const [sheet, setSheet] = useState(null) // 'favs' | 'login' | 'login-book' | { picker: группа }
+  const [booking, setBooking] = useState(null) // бронь, которую показывает финал
+  const [, bump] = useState(0) // брони читаются из хранилища — перерисовка после изменения
   const afterLogin = useRef(null)
 
   useEffect(() => { window.scrollTo(0, 0) }, [screen, pickedCarId])
@@ -61,23 +63,46 @@ export default function App() {
     setUser(u)
     save('user', u)
     setSheet(null)
-    afterLogin.current?.()
+    afterLogin.current?.(u)
     afterLogin.current = null
   }
   const logout = () => { setUser(null); save('user', null); setScreen('e1') }
-  const askLogin = (then) => { afterLogin.current = then; setSheet('login') }
+  const askLogin = (then, reason = 'login') => { afterLogin.current = then; setSheet(reason) }
   const toggleFav = (id) => setFavs((f) => (f.includes(id) ? f.filter((x) => x !== id) : [id, ...f]))
 
   const openCar = (id, from) => { setPickedCarId(id); setCameFrom(from); setScreen('e3'); setSheet(null) }
   const home = () => { setQuery(emptyQuery); setScreen('e1') }
 
+  // Брони живут в аккаунте: бронировать и смотреть их можно только после входа
+  const bookings = user ? load('accounts', {})[user.phone]?.bookings ?? [] : []
+  const saveBookings = (phone, update) => {
+    const accounts = load('accounts', {})
+    const acc = accounts[phone] ?? { favs, bookings: [] }
+    accounts[phone] = { ...acc, bookings: update(acc.bookings ?? []) }
+    save('accounts', accounts)
+    bump((n) => n + 1)
+  }
+  const book = (u) => {
+    const b = { id: String(Date.now()).slice(-4), carId: pickedCarId, query, total: tripTotal(cars.find((c) => c.id === pickedCarId), query), createdAt: Date.now(), cancelled: false }
+    saveBookings(u.phone, (list) => [b, ...list])
+    setBooking(b)
+    setScreen('final')
+  }
+  const cancelBooking = (id) => saveBookings(user.phone, (list) => list.map((b) => (b.id === id ? { ...b, cancelled: true } : b)))
+  const openBookings = () => (user ? setScreen('bookings') : askLogin(() => setScreen('bookings')))
+
   const fav = { favs, toggleFav }
   let page
-  if (screen === 'final') page = <Final query={query} carId={pickedCarId} onHome={home} />
+  if (screen === 'final' && booking) page = <Final booking={booking} onHome={home} onBookings={openBookings} />
+  else if (screen === 'bookings') page = (
+    <Bookings bookings={bookings} onHome={home} onCancel={cancelBooking}
+      onShow={(b) => { setBooking(b); setScreen('final') }}
+      onRepeat={(b) => { setQuery({ ...b.query, dateFrom: '', dateTo: '' }); setScreen('e2') }} />
+  )
   else if (screen === 'e3') page = (
     <E3 key={pickedCarId} query={query} setQuery={setQuery} carId={pickedCarId} cameFrom={cameFrom} fav={fav}
       onBack={() => setScreen(cameFrom)} onPickOther={() => setScreen('e2')} openPicker={(g) => setSheet({ picker: g })}
-      onBook={() => setScreen('final')} />
+      onBook={() => (user ? book(user) : askLogin(book, 'login-book'))} />
   )
   else if (screen === 'e2') page = (
     <E2 query={query} setQuery={setQuery} fav={fav} onBack={() => setScreen('e1')} onPick={(id) => openCar(id, 'e2')}
@@ -91,11 +116,12 @@ export default function App() {
   return (
     <>
       <Header dark={screen === 'e1'} user={user} favs={favs} onHome={home} onFavs={() => setSheet(sheet === 'favs' ? null : 'favs')}
-        onLogin={() => askLogin(null)} onLogout={logout} />
+        onLogin={() => askLogin(null)} onLogout={logout}
+        bookingsCount={bookings.filter((b) => !b.cancelled && bookingStatus(b) !== 'done').length} onBookings={openBookings} />
       {page}
       {sheet === 'favs' && <FavSheet query={query} fav={fav} user={user} onLogin={() => askLogin(() => setSheet('favs'))}
         onOpen={(id) => openCar(id, screen === 'e2' ? 'e2' : 'e1')} onClose={() => setSheet(null)} />}
-      {sheet === 'login' && <LoginSheet onLogin={login} onClose={() => setSheet(null)} />}
+      {(sheet === 'login' || sheet === 'login-book') && <LoginSheet forBooking={sheet === 'login-book'} onLogin={login} onClose={() => setSheet(null)} />}
       {sheet?.picker && <PlacePicker query={query} group={sheet.picker} onClose={() => setSheet(null)}
         onPick={(l, address = '') => { setQuery((q) => ({ ...q, locationId: l.id, cityId: l.city, address })); setSheet(null) }} />}
     </>
@@ -104,7 +130,7 @@ export default function App() {
 
 /* ---------- Шапка, избранное, вход ---------- */
 
-function Header({ dark, user, favs, onHome, onFavs, onLogin, onLogout }) {
+function Header({ dark, user, favs, onHome, onFavs, onLogin, onLogout, bookingsCount, onBookings }) {
   const [menu, setMenu] = useState(false)
   const menuRef = useRef(null)
   // Меню профиля закрывается кликом мимо и по Esc
@@ -138,6 +164,7 @@ function Header({ dark, user, favs, onHome, onFavs, onLogin, onLogout }) {
           {user && menu && (
             <div className="account-menu">
               <div className="account-who"><span className="muted">Вы вошли</span><b>{user.phone}</b></div>
+              <button className="account-item" onClick={() => { setMenu(false); onBookings() }}>Бронирования<span className="muted">{bookingsCount}</span></button>
               <button className="account-item" onClick={() => { setMenu(false); onFavs() }}>Избранное<span className="muted">{favs.length}</span></button>
               <button className="account-item account-out" onClick={() => { setMenu(false); onLogout() }}>Выйти</button>
             </div>
@@ -216,14 +243,16 @@ function FavSheet({ query, fav, user, onLogin, onOpen, onClose }) {
   )
 }
 
-function LoginSheet({ onLogin, onClose }) {
+function LoginSheet({ forBooking, onLogin, onClose }) {
   return (
     <Sheet className="sheet-center" onClose={onClose}>
       <div className="sheet-head">
-        <h2>Вход</h2>
+        <h2>{forBooking ? 'Войдите, чтобы забронировать' : 'Вход'}</h2>
         <button className="icon-btn" aria-label="Закрыть" onClick={onClose}>×</button>
       </div>
-      <p className="muted">Чтобы найти свою бронь и сохранить избранное. Подбирать и бронировать можно и без входа.</p>
+      <p className="muted">{forBooking
+        ? 'Бронь привяжем к номеру — по нему пришлём SMS и покажем её в «Бронированиях».'
+        : 'Чтобы видеть свои бронирования и сохранить избранное. Подбирать машину можно и без входа.'}</p>
       <Login onLogin={onLogin} />
     </Sheet>
   )
@@ -1395,12 +1424,13 @@ function Login({ onLogin }) {
 
 /* ---------- Финал: машина ждёт, конец концепта ---------- */
 
-function Final({ query, carId, onHome }) {
-  const car = cars.find((c) => c.id === carId)
+function Final({ booking, onHome, onBookings }) {
+  const { query } = booking
+  const car = cars.find((c) => c.id === booking.carId)
   const location = findPlace(query)
   const inCar = extras.filter((x) => query.extraIds.includes(x.id) && (x.group === 'trip' || x.id === 'child-seat'))
   const startText = isNow(query) ? `через ${location.etaMin + car.etaAdd} мин` : query.mode === 'hours' ? `сегодня в ${query.start}` : `${fmtDate(query.dateFrom)} ${query.timeFrom}`
-  const sms = `Машина ждёт вас: ${car.model}, ${location.name}, ${startText}.${inCar.length ? ` ${inCar.map((x) => x.name.split(' — ')[0]).join(', ')} — уже внутри.` : ''} Открыть: rent.ru/b/4821`
+  const sms = `Машина ждёт вас: ${car.model}, ${location.name}, ${startText}.${inCar.length ? ` ${inCar.map((x) => x.name.split(' — ')[0]).join(', ')} — уже внутри.` : ''} Открыть: rent.ru/b/${booking.id}`
 
   return (
     <main className="final">
@@ -1427,10 +1457,93 @@ function Final({ query, carId, onHome }) {
           <div className="final-end">
             <b>Здесь концепт заканчивается</b>
             <p>Оформление, вход и оплата — как в любом сервисе аренды, их я не показываю. Главное в концепте — подбор машины под поездку.</p>
-            <button className="btn-secondary" onClick={onHome}>На главную</button>
+            <div className="final-actions">
+              <button className="btn-secondary" onClick={onHome}>На главную</button>
+              <button className="link" onClick={onBookings}>Все бронирования</button>
+            </div>
           </div>
         </div>
       </div>
+    </main>
+  )
+}
+
+/* ---------- Бронирования ---------- */
+
+const HOUR = 60 * 60 * 1000
+// Начало и конец аренды по запросу брони
+function bookingTimes(b) {
+  const q = b.query
+  if (q.mode === 'hours') {
+    const from = q.start === 'now' ? b.createdAt : new Date(`${isoDay(new Date(b.createdAt))}T${q.start}`).getTime()
+    return { from, to: from + q.hours * HOUR }
+  }
+  return { from: new Date(`${q.dateFrom}T${q.timeFrom}`).getTime(), to: new Date(`${q.dateTo}T${q.timeTo}`).getTime() }
+}
+function bookingStatus(b) {
+  if (b.cancelled) return 'cancel'
+  const { from, to } = bookingTimes(b)
+  const now = Date.now()
+  return now < from ? 'up' : now < to ? 'now' : 'done'
+}
+const statusLabel = { up: 'Предстоит', now: 'Идёт', done: 'Завершена', cancel: 'Отменена' }
+
+function Bookings({ bookings, onHome, onShow, onRepeat, onCancel }) {
+  const [confirm, setConfirm] = useState(null)
+  const active = bookings.filter((b) => ['up', 'now'].includes(bookingStatus(b)))
+  const past = bookings.filter((b) => ['done', 'cancel'].includes(bookingStatus(b)))
+  const canCancel = (b) => bookingStatus(b) === 'up' && bookingTimes(b).from - Date.now() > 48 * HOUR
+
+  const card = (b) => {
+    const car = cars.find((c) => c.id === b.carId)
+    const st = bookingStatus(b)
+    return (
+      <div key={b.id + b.createdAt} className={`trip ${st === 'done' || st === 'cancel' ? 'trip-past' : ''}`}>
+        <div className="trip-photo photo-car" style={carPhoto(car)} />
+        <div className="trip-body">
+          <div className="trip-top"><b className="trip-model">{car.model}</b><span className={`trip-status trip-${st}`}>{statusLabel[st]}</span></div>
+          <div className="trip-info">
+            <div><span className="muted">Где · </span>{findPlace(b.query)?.name}</div>
+            <div><span className="muted">Когда · </span>{whenText(b.query)}</div>
+            <div><span className="muted">Вернуть · </span>{returnText(b.query)}</div>
+          </div>
+          <div className="trip-foot">
+            <b className="trip-sum">{rub(b.total)}</b>
+            {(st === 'up' || st === 'now') && <button className="btn-primary btn-sm" onClick={() => onShow(b)}>Где машина</button>}
+            {canCancel(b) && <button className="link trip-cancel-link" onClick={() => setConfirm(b)}>Отменить</button>}
+            {(st === 'done' || st === 'cancel') && <button className="btn-secondary btn-sm" onClick={() => onRepeat(b)}>Повторить поездку</button>}
+          </div>
+        </div>
+      </div>
+    )
+  }
+
+  return (
+    <main className="trips">
+      <button className="link-back" onClick={onHome}>← На главную</button>
+      <h1>Бронирования</h1>
+      {bookings.length === 0 ? (
+        <div className="trips-empty">
+          <b>Пока нет поездок</b>
+          <p className="muted">Расскажите о планах — подберём машину</p>
+          <button className="btn-primary btn-accent" onClick={onHome}>Подобрать машину</button>
+        </div>
+      ) : (
+        <>
+          {active.length > 0 && <><h2 className="trips-group">Предстоящие</h2>{active.map(card)}</>}
+          {past.length > 0 && <><h2 className="trips-group">Прошлые</h2>{past.map(card)}</>}
+        </>
+      )}
+      {confirm && (
+        <Sheet className="sheet-center" onClose={() => setConfirm(null)}>
+          <h2>Отменить бронь?</h2>
+          <p className="muted">{cars.find((c) => c.id === confirm.carId).model}, {whenText(confirm.query)}. Отмена бесплатная — до получения больше 48 часов.</p>
+          <div className="trips-confirm">
+            <button className="btn-secondary" onClick={() => setConfirm(null)}>Оставить</button>
+            <button className="btn-primary" onClick={() => { onCancel(confirm.id); setConfirm(null) }}>Отменить бронь</button>
+          </div>
+        </Sheet>
+      )}
     </main>
   )
 }
