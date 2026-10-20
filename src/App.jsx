@@ -1,6 +1,6 @@
 import { Fragment, useEffect, useRef, useState } from 'react'
 import { createPortal } from 'react-dom'
-import { locations, locationGroups, cars, scenarios, rub, carDetails, rentTerms, cities, extras, plans, prefOptions, companions, promises, faq } from './data.js'
+import { locations, locationGroups, cars, scenarios, rub, carDetails, rentTerms, cities, extras, plans, prefOptions, companions, promises, faq, addressHints } from './data.js'
 
 const carPhoto = (c, size = 'sm') => ({ backgroundImage: `url(${import.meta.env.BASE_URL}cars/${size}/${c.id}.webp)` })
 
@@ -19,20 +19,26 @@ const emptyQuery = {
   prefs: [], // переключатели Э2
   extraIds: [], // допы живут в запросе — переживают смену машины
   address: '',
+  returnMode: 'same', // 'same' — где забрал | 'point' — в нашей точке | 'free' — где удобно, как каршеринг
+  returnId: '', // точка возврата; пусто — решу по дороге
 }
 
 // Хранилище браузера: избранное, вход, брони. Без него всё работает в памяти
 const load = (k, d) => { try { return JSON.parse(localStorage.getItem(k)) ?? d } catch { return d } }
 const save = (k, v) => { try { localStorage.setItem(k, JSON.stringify(v)) } catch { /* приватный режим */ } }
+// Место получения; для отеля и дома имя — введённый адрес
+const isAddress = (l) => ['Отель', 'Адрес'].includes(l.type)
+function findPlace(q) {
+  const l = locations.find((x) => x.id === q.locationId)
+  return l && isAddress(l) && q.address ? { ...l, name: `${cities[l.city].name}, ${q.address}` } : l
+}
 const union = (a, b) => [...new Set([...a, ...b])]
 
 export default function App() {
   const [query, setQuery] = useState(emptyQuery)
-  const [screen, setScreen] = useState('e1') // 'e1' | 'e2' | 'e3' | 'e4' | 'e6' | 'booking'
+  const [screen, setScreen] = useState('e1') // 'e1' | 'e2' | 'e3' | 'final'
   const [pickedCarId, setPickedCarId] = useState(null)
   const [cameFrom, setCameFrom] = useState('e1') // откуда открыли Э3
-  const [booking, setBooking] = useState(null) // { total } с Э3
-  const [result, setResult] = useState(null) // оформленная бронь с Э4
   const [user, setUser] = useState(() => load('user', null))
   const [favs, setFavs] = useState(() => load('favs', []))
   const [sheet, setSheet] = useState(null) // 'favs' | 'login' | { picker: группа }
@@ -49,8 +55,6 @@ export default function App() {
     save('accounts', accounts)
   }, [favs, user])
 
-  const account = user ? load('accounts', {})[user.phone] ?? { favs: [], bookings: [] } : null
-
   const login = (u) => {
     const acc = load('accounts', {})[u.phone]
     setFavs((f) => union(acc?.favs ?? [], f))
@@ -65,29 +69,15 @@ export default function App() {
   const toggleFav = (id) => setFavs((f) => (f.includes(id) ? f.filter((x) => x !== id) : [id, ...f]))
 
   const openCar = (id, from) => { setPickedCarId(id); setCameFrom(from); setScreen('e3'); setSheet(null) }
-  const home = () => { setQuery(emptyQuery); setBooking(null); setResult(null); setScreen('e1') }
-  const openProfile = () => (user ? setScreen('booking') : askLogin(() => setScreen('booking')))
-
-  const saveBooking = (r) => {
-    const accounts = load('accounts', {})
-    const acc = accounts[r.phone] ?? { favs, bookings: [] }
-    accounts[r.phone] = { ...acc, bookings: [r, ...acc.bookings.filter((b) => b.id !== r.id)] }
-    save('accounts', accounts)
-    setResult(r)
-    setScreen('e6')
-  }
+  const home = () => { setQuery(emptyQuery); setScreen('e1') }
 
   const fav = { favs, toggleFav }
   let page
-  if (screen === 'booking') page = <MyBooking bookings={account?.bookings ?? (result ? [result] : [])} user={user} onLogout={logout} onHome={home} />
-  else if (screen === 'e6') page = <E6 result={result} onOpenBooking={openProfile} onHome={home} />
-  else if (screen === 'e4') page = (
-    <E4 query={query} carId={pickedCarId} booking={booking} user={user} onLogin={login} onBack={() => setScreen('e3')} onDone={saveBooking} />
-  )
+  if (screen === 'final') page = <Final query={query} carId={pickedCarId} onHome={home} />
   else if (screen === 'e3') page = (
     <E3 key={pickedCarId} query={query} setQuery={setQuery} carId={pickedCarId} cameFrom={cameFrom} fav={fav}
       onBack={() => setScreen(cameFrom)} onPickOther={() => setScreen('e2')} openPicker={(g) => setSheet({ picker: g })}
-      onBook={(b) => { setBooking(b); setScreen('e4') }} />
+      onBook={() => setScreen('final')} />
   )
   else if (screen === 'e2') page = (
     <E2 query={query} setQuery={setQuery} fav={fav} onBack={() => setScreen('e1')} onPick={(id) => openCar(id, 'e2')}
@@ -100,14 +90,14 @@ export default function App() {
 
   return (
     <>
-      <Header dark={screen === 'e1'} user={user} favs={favs} onHome={home} onFavs={() => setSheet(sheet === 'favs' ? null : 'favs')}
-        onLogin={() => askLogin(null)} onProfile={openProfile} />
+      <Header dark={screen === 'e1' || screen === 'final'} user={user} favs={favs} onHome={home} onFavs={() => setSheet(sheet === 'favs' ? null : 'favs')}
+        onLogin={() => askLogin(null)} onProfile={logout} />
       {page}
       {sheet === 'favs' && <FavSheet query={query} fav={fav} user={user} onLogin={() => askLogin(() => setSheet('favs'))}
         onOpen={(id) => openCar(id, screen === 'e2' ? 'e2' : 'e1')} onClose={() => setSheet(null)} />}
       {sheet === 'login' && <LoginSheet onLogin={login} onClose={() => setSheet(null)} />}
       {sheet?.picker && <PlacePicker query={query} group={sheet.picker} onClose={() => setSheet(null)}
-        onPick={(l) => { setQuery((q) => ({ ...q, locationId: l.id, cityId: l.city })); setSheet(null) }} />}
+        onPick={(l, address = '') => { setQuery((q) => ({ ...q, locationId: l.id, cityId: l.city, address })); setSheet(null) }} />}
     </>
   )
 }
@@ -158,6 +148,12 @@ function Sheet({ className = '', onClose, children }) {
     window.addEventListener('keydown', onKey)
     return () => window.removeEventListener('keydown', onKey)
   }, [onClose])
+  // Пока открыт поп-ап, страница под ним не скроллится
+  useEffect(() => {
+    const prev = document.body.style.overflow
+    document.body.style.overflow = 'hidden'
+    return () => { document.body.style.overflow = prev }
+  }, [])
   return createPortal(
     <div className="overlay" onClick={onClose}>
       <div className={`sheet ${className}`} role="dialog" aria-modal="true" onClick={(e) => e.stopPropagation()}>{children}</div>
@@ -234,13 +230,18 @@ function PlacePicker({ query, group, onPick, onClose }) {
   const [cityId, setCityId] = useState(query.cityId)
   const [text, setText] = useState('')
   const groupRefs = useRef({})
+  const inputRef = useRef(null)
 
   useEffect(() => {
     if (group && group !== 'all') groupRefs.current[group]?.scrollIntoView({ block: 'start' })
   }, [group])
 
   const t = text.trim().toLowerCase()
-  const items = t ? locations.filter((l) => `${l.name} ${cities[l.city].name}`.toLowerCase().includes(t)) : locations.filter((l) => l.city === cityId)
+  const points = locations.filter((l) => !isAddress(l))
+  const items = t ? points.filter((l) => `${l.name} ${cities[l.city].name}`.toLowerCase().includes(t)) : points.filter((l) => l.city === cityId)
+  const addrPlace = locations.find((l) => l.city === cityId && l.type === 'Адрес') ?? locations.find((l) => l.city === cityId && isAddress(l))
+  const hints = (addressHints[cityId] ?? []).filter((a) => a.toLowerCase().includes(t))
+  const addrs = t ? (hints.length ? hints : [text.trim()]) : []
 
   return (
     <Sheet className="sheet-full sheet-modal" onClose={onClose}>
@@ -248,7 +249,8 @@ function PlacePicker({ query, group, onPick, onClose }) {
         <button className="icon-btn" aria-label="Назад" onClick={onClose}>←</button>
         <h2>Выберите место получения</h2>
       </div>
-      <input className="picker-search" autoFocus placeholder="Аэропорт, вокзал или адрес" value={text} onChange={(e) => setText(e.target.value)} />
+      <input ref={inputRef} className="picker-search" autoFocus placeholder="Аэропорт, вокзал или адрес отеля / дома" value={text} onChange={(e) => setText(e.target.value)} />
+      <div className="picker-city">Привезём к аэропорту, вокзалу или по любому адресу в городе — без доплаты</div>
       {!t && <div className="picker-city">Город: <b>{cities[cityId].name}</b></div>}
       <div className="picker-list">
         {locationGroups.map((g) => {
@@ -267,7 +269,20 @@ function PlacePicker({ query, group, onPick, onClose }) {
             </div>
           )
         })}
-        {t && !items.length && <p className="muted">Ничего не нашли. Попробуйте другой город ниже</p>}
+        <div>
+          <div className="picker-group">{t ? `Адреса · ${cities[cityId].name}` : 'Отель или дом'}</div>
+          {t ? addrs.map((a) => (
+            <button key={a} className="picker-item" onClick={() => onPick(addrPlace, a)}>
+              <span className="picker-icon"><PlaceIcon type="Адрес" /></span>
+              <span>{a}<span className="picker-meet">Привезём к подъезду или ко входу отеля</span></span>
+            </button>
+          )) : (
+            <button className="picker-item" onClick={() => inputRef.current?.focus()}>
+              <span className="picker-icon"><PlaceIcon type="Адрес" /></span>
+              <span>Введите адрес<span className="picker-meet">Начните вводить улицу или название отеля</span></span>
+            </button>
+          )}
+        </div>
         <div ref={(el) => { groupRefs.current.cities = el }}>
           <div className="picker-group">Россия</div>
           {Object.entries(cities).filter(([id]) => id !== cityId || t).map(([id, c]) => (
@@ -307,8 +322,16 @@ function whenText(q) {
   return q.dateFrom && q.dateTo ? `${fmtDate(q.dateFrom)} ${q.timeFrom} — ${fmtDate(q.dateTo)} ${q.timeTo}` : 'даты не выбраны'
 }
 
+// Точки сервиса в городе — туда можно вернуть машину без доплаты
+const servicePoints = (cityId) => locations.filter((l) => l.city === cityId && ['Аэропорт', 'Вокзал'].includes(l.type))
+function returnText(q) {
+  if (q.returnMode === 'free') return 'Где удобно, в зоне города'
+  if (q.returnMode === 'point') return locations.find((l) => l.id === q.returnId)?.name ?? 'В любой нашей точке'
+  return 'Где забрали'
+}
+
 function summary(q) {
-  const loc = locations.find((l) => l.id === q.locationId)
+  const loc = findPlace(q)
   return `${loc ? loc.name : 'Где забрать?'} · ${whenText(q)}`
 }
 
@@ -393,11 +416,13 @@ function carDiff(prev, cur, q) {
 
 /* ---------- Форма «где и когда» ---------- */
 
-function SearchForm({ ref, query, setQuery, onSubmit, openPicker, layout = 'stack', submitLabel = 'Подобрать машину', submitDisabled, children }) {
+function SearchForm({ ref, query, setQuery, onSubmit, openPicker, layout = 'stack', submitLabel = 'Подобрать машину', submitDisabled, params, children }) {
   const [errors, setErrors] = useState({})
+  const [paramsOpen, setParamsOpen] = useState(false)
+  const [returnOpen, setReturnOpen] = useState(false)
   const [datesOpen, setDatesOpen] = useState(false)
   const [hoursOpen, setHoursOpen] = useState(false)
-  const location = locations.find((l) => l.id === query.locationId)
+  const location = findPlace(query)
   const set = (patch) => { setQuery((q) => ({ ...q, ...patch })); setErrors({}) }
 
   const submit = (e) => {
@@ -419,7 +444,7 @@ function SearchForm({ ref, query, setQuery, onSubmit, openPicker, layout = 'stac
         ))}
       </div>
 
-      <div className="search-fields">
+      <div className={`search-fields ${query.returnMode !== 'same' ? 'has-return' : ''}`}>
         <div className={`field field-where ${errors.location ? 'has-error' : ''}`}>
           <span className="field-label">Где забрать</span>
           <button type="button" className="field-btn" onClick={() => openPicker('all')}>
@@ -427,6 +452,13 @@ function SearchForm({ ref, query, setQuery, onSubmit, openPicker, layout = 'stac
           </button>
           {errors.location && <div className="error">{errors.location}</div>}
         </div>
+
+        {query.returnMode !== 'same' && (
+          <div className="field">
+            <span className="field-label">Где вернуть</span>
+            <button type="button" className="field-btn" onClick={() => setReturnOpen(true)}>{returnText(query)}</button>
+          </div>
+        )}
 
         {query.mode === 'days' ? (
           <>
@@ -460,12 +492,28 @@ function SearchForm({ ref, query, setQuery, onSubmit, openPicker, layout = 'stac
             </div>
           </>
         )}
+        {params && (
+          <div className="field">
+            <span className="field-label">Параметры</span>
+            <button type="button" className="field-btn" onClick={() => setParamsOpen(true)}>
+              {paramsText(query) || <span className="placeholder">Куда, с кем, какое авто</span>}
+            </button>
+          </div>
+        )}
         {layout === 'row' && <button type="submit" className="btn-primary btn-accent" disabled={submitDisabled}>{submitLabel}</button>}
       </div>
+
+      <label className="return-check">
+        <input type="checkbox" checked={query.returnMode !== 'same'}
+          onChange={(e) => (e.target.checked ? setReturnOpen(true) : set({ returnMode: 'same', returnId: '' }))} />
+        Вернуть в другом месте
+      </label>
 
       {children}
       {layout !== 'row' && <button type="submit" className="btn-primary" disabled={submitDisabled}>{submitLabel}</button>}
       {datesOpen && <DatePicker query={query} onApply={(patch) => { set(patch); setDatesOpen(false) }} onClose={() => setDatesOpen(false)} />}
+      {returnOpen && <ReturnPicker query={query} onApply={(patch) => { set(patch); setReturnOpen(false) }} onClose={() => setReturnOpen(false)} />}
+      {paramsOpen && <ParamsPicker query={query} onApply={(patch) => { set(patch); setParamsOpen(false) }} onClose={() => setParamsOpen(false)} />}
       {hoursOpen && <HoursPicker query={query} location={location} onApply={(patch) => { set(patch); setHoursOpen(false) }} onClose={() => setHoursOpen(false)} />}
     </form>
   )
@@ -476,6 +524,78 @@ function SearchForm({ ref, query, setQuery, onSubmit, openPicker, layout = 'stac
 const isoDay = (d) => `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`
 const fmtDay = (iso) => new Date(`${iso}T00:00`).toLocaleDateString('ru-RU', { day: 'numeric', month: 'short' })
 const timeSlots = Array.from({ length: 48 }, (_, i) => `${String(Math.floor(i / 2)).padStart(2, '0')}:${i % 2 ? '30' : '00'}`)
+
+// Параметры поездки до подбора: цель, с кем, требования к авто
+const paramsText = (q) => [
+  ...plans.filter((p) => q.planIds.includes(p.id)).map((p) => p.label),
+  companions.find((c) => c.id === q.companion)?.label,
+  ...prefOptions.filter((o) => q.prefs.includes(o.id)).map((o) => o.label),
+].filter(Boolean).map((t, i) => (i ? t.toLowerCase() : t)).join(' · ')
+
+function ParamsPicker({ query, onApply, onClose }) {
+  const [planIds, setPlanIds] = useState(query.planIds)
+  const [companion, setCompanion] = useState(query.companion)
+  const [prefs, setPrefs] = useState(query.prefs)
+  const chip = (on, label, onClick) => (
+    <button key={label} type="button" className={`chip ${on ? 'active' : ''}`} onClick={onClick}>{label}</button>
+  )
+  return (
+    <Sheet className="sheet-dates" onClose={onClose}>
+      <h2 className="dates-title">Параметры поездки</h2>
+      <div className="dates-scroll">
+        <p className="muted">Необязательно. Чем больше расскажете, тем точнее подбор.</p>
+        <div className="chips-label">Еду</div>
+        <div className="chips">{cityPlans(query.cityId).filter((p) => !p.local).map((p) => chip(planIds.includes(p.id), p.label, () => setPlanIds(togglePlanIds(planIds, p.id))))}</div>
+        <div className="chips-label">С кем</div>
+        <div className="chips">{companions.map((c) => chip(companion === c.id, c.label, () => setCompanion(companion === c.id ? '' : c.id)))}</div>
+        <div className="chips-label">Авто</div>
+        <div className="chips">{prefOptions.map((o) => chip(prefs.includes(o.id), o.label, () => setPrefs(prefs.includes(o.id) ? prefs.filter((x) => x !== o.id) : [...prefs, o.id])))}</div>
+      </div>
+      <div className="dates-foot">
+        <button type="button" className="btn-secondary" onClick={() => { setPlanIds([]); setCompanion(''); setPrefs([]) }}>Сбросить</button>
+        <button type="button" className="btn-primary btn-accent" onClick={() => onApply({ planIds, companion, prefs })}>Готово</button>
+      </div>
+    </Sheet>
+  )
+}
+
+function ReturnPicker({ query, onApply, onClose }) {
+  const [mode, setMode] = useState(query.returnMode)
+  const [id, setId] = useState(query.returnId)
+  const location = findPlace(query)
+  const points = servicePoints(location?.city ?? query.cityId)
+  const opt = (m, title, hint, free) => (
+    <button key={m} type="button" className={`row-cell ${mode === m ? 'on' : ''}`} onClick={() => setMode(m)}>
+      <span className="row-text">
+        <span className="plan-label">{title}</span>
+        <span className="plan-hint">{hint}</span>
+        {free && <span className="return-free">Без доплаты</span>}
+      </span>
+      {mode === m && <span className="row-arrow">✓</span>}
+    </button>
+  )
+  return (
+    <Sheet className="sheet-dates" onClose={onClose}>
+      <h2 className="dates-title">Где вернуть машину</h2>
+      <div className="dates-scroll">
+        {opt('same', 'Где забрали', location?.name ?? 'Там же, где получите')}
+        {opt('point', 'В нашей точке', points.map((l) => l.name).join(', '), true)}
+        {mode === 'point' && (
+          <div className="chips return-points">
+            {[{ id: '', name: 'Решу по дороге' }, ...points].map((l) => (
+              <button key={l.id} type="button" className={`chip ${id === l.id ? 'active' : ''}`} onClick={() => setId(l.id)}>{l.name}</button>
+            ))}
+          </div>
+        )}
+        {opt('free', 'Где удобно', 'Как в каршеринге: оставьте на любой парковке в зоне города и завершите аренду в SMS', true)}
+      </div>
+      <div className="dates-foot">
+        <button type="button" className="btn-secondary" onClick={onClose}>Отмена</button>
+        <button type="button" className="btn-primary btn-accent" onClick={() => onApply({ returnMode: mode, returnId: mode === 'point' ? id : '' })}>Готово</button>
+      </div>
+    </Sheet>
+  )
+}
 
 function HoursPicker({ query, location, onApply, onClose }) {
   const [start, setStart] = useState(query.start)
@@ -605,7 +725,7 @@ function Landing({ query, setQuery, fav, onSubmit, onPickCar, openPicker }) {
         <div className="hero-bg" style={{ '--hero-d': `url(${import.meta.env.BASE_URL}hero/d.webp)`, '--hero-m': `url(${import.meta.env.BASE_URL}hero/m.webp)` }} />
         <div className="hero-inner">
           <h1 className="hero-title">Расскажите, что в планах, — подберём лучшую машину для твоей цели</h1>
-          <SearchForm ref={formRef} layout="row" query={query} setQuery={setQuery} onSubmit={submit} openPicker={openPicker} />
+          <SearchForm ref={formRef} layout="row" params query={query} setQuery={setQuery} onSubmit={submit} openPicker={openPicker} />
         </div>
       </section>
 
@@ -639,12 +759,12 @@ function Landing({ query, setQuery, fav, onSubmit, onPickCar, openPicker }) {
   )
 }
 
-function CitySelect({ query, setQuery }) {
+function CitySelect({ query, setQuery, inCity }) {
   const [open, setOpen] = useState(false)
   const change = (cityId) => {
     setQuery((q) => ({
       ...q, cityId,
-      locationId: locations.find((l) => l.id === q.locationId)?.city === cityId ? q.locationId : '',
+      locationId: findPlace(q)?.city === cityId ? q.locationId : '',
       planIds: q.planIds.filter((id) => cityPlans(cityId).some((p) => p.id === id)),
     }))
     setOpen(false)
@@ -652,7 +772,7 @@ function CitySelect({ query, setQuery }) {
   return (
     <>
       <button type="button" className="city-select" onClick={() => setOpen(true)}>
-        {cities[query.cityId].name}<span aria-hidden="true">▾</span>
+        {inCity ? cities[query.cityId].in : cities[query.cityId].name}<span aria-hidden="true">▾</span>
       </button>
       {open && (
         <Sheet className="sheet-dates" onClose={() => setOpen(false)}>
@@ -685,9 +805,7 @@ function Plans({ ref, query, setQuery, onPick }) {
   return (
     <section ref={ref} className="section plans-section">
       <h2 className="plans-title">Какие планы <CitySelect query={query} setQuery={setQuery} />?</h2>
-      <p className="muted">Выберите цель или место — сразу подберём машину</p>
-      <div className="rows">{list.filter((p) => !p.local).map(row)}</div>
-      <h3 className="plans-sub">Рекомендуем {cities[query.cityId].in}</h3>
+      <p className="muted">Места, о которых вы могли не знать, — выберите, сразу подберём машину</p>
       <div className="rows">{list.filter((p) => p.local).map(row)}</div>
     </section>
   )
@@ -721,7 +839,7 @@ function Park({ query, setQuery, fav, onPickCar, onSubmit }) {
   const three = list.length <= 3 ? list : [list[0], list[Math.floor(list.length / 2)], list[list.length - 1]]
   return (
     <section className="section park">
-      <h2>Какие машины в парке</h2>
+      <h2>Какие машины в парке <CitySelect query={query} setQuery={setQuery} inCity /></h2>
       <div className="scenarios" role="tablist">
         {tabs.map((t) => (
           <button key={t.id} role="tab" aria-selected={tab === t.id} className={`scenario ${tab === t.id ? 'active' : ''}`} onClick={() => setTab(t.id)}>
@@ -741,7 +859,6 @@ function Park({ query, setQuery, fav, onPickCar, onSubmit }) {
         ))}
       </div>
       <div className="park-foot">
-        <span>Машины <CitySelect query={query} setQuery={setQuery} /></span>
         <button className="btn-primary" onClick={onSubmit}>Подобрать {cities[query.cityId].in}</button>
       </div>
     </section>
@@ -793,10 +910,8 @@ function E2({ query, setQuery, fav, onBack, onPick, openPicker }) {
   const res = pickCar(query)
   const { goal, places, companion, active, skipped, fit } = res
   const car = fit.find((c) => c.id === pickedId) ?? res.car
-  const location = locations.find((l) => l.id === query.locationId)
-  const cityId = location?.city ?? query.cityId
-  const goalsList = cityPlans(cityId).filter((p) => !p.local)
-  const [hintsAll, setHintsAll] = useState(false)
+  const location = findPlace(query)
+  const [paramsOpen, setParamsOpen] = useState(false)
 
   const change = (patch) => {
     if (car) setPrev(car)
@@ -805,7 +920,6 @@ function E2({ query, setQuery, fav, onBack, onPick, openPicker }) {
   }
   const choose = (id) => { setPrev(car); setPickedId(id); setMoreOpen(false); window.scrollTo({ top: 0, behavior: 'smooth' }) }
   const togglePref = (id) => change({ prefs: query.prefs.includes(id) ? query.prefs.filter((x) => x !== id) : [...query.prefs, id] })
-  const togglePlan = (id) => change({ planIds: togglePlanIds(query.planIds, id) })
 
   const reasons = []
   if (goal) reasons.push(<><b>{goal.label}</b> → {goal.hint.toLowerCase()}</>)
@@ -836,15 +950,12 @@ function E2({ query, setQuery, fav, onBack, onPick, openPicker }) {
 
   const diff = prev && car && prev.id !== car.id ? carDiff(prev, car, query) : null
   const fixes = !car ? active.filter((o) => pickCar(query, query.prefs.filter((x) => x !== o.id)).car) : []
-  const chip = (on, label, onClick, disabled) => (
-    <button key={label} type="button" className={`filter ${on ? 'active' : ''}`} aria-pressed={on} disabled={disabled} onClick={onClick}>{label}</button>
-  )
 
   const cells = (cls) => (
     <div className={`cells ${cls}`}>
       <button type="button" className="cell" onClick={() => openPicker('all')}>
         <PlaceIcon type={location?.type ?? 'Адрес'} />
-        <span className="cell-text"><span className="cell-label">Где забрать</span>{location ? location.name : 'Выберите место'}</span>
+        <span className="cell-text"><span className="cell-label">Где забрать</span>{location ? location.name : 'Выберите место'}{query.returnMode !== 'same' && <span className="muted"> · вернуть: {returnText(query).toLowerCase()}</span>}</span>
         <span className="cell-arrow" aria-hidden="true">›</span>
       </button>
       <button type="button" className="cell" onClick={() => setDatesOpen(true)}>
@@ -863,28 +974,9 @@ function E2({ query, setQuery, fav, onBack, onPick, openPicker }) {
         <div className="e2-main">
           {cells('cells-inline')}
 
-          <div className="tags">
-            <div className="tags-row"><span className="tags-label">Еду</span>
-              {goalsList.map((p) => chip(query.planIds.includes(p.id), p.label, () => togglePlan(p.id)))}</div>
-            {(() => {
-              const g = goalsList.find((p) => query.planIds.includes(p.id))
-              const hints = g ? cityPlans(cityId).filter((p) => p.goal === g.id) : []
-              if (!hints.length) return null
-              const shown = hintsAll ? hints : hints.slice(0, 3)
-              return (
-                <div className="tags-row tags-hints"><span className="tags-label">Например</span>
-                  {shown.map((p) => chip(query.planIds.includes(p.id), p.label, () => togglePlan(p.id)))}
-                  {hints.length > 3 && <button type="button" className="link-more" onClick={() => setHintsAll(!hintsAll)}>{hintsAll ? 'Свернуть' : `Ещё ${hints.length - 3}`}</button>}
-                </div>
-              )
-            })()}
-            <div className="tags-row"><span className="tags-label">С кем</span>
-              {companions.map((c) => chip(query.companion === c.id, c.label, () => change({ companion: query.companion === c.id ? '' : c.id })))}</div>
-            <div className="tags-row"><span className="tags-label">Авто</span>
-              {prefOptions.map((o) => {
-                const on = query.prefs.includes(o.id)
-                return chip(on, o.label, () => togglePref(o.id), !on && !pickCar(query, [...query.prefs, o.id]).car)
-              })}</div>
+          <div className="params-line">
+            <span><span className="muted">Учли: </span>{paramsText(query) || 'параметры не заданы'}</span>
+            <button type="button" className="link" onClick={() => setParamsOpen(true)}>Изменить</button>
           </div>
 
           {car && diff && (
@@ -898,7 +990,7 @@ function E2({ query, setQuery, fav, onBack, onPick, openPicker }) {
           {car ? (
             <div className="pick-card" key={car.id}>
               <div className="pick-photo photo-car" style={carPhoto(car, 'lg')}>
-                <span className="badge">Подобрали для вас</span>
+                <span className="badge">{paramsText(query) ? 'Под ваши параметры' : 'Подобрали для вас'}</span>
                 <FavToggle id={car.id} fav={fav} />
               </div>
               <div className="pick-body">
@@ -959,6 +1051,7 @@ function E2({ query, setQuery, fav, onBack, onPick, openPicker }) {
         </aside>
       </div>
 
+      {paramsOpen && <ParamsPicker query={query} onApply={(patch) => { change(patch); setParamsOpen(false) }} onClose={() => setParamsOpen(false)} />}
       {datesOpen && <DatePicker query={query} onClose={() => setDatesOpen(false)}
         onApply={(patch) => { change({ ...patch, mode: 'days' }); setDatesOpen(false) }} />}
       {moreOpen && (
@@ -990,22 +1083,22 @@ function E2({ query, setQuery, fav, onBack, onPick, openPicker }) {
 function E3({ query, setQuery, carId, cameFrom, fav, onBack, onPickOther, openPicker, onBook }) {
   const car = cars.find((c) => c.id === carId)
   const d = carDetails[car.id]
-  const location = locations.find((l) => l.id === query.locationId)
+  const location = findPlace(query)
   const city = cities[location?.city ?? query.cityId]
   const widgetRef = useRef(null)
+  const [edit, setEdit] = useState(null) // 'when' | 'return'
 
   const ready = queryReady(query)
   const status = ready ? availability(car, query.locationId) : null
   const chosen = extras.filter((x) => query.extraIds.includes(x.id))
   const total = tripTotal(car, query)
-  const hasDelivery = query.extraIds.includes('delivery')
 
   const placesHere = locations.filter((l) => l.city === (location?.city ?? query.cityId) && l.id !== query.locationId && !d.unavailableAt.includes(l.id))
 
   const toggle = (id) => setQuery((q) => ({ ...q, extraIds: q.extraIds.includes(id) ? q.extraIds.filter((x) => x !== id) : [...q.extraIds, id] }))
   const scrollToWidget = () => widgetRef.current.scrollIntoView({ behavior: 'smooth', block: 'center' })
   const perLabel = (x) => (x.price === 0 ? 'бесплатно' : `${rub(x.price)}${x.per === 'day' ? ' / сутки' : ''}`)
-  const book = () => onBook({ total })
+  const book = () => onBook()
 
   // Резину показываем только в межсезонье
   const month = new Date(query.dateFrom || Date.now()).getMonth() + 1
@@ -1048,7 +1141,7 @@ function E3({ query, setQuery, carId, cameFrom, fav, onBack, onPickOther, openPi
             <h2>Как получите машину</h2>
             <ol className="steps">
               <li><b>{location ? location.name : 'Выберите точку получения'}</b>
-                <span>{location ? (hasDelivery && query.address ? `Привезём по адресу: ${query.address}` : location.meet) : 'аэропорт, вокзал, отель, парковка или к дому'}
+                <span>{location ? location.meet : 'аэропорт, вокзал, отель, парковка или к дому'}
                   {location && isNow(query) ? ` — подадим через ${location.etaMin + car.etaAdd} мин` : ''}</span></li>
               <li><b>Встречает сотрудник — 10 минут</b>
                 <span>Вместе обходите машину и фотографируете её — акт с фото приходит в телефон, так старые царапины не станут вашими. Показываем, как работают допы, и отдаём ключи</span></li>
@@ -1068,7 +1161,7 @@ function E3({ query, setQuery, carId, cameFrom, fav, onBack, onPickOther, openPi
           <section className="e3-section">
             <h2>Условия</h2>
             <dl className="terms">
-              <dt>Пробег</dt><dd>{query.extraIds.includes('unlimited') ? 'Без ограничений — безлимит в вашем расчёте' : `${rentTerms.mileage}. Или возьмите безлимит в расчёте справа`}</dd>
+              <dt>Пробег</dt><dd>{query.extraIds.includes('unlimited') ? 'Без ограничений — безлимит в вашем расчёте' : `${rentTerms.mileage}. Или возьмите безлимит в допах ниже`}</dd>
               <dt>Водитель</dt><dd>{rentTerms.driver}</dd>
               <dt>Куда можно</dt><dd>{city.regions}</dd>
               <dt>Страховка</dt><dd>{rentTerms.insurance}</dd>
@@ -1092,48 +1185,48 @@ function E3({ query, setQuery, carId, cameFrom, fav, onBack, onPickOther, openPi
         </div>
 
         <aside className="e3-aside" ref={widgetRef}>
-          <div className="price-big">{query.mode === 'hours' ? `${rub(car.pricePerHour)} ` : `${rub(car.pricePerDay)} `}
-            <span className="muted">/ {query.mode === 'hours' ? 'час' : 'сутки'}</span></div>
-          <SearchForm query={query} setQuery={setQuery} openPicker={openPicker} submitLabel={ready ? 'Забронировать' : 'Проверить наличие'}
-            submitDisabled={status === 'sold' || status === 'place'} onSubmit={() => status === 'ok' && book()}>
-            {status === 'ok' && (
-              <div className="avail ok">✓ Свободна{isNow(query) ? `, подадим через ${location.etaMin + car.etaAdd} мин` : ''}</div>
-            )}
-            {status === 'place' && (
-              <div className="avail no">
-                <div>В точке «{location.name}» этой машины нет. Можно забрать здесь:</div>
-                <div className="avail-options">
-                  {placesHere.map((l) => (
-                    <button type="button" key={l.id} className="filter" onClick={() => setQuery((q) => ({ ...q, locationId: l.id }))}>{l.name}</button>
-                  ))}
-                </div>
-              </div>
-            )}
-            {status === 'sold' && <div className="avail no">Эту машину разобрали</div>}
-
-            <div className="calc-options">
-              {extras.filter((x) => x.group === 'calc').map((x) => (
-                <label key={x.id} className={`extra ${query.extraIds.includes(x.id) ? 'on' : ''}`}>
-                  <input type="checkbox" checked={query.extraIds.includes(x.id)} onChange={() => toggle(x.id)} />
-                  <span className="extra-name">{x.name}</span>
-                  <span className="extra-price">{perLabel(x)}</span>
-                </label>
-              ))}
-              {hasDelivery && (
-                <input className="calc-address" placeholder="Улица, дом — привезём сюда" value={query.address}
-                  onChange={(e) => setQuery((q) => ({ ...q, address: e.target.value }))} />
-              )}
+          {[
+            ['Где', location ? location.name : 'Выберите место', () => openPicker('all')],
+            ['Когда', whenText(query), () => setEdit('when')],
+            ['Вернуть', returnText(query), () => setEdit('return')],
+          ].map(([label, value, onClick]) => (
+            <div key={label} className="book-row">
+              <span><span className="cell-label">{label}</span>{value}</span>
+              <button type="button" className="link" onClick={onClick}>Изменить</button>
             </div>
+          ))}
 
-            {status === 'ok' && (
+          {status === 'place' && (
+            <div className="avail no">
+              <div>В точке «{location.name}» этой машины нет. Можно забрать здесь:</div>
+              <div className="avail-options">
+                {placesHere.map((l) => (
+                  <button type="button" key={l.id} className="filter" onClick={() => setQuery((q) => ({ ...q, locationId: l.id, address: '' }))}>{l.name}</button>
+                ))}
+              </div>
+            </div>
+          )}
+          {status === 'sold' && <div className="avail no">Эту машину разобрали</div>}
+
+          {status === 'ok' && (
+            <>
+              <div className="price-big">{rub(total)}</div>
+              <div className="muted">за {unitsText(query)}{chosen.length ? ', с допами' : ''}</div>
               <dl className="bill">
                 <dt>Аренда, {unitsText(query)}</dt><dd>{rub(rentPrice(car, query))}</dd>
                 {chosen.map((x) => <Fragment key={x.id}><dt>{x.name}</dt><dd>{rub(extraCost(x, query))}</dd></Fragment>)}
-                <dt className="bill-total">Итого</dt><dd className="bill-total">{rub(total)}</dd>
-                <dt className="muted">Залог, вернём</dt><dd className="muted">{rub(d.deposit)}</dd>
+                <dt>Подача и возврат</dt><dd className="bill-inc">включено</dd>
+                <dt className="muted">Залог, вернём после аренды</dt><dd className="muted">{rub(d.deposit)}</dd>
               </dl>
-            )}
-          </SearchForm>
+            </>
+          )}
+          <button className="btn-primary btn-accent btn-book" disabled={status === 'sold' || status === 'place'}
+            onClick={status === 'ok' ? book : () => openPicker('all')}>{ready ? 'Забронировать' : 'Укажите, где и когда'}</button>
+          {status === 'ok' && <div className="book-note muted">✓ Бесплатная отмена за 48 ч</div>}
+          {edit === 'when' && (query.mode === 'hours'
+            ? <HoursPicker query={query} location={location} onApply={(patch) => { setQuery((q) => ({ ...q, ...patch })); setEdit(null) }} onClose={() => setEdit(null)} />
+            : <DatePicker query={query} onApply={(patch) => { setQuery((q) => ({ ...q, ...patch })); setEdit(null) }} onClose={() => setEdit(null)} />)}
+          {edit === 'return' && <ReturnPicker query={query} onApply={(patch) => { setQuery((q) => ({ ...q, ...patch })); setEdit(null) }} onClose={() => setEdit(null)} />}
 
           {(status === 'sold' || status === 'place') && (
             <button className="btn-secondary" onClick={onPickOther}>Подобрать другую — допы сохранятся</button>
@@ -1152,177 +1245,15 @@ function E3({ query, setQuery, carId, cameFrom, fav, onBack, onPickOther, openPi
   )
 }
 
-/* ---------- Э4 Оформление и оплата ---------- */
+/* ---------- Вход (для избранного) ---------- */
 
 const banks = ['Сбер', 'Т-Банк', 'Альфа-Банк', 'ВТБ', 'Точка']
 const bankClient = { phone: '+7 999 123-45-67', name: 'Иван Петров', birth: '12.04.1990' }
-const scannedLicense = { name: 'Иван Петров', birth: '12.04.1990', license: '99 12 345678', issued: '03.2015' }
-const HOLD_SEC = 600
 
 const fmtPhone = (digits) => {
   const d = digits.padEnd(10, '_')
   return `+7 ${d.slice(0, 3)} ${d.slice(3, 6)}-${d.slice(6, 8)}-${d.slice(8, 10)}`
 }
-const yearsSince = (month, year, day = 1) => {
-  const now = new Date()
-  let y = now.getFullYear() - year
-  if (now.getMonth() + 1 < month || (now.getMonth() + 1 === month && now.getDate() < day)) y -= 1
-  return y
-}
-
-// Сумма брони — одна для Э4 и Э6
-function bookingTotals(query, car, booking) {
-  const chosen = extras.filter((x) => query.extraIds.includes(x.id))
-  const payNow = isNow(query) ? booking.total : Math.round(booking.total * 0.2)
-  return { chosen, rent: rentPrice(car, query), payNow, rest: booking.total - payNow, deposit: carDetails[car.id].deposit }
-}
-
-function Step({ n, title, active, done, summary: doneText, onEdit, children }) {
-  return (
-    <section className={`step ${active ? 'active' : ''} ${done ? 'done' : ''}`}>
-      <div className="step-head">
-        <span className="step-n">{done ? '✓' : n}</span>
-        <div className="step-title">{title}{done && !active && <div className="muted">{doneText}</div>}</div>
-        {done && !active && onEdit && <button type="button" className="link-back" onClick={onEdit}>Изменить</button>}
-      </div>
-      {active && <div className="step-body">{children}</div>}
-    </section>
-  )
-}
-
-function E4({ query, carId, booking, user, onLogin, onBack, onDone }) {
-  const car = cars.find((c) => c.id === carId)
-  const location = locations.find((l) => l.id === query.locationId)
-  const t = bookingTotals(query, car, booking)
-  const needDriver2 = query.extraIds.includes('driver2')
-  const now = isNow(query)
-
-  // Уже вошли из шапки — сразу к водителю
-  const [step, setStep] = useState(user ? 'driver' : 'login') // 'login' | 'driver' | 'pay'
-  const [driver, setDriver] = useState({ name: user?.viaBank ? bankClient.name : '', birth: user?.viaBank ? bankClient.birth : '', license: '', issued: '', fromBank: !!user?.viaBank })
-  const [driverOk, setDriverOk] = useState(false)
-  const [driver2, setDriver2] = useState(false)
-  const [payMethod, setPayMethod] = useState('card')
-  const [paying, setPaying] = useState(false)
-  const [summaryOpen, setSummaryOpen] = useState(false)
-
-  // «Сейчас»: машина закреплена 10 минут
-  const [left, setLeft] = useState(HOLD_SEC)
-  const [expired, setExpired] = useState(false)
-  useEffect(() => {
-    if (!now) return
-    const id = setInterval(() => setLeft((s) => Math.max(0, s - 1)), 1000)
-    return () => clearInterval(id)
-  }, [now])
-  useEffect(() => {
-    if (!now || left > 0) return
-    setExpired(true)
-    const id = setTimeout(() => { setExpired(false); setLeft(HOLD_SEC) }, 1000)
-    return () => clearTimeout(id)
-  }, [left, now])
-
-  const login = (u) => {
-    onLogin(u)
-    if (u.viaBank) setDriver((d) => ({ ...d, name: bankClient.name, birth: bankClient.birth, fromBank: true }))
-    setStep(driverOk ? 'pay' : 'driver')
-  }
-
-  const pay = () => {
-    setPaying(true)
-    setTimeout(() => onDone({
-      id: Math.random().toString(36).slice(2, 6).toUpperCase(), phone: user.phone, name: driver.name, carId, query, extraIds: query.extraIds,
-      total: booking.total, paidNow: t.payNow, rest: t.rest, deposit: t.deposit,
-    }), 1500)
-  }
-
-  const ready = user && driverOk
-  const payLabel = paying ? 'Оплачиваем…' : `Оплатить ${rub(t.payNow)} и забронировать`
-  const when = now ? `подадим через ${location.etaMin + car.etaAdd} мин после оплаты` : whenText(query)
-  const mm = String(Math.floor(left / 60)), ss = String(left % 60).padStart(2, '0')
-
-  const bookingCard = (
-    <div className="e4-booking">
-      <div className="e4-car">
-        <span className="similar-photo photo-car" style={carPhoto(car)} />
-        <div><b>{car.model}</b><div className="muted">{location.name}</div><div className="muted">{when}</div></div>
-      </div>
-      <dl className="bill">
-        <dt>Аренда, {unitsText(query)}</dt><dd>{rub(t.rent)}</dd>
-        {t.chosen.map((x) => <Fragment key={x.id}><dt>{x.name}</dt><dd>{rub(extraCost(x, query))}</dd></Fragment>)}
-        <dt className="bill-total">Итого</dt><dd className="bill-total">{rub(booking.total)}</dd>
-        <dt className="muted">Залог, вернём</dt><dd className="muted">{rub(t.deposit)}</dd>
-      </dl>
-      <button type="button" className="link-back" onClick={onBack}>Изменить</button>
-    </div>
-  )
-
-  return (
-    <main className="e3 e4">
-      <button className="link-back" onClick={onBack}>← Назад к машине</button>
-
-      {now && (
-        <div className={`hold ${expired ? 'expired' : ''}`}>
-          {expired ? 'Время вышло — проверяем машину заново' : `Машина закреплена за вами ещё ${mm}:${ss}`}
-        </div>
-      )}
-
-      <button type="button" className="e4-summary-line" onClick={() => setSummaryOpen((v) => !v)}>
-        <span>{car.model} · {now ? 'сейчас' : whenText(query)} · {rub(booking.total)}</span>
-        <span>{summaryOpen ? '▴' : '▾'}</span>
-      </button>
-      {summaryOpen && <div className="e4-summary-body">{bookingCard}</div>}
-
-      <div className="e3-layout">
-        <div className="e4-form">
-          <h1>Оформление</h1>
-
-          <Step n={1} title="Вход" active={step === 'login'} done={!!user}
-            summary={`${user?.phone ?? ''}${user?.viaBank ? ' · через банк' : ''} — бронь появится в «Моей брони»`} onEdit={() => setStep('login')}>
-            <p className="muted">Номер нужен, чтобы прислать SMS «Машина ждёт» и чтобы вы нашли бронь в «Моей брони».</p>
-            <Login onLogin={login} />
-          </Step>
-
-          <Step n={2} title="Водитель" active={step === 'driver'} done={driverOk}
-            summary={`${driver.name} · права проверены`} onEdit={user ? () => setStep('driver') : null}>
-            <Driver driver={driver} setDriver={setDriver} needDriver2={needDriver2} driver2={driver2} setDriver2={setDriver2}
-              onOk={() => { setDriverOk(true); setStep('pay') }} />
-          </Step>
-
-          <Step n={3} title="Оплата" active={step === 'pay'} done={false}>
-            <dl className="bill pay-split">
-              {now ? (
-                <><dt>Сейчас — вся аренда</dt><dd>{rub(t.payNow)}</dd></>
-              ) : (
-                <><dt>Сейчас — предоплата 20%</dt><dd>{rub(t.payNow)}</dd>
-                  <dt>При получении — остаток</dt><dd>{rub(t.rest)}</dd></>
-              )}
-            </dl>
-            <p className="muted">Залог {rub(t.deposit)} заблокируем на карте при получении — это не списание.</p>
-            <div className="mode-toggle pay-methods">
-              <button type="button" className={payMethod === 'card' ? 'active' : ''} onClick={() => setPayMethod('card')}>Картой</button>
-              <button type="button" className={payMethod === 'sbp' ? 'active' : ''} onClick={() => setPayMethod('sbp')}>СБП</button>
-            </div>
-            <p className="muted">Бесплатная отмена за 24 часа до подачи.</p>
-          </Step>
-
-          <button className="btn-primary e4-pay" disabled={!ready || paying} onClick={pay}>{payLabel}</button>
-          {!ready && <p className="muted">Войдите и добавьте права, чтобы оплатить</p>}
-        </div>
-
-        <aside className="e3-aside e4-aside">{bookingCard}</aside>
-      </div>
-
-      <div className="e3-bar">
-        <div>
-          <div className="price">{rub(t.payNow)}</div>
-          <div className="muted">{now ? 'вся аренда' : 'предоплата 20%'}</div>
-        </div>
-        <button className="btn-primary" disabled={!ready || paying} onClick={pay}>{paying ? 'Оплачиваем…' : 'Оплатить'}</button>
-      </div>
-    </main>
-  )
-}
-
 function Login({ onLogin }) {
   const [way, setWay] = useState('sms') // 'sms' | 'bank'
   const [digits, setDigits] = useState('')
@@ -1402,207 +1333,43 @@ function Login({ onLogin }) {
   )
 }
 
-function Driver({ driver, setDriver, needDriver2, driver2, setDriver2, onOk }) {
-  const [scanning, setScanning] = useState(false)
-  const [manual, setManual] = useState(false)
-  const [errors, setErrors] = useState({})
-  const [checked, setChecked] = useState(false)
+/* ---------- Финал: машина ждёт, конец концепта ---------- */
 
-  const set = (patch) => { setDriver((d) => ({ ...d, ...patch })); setErrors({}); setChecked(false) }
-
-  const scan = () => {
-    setScanning(true)
-    setTimeout(() => {
-      setScanning(false)
-      // Каскад: поля заполняются по очереди
-      const keys = driver.fromBank ? ['license', 'issued'] : ['name', 'birth', 'license', 'issued']
-      keys.forEach((k, i) => setTimeout(() => setDriver((d) => ({ ...d, [k]: scannedLicense[k] })), i * 250))
-      setTimeout(() => { setChecked(true); if (!needDriver2) setTimeout(onOk, 600) }, keys.length * 250)
-    }, 1500)
-  }
-
-  const validate = () => {
-    const err = {}
-    const [bd, bm, by] = driver.birth.split('.').map(Number)
-    const [im, iy] = driver.issued.split('.').map(Number)
-    if (!driver.name.trim()) err.name = 'Укажите имя и фамилию'
-    if (!by || !bm || !bd) err.birth = 'Дата в формате ДД.ММ.ГГГГ'
-    else if (yearsSince(bm, by, bd) < 21) err.birth = 'Арендовать можно с 21 года'
-    if (driver.license.replace(/\D/g, '').length !== 10) err.license = 'Номер ВУ — 10 цифр'
-    if (!iy || !im) err.issued = 'Месяц и год в формате ММ.ГГГГ'
-    else if (yearsSince(im, iy) < 2) err.issued = 'Для этой машины нужен стаж от 2 лет'
-    setErrors(err)
-    if (Object.keys(err).length === 0) onOk()
-  }
-
-  const showFields = manual || checked || driver.license || driver.fromBank
-  const stage = driver.issued ? yearsSince(...driver.issued.split('.').map(Number)) : 0
-  const fields = [
-    ['name', 'Имя и фамилия', 'Иван Петров'],
-    ['birth', 'Дата рождения', 'ДД.ММ.ГГГГ'],
-    ['license', 'Водительское удостоверение', '99 12 345678'],
-    ['issued', 'Выдано', 'ММ.ГГГГ'],
-  ]
+function Final({ query, carId, onHome }) {
+  const car = cars.find((c) => c.id === carId)
+  const location = findPlace(query)
+  const inCar = extras.filter((x) => query.extraIds.includes(x.id) && (x.group === 'trip' || x.id === 'child-seat'))
+  const startText = isNow(query) ? `через ${location.etaMin + car.etaAdd} мин` : query.mode === 'hours' ? `сегодня в ${query.start}` : `${fmtDate(query.dateFrom)} ${query.timeFrom}`
+  const sms = `Машина ждёт вас: ${car.model}, ${location.name}, ${startText}.${inCar.length ? ` ${inCar.map((x) => x.name.split(' — ')[0]).join(', ')} — уже внутри.` : ''} Открыть: rent.ru/b/4821`
 
   return (
-    <div className="driver">
-      {scanning ? (
-        <div className="scan"><div className="scan-frame"><div className="scan-line" /></div><div className="muted">Наведите камеру на права</div></div>
-      ) : !checked && (
-        <>
-          <button type="button" className="btn-primary" onClick={scan}>Сфотографировать ВУ</button>
-          {!manual && <button type="button" className="link-back" onClick={() => setManual(true)}>Ввести вручную</button>}
-        </>
-      )}
-
-      {checked && <div className="avail ok">✓ Права проверены, стаж {stage} {plural(stage, 'год', 'года', 'лет')}</div>}
-
-      {showFields && !scanning && (
-        <div className="driver-fields">
-          {fields.map(([k, label, ph]) => (
-            <div key={k} className={`field ${errors[k] ? 'has-error' : ''}`}>
-              <label htmlFor={k}>{label}{driver.fromBank && (k === 'name' || k === 'birth') && <span className="from-bank">из банка</span>}</label>
-              <input id={k} placeholder={ph} value={driver[k]} onChange={(e) => set({ [k]: e.target.value })} />
-              {errors[k] && <div className="error">{errors[k]}</div>}
-            </div>
-          ))}
+    <main className="final">
+      <div className="final-in">
+        <div>
+          <div className="final-kick">Забронировано</div>
+          <h1 className="final-title">Машина будет ждать вас здесь</h1>
+          <div className="final-map">
+            <svg viewBox="0 0 400 300" width="100%" height="100%" aria-hidden="true">
+              <path d="M0 210 L400 150" stroke="#34383d" strokeWidth="18" />
+              <path d="M120 0 L170 300" stroke="#34383d" strokeWidth="12" />
+              <path d="M260 0 L300 300" stroke="#2c3034" strokeWidth="8" />
+              <path d="M0 80 Q200 120 400 60" stroke="#2c3034" strokeWidth="8" fill="none" />
+              <rect x="40" y="110" width="60" height="70" rx="6" fill="#26292d" />
+              <rect x="190" y="200" width="70" height="50" rx="6" fill="#26292d" />
+              <circle cx="200" cy="170" r="30" fill="var(--accent)" opacity=".18" />
+              <circle cx="200" cy="170" r="10" fill="var(--accent)" />
+            </svg>
+          </div>
+          <p className="final-meet">{location.name}. {location.meet}. {startText[0].toUpperCase() + startText.slice(1)}</p>
         </div>
-      )}
-
-      {needDriver2 && (
-        <label className="extra"><input type="checkbox" checked={driver2} onChange={(e) => setDriver2(e.target.checked)} />
-          <span className="extra-name">Добавить второго водителя<span className="muted"> · права сфотографируем при получении</span></span></label>
-      )}
-
-      {showFields && !scanning && (checked ? needDriver2 : manual || driver.license) && <button type="button" className="btn-secondary" onClick={checked ? onOk : validate}>Продолжить</button>}
-    </div>
-  )
-}
-
-/* ---------- Э6 Машина ждёт ---------- */
-
-function E6({ result, onOpenBooking, onHome }) {
-  const car = cars.find((c) => c.id === result.carId)
-  const q = result.query
-  const location = locations.find((l) => l.id === q.locationId)
-  const now = isNow(q)
-  const chosen = extras.filter((x) => result.extraIds.includes(x.id))
-  const inCar = chosen.filter((x) => x.group === 'trip' || x.id === 'child-seat')
-
-  const [eta, setEta] = useState(location.etaMin + car.etaAdd)
-  useEffect(() => {
-    if (!now) return
-    const id = setInterval(() => setEta((m) => Math.max(1, m - 1)), 60000)
-    return () => clearInterval(id)
-  }, [now])
-
-  const startText = now ? `через ${eta} мин` : q.mode === 'hours' ? `сегодня в ${q.start}` : `${fmtDate(q.dateFrom)} ${q.timeFrom}`
-  const sms = `Машина ждёт вас: ${car.model}, ${location.name}, ${startText}.${inCar.length ? ` ${inCar.map((x) => x.name.split(' — ')[0]).join(', ')} — уже внутри.` : ''} Всё о брони: rent.ru/b/${result.id}`
-
-  return (
-    <main className="e6">
-      <div className="e6-layout">
-        <div className="e6-main">
-          <svg className="e6-check" viewBox="0 0 52 52" aria-hidden="true">
-            <circle cx="26" cy="26" r="24" fill="none" />
-            <path d="M15 27l7 7 15-15" fill="none" />
-          </svg>
-          <div className="e6-head">
-            <h1>Машина ждёт вас</h1>
-            <div className="muted">Бронь {result.id}</div>
-            <p className="e6-when">{car.model} — {location.name}, {startText}</p>
-          </div>
-
-          <div className="e6-sms">
-            <div className="phone">
-              <div className="muted">SMS · сейчас</div>
-              <div className="bubble">{sms.split(`rent.ru/b/${result.id}`)[0]}
-                <button type="button" className="sms-link" onClick={onOpenBooking}>rent.ru/b/{result.id}</button></div>
-            </div>
-          </div>
-
-          <section className="e3-section">
-            <h2>Что дальше</h2>
-            <ol className="steps">
-              <li><b>Машина ждёт в точке</b><span>{location.meet}</span></li>
-              <li><b>Встречает сотрудник — 10 минут</b><span>Вместе фотографируете машину, акт приходит в телефон. Потом ключи — и всё</span></li>
-              <li><b>Сразу в путь</b><span>Бак полный, допы уже в машине</span></li>
-            </ol>
-          </section>
-
-          <section className="e3-section">
-            <h2>Взять с собой</h2>
-            <p className="body-sm">Водительское удостоверение и карту, с которой платили, — на ней заблокируем залог.</p>
-          </section>
-
-          <section className="e3-section">
-            <h2>Оплата</h2>
-            <dl className="bill">
-              <dt>Оплачено</dt><dd>{rub(result.paidNow)}</dd>
-              {result.rest > 0 && <><dt>При получении</dt><dd>{rub(result.rest)}</dd></>}
-              <dt className="muted">Залог — заблокируем при получении</dt><dd className="muted">{rub(result.deposit)}</dd>
-            </dl>
-          </section>
-
-          {inCar.length > 0 && (
-            <section className="e3-section">
-              <h2>Что в машине</h2>
-              <ul className="in-car">{inCar.map((x) => <li key={x.id}>{x.name}</li>)}</ul>
-            </section>
-          )}
-
-          <div className="e6-actions">
-            <button className="btn-primary" onClick={onOpenBooking}>Моя бронь</button>
+        <div>
+          <div className="final-sms"><span>SMS · за час до получения</span>{sms}</div>
+          <div className="final-end">
+            <b>Здесь концепт заканчивается</b>
+            <p>Оформление, вход и оплата — как в любом сервисе аренды, их я не показываю. Главное в концепте — подбор машины под поездку.</p>
             <button className="btn-secondary" onClick={onHome}>На главную</button>
           </div>
         </div>
-      </div>
-    </main>
-  )
-}
-
-/* ---------- Моя бронь ---------- */
-
-function MyBooking({ bookings, user, onLogout, onHome }) {
-  const [last, ...past] = bookings
-  if (!last) return (
-    <main className="stub">
-      <h1>Броней пока нет</h1>
-      <p className="muted">Вы вошли как {user?.phone}. Здесь появятся ваши брони и статус машины.</p>
-      <div className="e6-actions">
-        <button className="btn-primary" onClick={onHome}>Подобрать машину</button>
-        <button className="btn-secondary" onClick={onLogout}>Выйти</button>
-      </div>
-    </main>
-  )
-  const car = cars.find((c) => c.id === last.carId)
-  const location = locations.find((l) => l.id === last.query.locationId)
-  const city = cities[location.city]
-  const inCar = extras.filter((x) => last.extraIds.includes(x.id))
-  return (
-    <main className="stub my-booking">
-      <div className="muted">Бронь {last.id} · {user?.phone}</div>
-      <h1>{car.model}</h1>
-      <div className="avail ok">Машина готовится — пришлём SMS, когда будет на месте</div>
-      <div className="e3-photo photo-car" style={carPhoto(car, 'lg')} />
-      <dl>
-        <dt>Где</dt><dd>{location.name}<div className="muted">{location.meet}</div></dd>
-        <dt>Когда</dt><dd>{whenText(last.query)}</dd>
-        <dt>Допы</dt><dd>{inCar.length ? inCar.map((x) => x.name).join(', ') : '—'}</dd>
-        <dt>Оплачено</dt><dd>{rub(last.paidNow)}{last.rest > 0 && <div className="muted">ещё {rub(last.rest)} при получении</div>}</dd>
-        <dt>Залог</dt><dd>{rub(last.deposit)} — блокировка на карте</dd>
-        <dt>Как вернуть</dt><dd>{city.dropoff}<div className="muted">{rentTerms.fuel}</div></dd>
-        <dt>Поддержка</dt><dd>8 800 000-00-00, круглосуточно · подменная машина, если что-то сломается</dd>
-      </dl>
-      {past.length > 0 && (
-        <>
-          <h2>Прошлые брони</h2>
-          <ul className="body-sm">{past.map((b) => <li key={b.id + b.total}>{cars.find((c) => c.id === b.carId)?.model} · {summary(b.query)}</li>)}</ul>
-        </>
-      )}
-      <div className="e6-actions">
-        <button className="btn-secondary" onClick={onHome}>На главную</button>
-        <button className="link" onClick={onLogout}>Выйти</button>
       </div>
     </main>
   )
