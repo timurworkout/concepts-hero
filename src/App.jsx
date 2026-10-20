@@ -239,6 +239,7 @@ const placeIcons = {
   'Парковка': <><rect x="3.5" y="3.5" width="17" height="17" rx="4" /><path d="M10 17V7h3a3 3 0 0 1 0 6h-3" /></>,
   'Адрес': <><path d="M4 11l8-7 8 7" /><path d="M6 9.5V20h12V9.5M10 20v-5h4v5" /></>,
   'Город': <><path d="M3 21h18M5 21V8l6-3v16M11 21V10h8v11" /><path d="M8 10h.01M8 14h.01M15 14h.01M15 17h.01" /></>,
+  'Возврат': <path d="M4 12a8 8 0 1 0 2.3-5.6M4 4v4h4" />,
   'Даты': <><rect x="3.5" y="5" width="17" height="15" rx="3" /><path d="M3.5 10h17M8 3v4M16 3v4" /></>,
 }
 
@@ -1239,16 +1240,19 @@ function E3({ query, setQuery, carId, cameFrom, fav, onBack, onPickOther, openPi
         </div>
 
         <aside className="e3-aside" ref={widgetRef}>
-          {[
-            ['Где', location ? location.name : 'Выберите место', () => openPicker('all')],
-            ['Когда', whenText(query), () => setEdit('when')],
-            ['Вернуть', returnText(query), () => setEdit('return')],
-          ].map(([label, value, onClick]) => (
-            <div key={label} className="book-row">
-              <span><span className="cell-label">{label}</span>{value}</span>
-              <button type="button" className="link" onClick={onClick}>Изменить</button>
-            </div>
-          ))}
+          <div className="book-tiles">
+            {[
+              ['Где', location ? location.name : 'Выберите место', location?.type ?? 'Адрес', () => openPicker('all')],
+              ['Когда', whenText(query), 'Даты', () => setEdit('when')],
+              ['Вернуть', returnText(query), 'Возврат', () => setEdit('return')],
+            ].map(([label, value, icon, onClick]) => (
+              <button key={label} type="button" className="book-tile" onClick={onClick}>
+                <PlaceIcon type={icon} />
+                <span className="cell-text"><span className="cell-label">{label}</span>{value}</span>
+                <span className="cell-arrow" aria-hidden="true">›</span>
+              </button>
+            ))}
+          </div>
 
           {status === 'place' && (
             <div className="avail no">
@@ -1262,6 +1266,7 @@ function E3({ query, setQuery, carId, cameFrom, fav, onBack, onPickOther, openPi
           )}
           {status === 'sold' && <div className="avail no">Эту машину разобрали</div>}
 
+          <div className="book-sum-tile">
           {status === 'ok' && (
             <>
               <div className="price-big">{rub(total)}</div>
@@ -1277,6 +1282,7 @@ function E3({ query, setQuery, carId, cameFrom, fav, onBack, onPickOther, openPi
           <button className="btn-primary btn-accent btn-book" disabled={status === 'sold' || status === 'place'}
             onClick={status === 'ok' ? book : () => openPicker('all')}>{ready ? 'Забронировать' : 'Укажите, где и когда'}</button>
           {status === 'ok' && <div className="book-note muted">✓ Бесплатная отмена за 48 ч</div>}
+          </div>
           {edit === 'when' && (query.mode === 'hours'
             ? <HoursPicker query={query} location={location} onApply={(patch) => { setQuery((q) => ({ ...q, ...patch })); setEdit(null) }} onClose={() => setEdit(null)} />
             : <DatePicker query={query} onApply={(patch) => { setQuery((q) => ({ ...q, ...patch })); setEdit(null) }} onClose={() => setEdit(null)} />)}

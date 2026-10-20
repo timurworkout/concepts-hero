@@ -347,7 +347,7 @@ h2 { font-size: 22px; font-weight: 500; letter-spacing: -0.44px; margin: 0 0 24p
   .book-card { position: fixed; z-index: 10; left: 0; right: 0; bottom: 0; grid-template-columns: 1fr auto; align-items: center; gap: 4px 12px; border-radius: 20px 20px 0 0; padding: 12px 16px 16px; box-shadow: 0 -4px 20px rgba(0,0,0,0.12); }
   .book-card .price-big { font-size: 22px; }
   .book-card .btn-primary { min-height: 52px; padding: 0 28px; border-radius: var(--r-full); }
-  .book-note { grid-column: 1 / -1; order: -1; }
+  .book-card .book-note { grid-column: 1 / -1; order: -1; }
   .pick-body { padding: 20px 16px; }
   .pick-title { font-size: 26px; }
   .pick-specs { grid-template-columns: 1fr 1fr; }
@@ -391,7 +391,7 @@ h2 { font-size: 22px; font-weight: 500; letter-spacing: -0.44px; margin: 0 0 24p
 @media (max-width: 743px) {
   .e3 { padding: 16px 16px 96px; }
   /* Виджет сразу под фото, дальше разделы */
-  .e3-layout { display: flex; flex-direction: column; gap: 0; }
+  .e3-layout { display: flex; flex-direction: column; align-items: stretch; gap: 0; }
   .e3-main { display: contents; }
   .e3-aside { position: static; order: 1; margin-top: 24px; }
   .e3-section { order: 2; }
@@ -428,8 +428,13 @@ h2 { font-size: 22px; font-weight: 500; letter-spacing: -0.44px; margin: 0 0 24p
 }
 
 /* Э3: карточка брони */
-.book-row { display: flex; justify-content: space-between; align-items: center; gap: 12px; padding: 10px 0; border-bottom: 1px solid var(--hairline); font-size: 15px; }
-.book-row > span { display: grid; gap: 2px; min-width: 0; }
+.book-tiles { display: grid; gap: 8px; }
+.book-tile { display: flex; align-items: center; gap: 12px; width: 100%; border: 1.5px solid var(--hairline); border-radius: var(--r-md); background: var(--canvas); padding: 12px 14px; text-align: left; font-size: 15px; color: var(--ink); transition: border-color .15s; }
+.book-tile:hover { border-color: var(--ink); }
+.book-tile .place-icon { width: 22px; height: 22px; flex: none; }
+.book-tile .cell-text { flex: 1; min-width: 0; }
+.book-sum-tile { display: grid; gap: 12px; background: var(--surface-soft); border-radius: 18px; padding: 16px; }
+.book-sum-tile .bill { margin: 0; }
 .bill-inc { color: var(--good); font-weight: 600; }
 .btn-book { width: 100%; min-height: 56px; font-size: 17px; }
 
