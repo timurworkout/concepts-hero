@@ -291,10 +291,11 @@ function PlacePicker({ query, group, onPick, onClose }) {
   }, [group])
 
   const t = text.trim().toLowerCase()
+  const plain = (x) => x.replace(/\u00a0/g, ' ').toLowerCase() // в данных неразрывные пробелы
   const points = locations.filter((l) => !isAddress(l))
-  const items = t ? points.filter((l) => `${l.name} ${cities[l.city].name}`.toLowerCase().includes(t)) : points.filter((l) => l.city === cityId)
+  const items = t ? points.filter((l) => plain(`${l.name} ${cities[l.city].name}`).includes(t)) : points.filter((l) => l.city === cityId)
   const addrPlace = locations.find((l) => l.city === cityId && l.type === 'Адрес') ?? locations.find((l) => l.city === cityId && isAddress(l))
-  const hints = (addressHints[cityId] ?? []).filter((a) => a.toLowerCase().includes(t))
+  const hints = (addressHints[cityId] ?? []).filter((a) => plain(a).includes(t))
   const addrs = t ? (hints.length ? hints : [text.trim()]) : []
 
   return (
@@ -1453,7 +1454,7 @@ function Final({ booking, onHome, onBookings }) {
   const location = findPlace(query)
   const inCar = extras.filter((x) => query.extraIds.includes(x.id) && (x.group === 'trip' || x.id === 'child-seat'))
   const startText = isNow(query) ? `через ${location.etaMin + car.etaAdd} мин` : query.mode === 'hours' ? `сегодня в ${query.start}` : `${fmtDate(query.dateFrom)} ${query.timeFrom}`
-  const sms = `Машина ждёт вас: ${car.model}, ${location.name}, ${startText}.${inCar.length ? ` ${inCar.map((x) => x.name.split(' — ')[0]).join(', ')} — уже внутри.` : ''} Открыть: rent.ru/b/${booking.id}`
+  const sms = `Машина ждёт вас: ${car.model}, ${location.name}, ${startText}.${inCar.length ? ` ${inCar.map((x) => x.name.split(/\s—\s/)[0]).join(', ')} — уже внутри.` : ''} Открыть: rent.ru/b/${booking.id}`
 
   return (
     <main className="final">

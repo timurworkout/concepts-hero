@@ -1,3 +1,18 @@
+// Типографика: короткие слова и тире не висят в конце строки — неразрывный пробел
+const SHORT = 'в|во|с|со|к|ко|у|о|об|и|а|но|да|на|по|за|из|до|от|без|для|не|ни|под|над|при|про|через'
+export const nb = (t) => t
+  .replace(new RegExp(`(^|[\\s(«])(${SHORT})\\s`, 'giu'), '$1$2\u00a0')
+  .replace(new RegExp(`(^|[\\s(«])(${SHORT})\\s`, 'giu'), '$1$2\u00a0') // второй проход: «в на ...» подряд
+  .replace(/\s—/g, '\u00a0—')
+// Прогоняем все строки данных через nb на месте. id без пробелов, их правило не трогает
+function typo(v) {
+  if (!v || typeof v !== 'object') return
+  for (const k of Object.keys(v)) {
+    if (typeof v[k] === 'string') v[k] = nb(v[k])
+    else typo(v[k])
+  }
+}
+
 // Моки из project/mock-data.md
 
 // meet — где именно ждёт машина
@@ -331,3 +346,5 @@ export const faq = [
 ]
 
 export const rub = (n) => n.toLocaleString('ru-RU') + ' ₽'
+
+for (const d of [locations, addressHints, cars, carDetails, rentTerms, cities, extras, scenarios, plans, companions, prefOptions, promises, faq]) typo(d)
