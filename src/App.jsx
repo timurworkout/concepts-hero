@@ -653,6 +653,36 @@ function HoursPicker({ query, location, onApply, onClose }) {
   )
 }
 
+// Своё поле времени вместо системного select: ячейка + выпадающий список слотов
+function TimeSelect({ label, value, onChange }) {
+  const [open, setOpen] = useState(false)
+  const ref = useRef(null)
+  useEffect(() => {
+    if (!open) return
+    ref.current?.querySelector('[aria-selected="true"]')?.scrollIntoView({ block: 'center' })
+    const onClick = (e) => !ref.current?.contains(e.target) && setOpen(false)
+    document.addEventListener('mousedown', onClick)
+    return () => document.removeEventListener('mousedown', onClick)
+  }, [open])
+  return (
+    <div className="dates-time" ref={ref}>
+      <button type="button" className="time-btn" aria-expanded={open} onClick={() => setOpen(!open)}>
+        <span>{label}</span>
+        <b>{value}<svg className="city-chevron" viewBox="0 0 12 12" aria-hidden="true"><path d="M2 4.5l4 4 4-4" /></svg></b>
+      </button>
+      {open && (
+        <div className="time-pop" role="listbox">
+          {timeSlots.map((t) => (
+            <button key={t} type="button" role="option" aria-selected={t === value} className="city-option" onClick={() => { onChange(t); setOpen(false) }}>
+              {t}{t === value && <span aria-hidden="true">✓</span>}
+            </button>
+          ))}
+        </div>
+      )}
+    </div>
+  )
+}
+
 function DatePicker({ query, onApply, onClose }) {
   const [from, setFrom] = useState(query.dateFrom)
   const [to, setTo] = useState(query.dateTo)
@@ -672,12 +702,8 @@ function DatePicker({ query, onApply, onClose }) {
     <Sheet className="sheet-dates" onClose={onClose}>
       <h2 className="dates-title">Выберите даты</h2>
       <div className="dates-times">
-        <label className="dates-time"><span>Время получения</span>
-          <select value={timeFrom} onChange={(e) => setTimeFrom(e.target.value)}>{timeSlots.map((t) => <option key={t}>{t}</option>)}</select>
-        </label>
-        <label className="dates-time"><span>Время возврата</span>
-          <select value={timeTo} onChange={(e) => setTimeTo(e.target.value)}>{timeSlots.map((t) => <option key={t}>{t}</option>)}</select>
-        </label>
+        <TimeSelect label="Время получения" value={timeFrom} onChange={setTimeFrom} />
+        <TimeSelect label="Время возврата" value={timeTo} onChange={setTimeTo} />
       </div>
       <div className="dates-scroll">
         {months.map((m) => {
