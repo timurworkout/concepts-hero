@@ -90,7 +90,7 @@ export default function App() {
 
   return (
     <>
-      <Header dark={screen === 'e1' || screen === 'final'} user={user} favs={favs} onHome={home} onFavs={() => setSheet(sheet === 'favs' ? null : 'favs')}
+      <Header dark={screen === 'e1'} user={user} favs={favs} onHome={home} onFavs={() => setSheet(sheet === 'favs' ? null : 'favs')}
         onLogin={() => askLogin(null)} onLogout={logout} />
       {page}
       {sheet === 'favs' && <FavSheet query={query} fav={fav} user={user} onLogin={() => askLogin(() => setSheet('favs'))}
@@ -1374,14 +1374,14 @@ function Final({ query, carId, onHome }) {
           <h1 className="final-title">Машина будет ждать вас здесь</h1>
           <div className="final-map">
             <svg viewBox="0 0 400 300" width="100%" height="100%" aria-hidden="true">
-              <path d="M0 210 L400 150" stroke="#34383d" strokeWidth="18" />
-              <path d="M120 0 L170 300" stroke="#34383d" strokeWidth="12" />
-              <path d="M260 0 L300 300" stroke="#2c3034" strokeWidth="8" />
-              <path d="M0 80 Q200 120 400 60" stroke="#2c3034" strokeWidth="8" fill="none" />
-              <rect x="40" y="110" width="60" height="70" rx="6" fill="#26292d" />
-              <rect x="190" y="200" width="70" height="50" rx="6" fill="#26292d" />
-              <circle cx="200" cy="170" r="30" fill="var(--accent)" opacity=".18" />
-              <circle cx="200" cy="170" r="10" fill="var(--accent)" />
+              <path d="M0 210 L400 150" stroke="#ffffff" strokeWidth="18" />
+              <path d="M120 0 L170 300" stroke="#ffffff" strokeWidth="12" />
+              <path d="M260 0 L300 300" stroke="#ffffff" strokeWidth="8" />
+              <path d="M0 80 Q200 120 400 60" stroke="#ffffff" strokeWidth="8" fill="none" />
+              <rect x="40" y="110" width="60" height="70" rx="6" fill="#e2e4e6" />
+              <rect x="190" y="200" width="70" height="50" rx="6" fill="#e2e4e6" />
+              <circle cx="200" cy="170" r="30" fill="var(--ink)" opacity=".12" />
+              <circle cx="200" cy="170" r="10" fill="var(--accent)" stroke="var(--ink)" strokeWidth="3" />
             </svg>
           </div>
           <p className="final-meet">{location.name}. {location.meet}. {startText[0].toUpperCase() + startText.slice(1)}</p>
