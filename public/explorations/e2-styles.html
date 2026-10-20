@@ -10,10 +10,10 @@
 /* ---------- Общее: переключатель вариантов ---------- */
 * { box-sizing: border-box; margin: 0; }
 body { font-family: system-ui, sans-serif; }
-.switcher { display: flex; justify-content: center; gap: 4px; padding: 6px; background: #111; }
+.switcher { position: relative; z-index: 20; display: flex; justify-content: center; gap: 4px; padding: 6px; background: #111; }
 .switcher button { border: 0; background: transparent; color: #aaa; font: 600 13px system-ui; padding: 8px 12px; border-radius: 999px; cursor: pointer; }
 .switcher button.on { background: #fff; color: #111; }
-.v { display: none; min-height: 100vh; }
+.v { display: none; min-height: 100vh; position: relative; }
 .v.on { display: block; }
 .photo { background-size: contain; background-repeat: no-repeat; background-position: center; }
 
