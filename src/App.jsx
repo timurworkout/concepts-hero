@@ -1205,7 +1205,7 @@ function E3({ query, setQuery, carId, cameFrom, fav, onBack, onPickOther, openPi
 
   const toggle = (id) => setQuery((q) => ({ ...q, extraIds: q.extraIds.includes(id) ? q.extraIds.filter((x) => x !== id) : [...q.extraIds, id] }))
   const scrollToWidget = () => widgetRef.current.scrollIntoView({ behavior: 'smooth', block: 'center' })
-  const perLabel = (x) => (x.price === 0 ? 'бесплатно' : `${rub(x.price)}${x.per === 'day' ? ' / сутки' : ''}`)
+  const perLabel = (x) => (x.price === 0 ? 'бесплатно' : `${rub(x.price)}${x.per === 'day' ? ' / сутки' : ' за\u00a0аренду'}`)
   const book = () => onBook()
 
   // Резину показываем только в межсезонье
@@ -1282,9 +1282,11 @@ function E3({ query, setQuery, carId, cameFrom, fav, onBack, onPickOther, openPi
               <div className="extras">
                 {extras.filter((x) => x.group === g).map((x) => (
                   <label key={x.id} className={`extra ${query.extraIds.includes(x.id) ? 'on' : ''}`}>
-                    <input type="checkbox" checked={query.extraIds.includes(x.id)} onChange={() => toggle(x.id)} />
-                    <span className="extra-name">{x.name}{x.note && <span className="muted"> · {x.note}</span>}</span>
-                    <span className="extra-price">{perLabel(x)}</span>
+                    <span className="extra-text">
+                      <span className="extra-name">{x.name}</span>
+                      <span className="extra-price">{perLabel(x)}{x.note && ` · ${x.note}`}</span>
+                    </span>
+                    <input type="checkbox" role="switch" className="switch" checked={query.extraIds.includes(x.id)} onChange={() => toggle(x.id)} />
                   </label>
                 ))}
               </div>
@@ -1454,7 +1456,7 @@ function Final({ booking, onHome, onBookings }) {
   const location = findPlace(query)
   const inCar = extras.filter((x) => query.extraIds.includes(x.id) && (x.group === 'trip' || x.id === 'child-seat'))
   const startText = isNow(query) ? `через ${location.etaMin + car.etaAdd} мин` : query.mode === 'hours' ? `сегодня в ${query.start}` : `${fmtDate(query.dateFrom)} ${query.timeFrom}`
-  const sms = `Машина ждёт вас: ${car.model}, ${location.name}, ${startText}.${inCar.length ? ` ${inCar.map((x) => x.name.split(/\s—\s/)[0]).join(', ')} — уже внутри.` : ''} Открыть: rent.ru/b/${booking.id}`
+  const sms = `Машина ждёт вас: ${car.model}, ${location.name}, ${startText}.${inCar.length ? ` ${inCar.map((x) => x.name.replace(/\s+в\s+машине$/, '')).join(', ')} — уже внутри.` : ''} Открыть: rent.ru/b/${booking.id}`
 
   return (
     <main className="final">
