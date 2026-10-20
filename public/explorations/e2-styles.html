@@ -10,7 +10,7 @@
 /* ---------- Общее: переключатель вариантов ---------- */
 * { box-sizing: border-box; margin: 0; }
 body { font-family: system-ui, sans-serif; }
-.switcher { position: relative; z-index: 20; display: flex; justify-content: center; gap: 4px; padding: 6px; background: #111; }
+.switcher { position: sticky; top: 0; z-index: 20; display: flex; justify-content: center; gap: 4px; padding: 6px; background: #111; }
 .switcher button { border: 0; background: transparent; color: #aaa; font: 600 13px system-ui; padding: 8px 12px; border-radius: 999px; cursor: pointer; }
 .switcher button.on { background: #fff; color: #111; }
 .v { display: none; min-height: 100vh; position: relative; }
@@ -221,7 +221,7 @@ body { font-family: system-ui, sans-serif; }
 .v3b .alt-foot { display: flex; align-items: center; gap: 8px; margin-top: 4px; color: var(--ink); font-weight: 500; }
 .v3b .hot { background: var(--soft); border-radius: 4px; padding: 2px 8px; font-size: 12px; font-weight: 500; color: var(--muted); }
 .v3b .more { margin-top: 24px; }
-.v3b aside { position: sticky; top: 24px; }
+.v3b aside { position: sticky; top: 68px; }
 .v3b .book { border: 1px solid var(--line); border-radius: 4px; padding: 24px; display: flex; flex-direction: column; gap: 16px; }
 .v3b .book .cells { flex-direction: column; margin: 0; }
 .v3b .price { font-size: 40px; line-height: 48px; font-weight: 500; color: var(--ink); }
