@@ -91,7 +91,7 @@ export default function App() {
   return (
     <>
       <Header dark={screen === 'e1' || screen === 'final'} user={user} favs={favs} onHome={home} onFavs={() => setSheet(sheet === 'favs' ? null : 'favs')}
-        onLogin={() => askLogin(null)} onProfile={logout} />
+        onLogin={() => askLogin(null)} onLogout={logout} />
       {page}
       {sheet === 'favs' && <FavSheet query={query} fav={fav} user={user} onLogin={() => askLogin(() => setSheet('favs'))}
         onOpen={(id) => openCar(id, screen === 'e2' ? 'e2' : 'e1')} onClose={() => setSheet(null)} />}
@@ -104,21 +104,45 @@ export default function App() {
 
 /* ---------- Шапка, избранное, вход ---------- */
 
-function Header({ dark, user, favs, onHome, onFavs, onLogin, onProfile }) {
-  const shown = favs.map((id) => cars.find((c) => c.id === id)).filter(Boolean).slice(0, 3)
+function Header({ dark, user, favs, onHome, onFavs, onLogin, onLogout }) {
+  const [menu, setMenu] = useState(false)
+  const menuRef = useRef(null)
+  // Меню профиля закрывается кликом мимо и по Esc
+  useEffect(() => {
+    if (!menu) return
+    const onClick = (e) => !menuRef.current?.contains(e.target) && setMenu(false)
+    const onKey = (e) => e.key === 'Escape' && setMenu(false)
+    document.addEventListener('mousedown', onClick)
+    window.addEventListener('keydown', onKey)
+    return () => { document.removeEventListener('mousedown', onClick); window.removeEventListener('keydown', onKey) }
+  }, [menu])
   return (
     <header className={`header ${dark ? 'header-dark' : ''}`}>
-      <button className="logo" onClick={onHome}>Машина ждёт</button>
+      <button className="logo" onClick={onHome} aria-label="вольно — на главную">
+        в<svg className="logo-o" viewBox="0 0 40 40" aria-hidden="true">
+          <circle className="logo-rim" cx="20" cy="20" r="16.5" fill="none" strokeWidth="5" />
+          <g stroke="currentColor" strokeWidth="3.4" strokeLinecap="round"><line x1="5" y1="19" x2="14" y2="20" /><line x1="35" y1="19" x2="26" y2="20" /><line x1="20" y1="26" x2="20" y2="35" /></g>
+          <circle cx="20" cy="21" r="5.5" fill="none" stroke="currentColor" strokeWidth="3" />
+        </svg>льно
+      </button>
       <nav className="header-nav">
         <button className="header-btn" onClick={onFavs} aria-label={`Избранное: ${favs.length}`}>
           <Heart on={favs.length > 0} />
-          {shown.length > 0 && <span className="fav-stack">{shown.map((c) => <span key={c.id} className="fav-mini photo-car" style={carPhoto(c)} />)}</span>}
-          <span className="header-label">Избранное{favs.length > 0 && ` · ${favs.length}`}</span>
+          <span className="header-label">Избранное</span>
         </button>
-        <button className="header-btn" onClick={user ? onProfile : onLogin}>
-          <span className={`avatar ${user ? 'avatar-user' : ''}`}>{user ? user.phone.slice(-2) : '◯'}</span>
-          <span className="header-label">{user ? user.phone : 'Войти'}</span>
-        </button>
+        <div className="account" ref={menuRef}>
+          <button className="header-btn" onClick={user ? () => setMenu(!menu) : onLogin} aria-expanded={user ? menu : undefined}>
+            <svg className="profile-icon" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="8" r="3.5" /><path d="M5 20c.8-3.6 3.6-5.5 7-5.5s6.2 1.9 7 5.5" /></svg>
+            <span className="header-label">Профиль</span>
+          </button>
+          {user && menu && (
+            <div className="account-menu">
+              <div className="account-who"><span className="muted">Вы вошли</span><b>{user.phone}</b></div>
+              <button className="account-item" onClick={() => { setMenu(false); onFavs() }}>Избранное<span className="muted">{favs.length}</span></button>
+              <button className="account-item account-out" onClick={() => { setMenu(false); onLogout() }}>Выйти</button>
+            </div>
+          )}
+        </div>
       </nav>
     </header>
   )
