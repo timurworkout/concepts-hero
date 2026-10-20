@@ -918,7 +918,30 @@ function Manifest({ onGoal }) {
   )
 }
 
+// Ленту без полосы прокрутки мышью листаем перетаскиванием; клик после перетаскивания не срабатывает
+function useDragScroll() {
+  const drag = useRef(null)
+  return {
+    onPointerDown: (e) => {
+      if (e.pointerType !== 'mouse') return
+      drag.current = { x: e.clientX, left: e.currentTarget.scrollLeft, moved: false }
+    },
+    onPointerMove: (e) => {
+      const d = drag.current
+      if (!d) return
+      const dx = e.clientX - d.x
+      if (Math.abs(dx) > 5) d.moved = true
+      if (d.moved) e.currentTarget.scrollLeft = d.left - dx
+    },
+    onPointerUp: () => { setTimeout(() => { drag.current = null }) },
+    onPointerLeave: () => { drag.current = null },
+    onClickCapture: (e) => { if (drag.current?.moved) { e.stopPropagation(); e.preventDefault() } },
+  }
+}
+
 function Park({ query, setQuery, fav, onPickCar }) {
+  const dragTabs = useDragScroll()
+  const dragCars = useDragScroll()
   const tabs = scenarios.filter((s) => s.carIds)
   const [tab, setTab] = useState(tabs[0].id)
   const ids = tabs.find((t) => t.id === tab).carIds
@@ -927,14 +950,14 @@ function Park({ query, setQuery, fav, onPickCar }) {
   return (
     <section className="section park">
       <h2>Какие машины в парке <CitySelect query={query} setQuery={setQuery} inCity /></h2>
-      <div className="scenarios" role="tablist">
+      <div className="scenarios" role="tablist" {...dragTabs}>
         {tabs.map((t) => (
           <button key={t.id} role="tab" aria-selected={tab === t.id} className={`scenario ${tab === t.id ? 'active' : ''}`} onClick={() => setTab(t.id)}>
             {t.label}
           </button>
         ))}
       </div>
-      <div className="park-grid">
+      <div className="park-grid" {...dragCars}>
         {three.map((c) => (
           <div key={c.id} className="park-card" role="button" tabIndex={0} onClick={() => onPickCar(c.id)} onKeyDown={(e) => e.key === 'Enter' && onPickCar(c.id)}>
             <div className="park-photo photo-car" style={carPhoto(c, 'lg')}><FavToggle id={c.id} fav={fav} /></div>
@@ -1295,7 +1318,7 @@ function E3({ query, setQuery, carId, cameFrom, fav, onBack, onPickOther, openPi
           )}
           {status === 'sold' && <div className="avail no">Эту машину разобрали</div>}
 
-          <div className="book-sum-tile">
+          {ready && <div className="book-sum-tile">
           {status === 'ok' && (
             <>
               <div className="price-big">{rub(total)}</div>
@@ -1309,9 +1332,9 @@ function E3({ query, setQuery, carId, cameFrom, fav, onBack, onPickOther, openPi
             </>
           )}
           <button className="btn-primary btn-accent btn-book" disabled={status === 'sold' || status === 'place'}
-            onClick={status === 'ok' ? book : () => openPicker('all')}>{ready ? 'Забронировать' : 'Укажите, где и когда'}</button>
+            onClick={book}>Забронировать</button>
           {status === 'ok' && <div className="book-note muted">✓ Бесплатная отмена за 48 ч</div>}
-          </div>
+          </div>}
           {edit === 'when' && (query.mode === 'hours'
             ? <HoursPicker query={query} location={location} onApply={(patch) => { setQuery((q) => ({ ...q, ...patch })); setEdit(null) }} onClose={() => setEdit(null)} />
             : <DatePicker query={query} onApply={(patch) => { setQuery((q) => ({ ...q, ...patch })); setEdit(null) }} onClose={() => setEdit(null)} />)}
