@@ -268,6 +268,7 @@ const placeIcons = {
   'Парковка': <><rect x="3.5" y="3.5" width="17" height="17" rx="4" /><path d="M10 17V7h3a3 3 0 0 1 0 6h-3" /></>,
   'Адрес': <><path d="M4 11l8-7 8 7" /><path d="M6 9.5V20h12V9.5M10 20v-5h4v5" /></>,
   'Город': <><path d="M3 21h18M5 21V8l6-3v16M11 21V10h8v11" /><path d="M8 10h.01M8 14h.01M15 14h.01M15 17h.01" /></>,
+  'Цель': <path d="M5 21V4M5 4h11l-2 4 2 4H5" />,
   'Возврат': <path d="M4 12a8 8 0 1 0 2.3-5.6M4 4v4h4" />,
   'Даты': <><rect x="3.5" y="5" width="17" height="15" rx="3" /><path d="M3.5 10h17M8 3v4M16 3v4" /></>,
 }
@@ -1194,7 +1195,14 @@ function E3({ query, setQuery, carId, cameFrom, fav, onBack, onPickOther, openPi
   const location = findPlace(query)
   const city = cities[location?.city ?? query.cityId]
   const widgetRef = useRef(null)
-  const [edit, setEdit] = useState(null) // 'when' | 'return'
+  const [edit, setEdit] = useState(null) // 'when' | 'return' | 'goal'
+  // Цель поездки: если машину открыли с главной, её ещё нет — предлагаем только цели под эту машину
+  const goal = plans.find((p) => !p.local && query.planIds.includes(p.id))
+  const carGoals = cityPlans(location?.city ?? query.cityId).filter((p) => !p.local && p.test(car))
+  const pickGoal = (p) => {
+    setQuery((q) => ({ ...q, planIds: [p.id], extraIds: union(q.extraIds, p.extraIds ?? []) }))
+    setEdit(null)
+  }
 
   const ready = queryReady(query)
   const status = ready ? availability(car, query.locationId) : null
@@ -1296,6 +1304,17 @@ function E3({ query, setQuery, carId, cameFrom, fav, onBack, onPickOther, openPi
 
         <aside className="e3-aside" ref={widgetRef}>
           <div className="book-tiles">
+            <button type="button" className={`book-tile ${goal && !goal.test(car) ? 'book-tile-warn' : ''}`} onClick={() => setEdit('goal')}>
+              <PlaceIcon type="Цель" />
+              <span className="cell-text"><span className="cell-label">Цель поездки</span>{goal ? goal.label : <span className="muted">Подберём под неё машину</span>}</span>
+              <span className="cell-arrow" aria-hidden="true">›</span>
+            </button>
+            {goal && !goal.test(car) && (
+              <div className="goal-warn">
+                Для «{goal.label}» {car.model} не лучший выбор. Нужно: {goal.hint[0].toLowerCase() + goal.hint.slice(1)}.{' '}
+                <button type="button" className="link" onClick={onPickOther}>Подобрать под цель</button>
+              </div>
+            )}
             {[
               ['Где', location ? location.name : 'Выберите место', location?.type ?? 'Адрес', () => openPicker('all')],
               ['Когда', whenText(query), 'Даты', () => setEdit('when')],
@@ -1341,6 +1360,21 @@ function E3({ query, setQuery, carId, cameFrom, fav, onBack, onPickOther, openPi
           {edit === 'when' && (query.mode === 'hours'
             ? <HoursPicker query={query} location={location} onApply={(patch) => { setQuery((q) => ({ ...q, ...patch })); setEdit(null) }} onClose={() => setEdit(null)} />
             : <DatePicker query={query} onApply={(patch) => { setQuery((q) => ({ ...q, ...patch })); setEdit(null) }} onClose={() => setEdit(null)} />)}
+          {edit === 'goal' && (
+            <Sheet className="sheet-dates" onClose={() => setEdit(null)}>
+              <h2 className="dates-title">Цель поездки</h2>
+              <div className="dates-scroll">
+                <p className="muted">Только цели, для которых подходит {car.model}</p>
+                {carGoals.map((p) => (
+                  <button key={p.id} type="button" className={`row-cell goal-option ${goal?.id === p.id ? 'on' : ''}`} onClick={() => pickGoal(p)}>
+                    <span className="row-text"><span className="plan-label">{p.label}</span><span className="plan-hint">{p.hint}</span></span>
+                    {goal?.id === p.id && <span className="row-arrow">✓</span>}
+                  </button>
+                ))}
+                <p className="muted goal-other">Для других целей лучше другая машина — <button type="button" className="link" onClick={() => { setEdit(null); onPickOther() }}>подобрать под цель</button></p>
+              </div>
+            </Sheet>
+          )}
           {edit === 'return' && <ReturnPicker query={query} onApply={(patch) => { setQuery((q) => ({ ...q, ...patch })); setEdit(null) }} onClose={() => setEdit(null)} />}
 
           {(status === 'sold' || status === 'place') && (
