@@ -110,7 +110,7 @@ export default function App() {
       openPicker={(g) => setSheet({ picker: g })} />
   )
   else page = (
-    <Landing query={query} setQuery={setQuery} fav={fav} onSubmit={() => { setScreen('e2'); setPicking(true) }} onPickCar={(id) => openCar(id, 'e1')}
+    <Landing query={query} setQuery={setQuery} fav={fav} onSubmit={() => { setScreen('e2'); setPicking(true) }} onPickCar={(id, cityId) => { setQuery((q) => (q.cityId ? q : { ...q, cityId })); openCar(id, 'e1') }}
       openPicker={(g) => setSheet({ picker: g })} />
   )
 
@@ -1526,7 +1526,7 @@ function Park({ query, fav, onPickCar, onFind }) {
       </div>
       <div className={`park-grid ${tab !== shownTab ? 'leave' : ''}`} {...dragCars}>
         {three.map((c, i) => (
-          <div key={shownTab + c.id} style={{ '--i': i }} className={`park-card ${switched.current ? 'enter' : ''}`} role="button" tabIndex={0} onClick={() => onPickCar(c.id)} onKeyDown={(e) => onActivateKey(e, () => onPickCar(c.id))}>
+          <div key={shownTab + c.id} style={{ '--i': i }} className={`park-card ${switched.current ? 'enter' : ''}`} role="button" tabIndex={0} onClick={() => onPickCar(c.id, cityId)} onKeyDown={(e) => onActivateKey(e, () => onPickCar(c.id, cityId))}>
             <div className="park-photo photo-car" style={carPhoto(c, 'lg')}><FavToggle id={c.id} fav={fav} /></div>
             <div className="park-body">
               <span>{c.model}</span>
