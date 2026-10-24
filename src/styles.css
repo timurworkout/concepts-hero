@@ -730,7 +730,7 @@ label.wz-seg, .wz-seg-btn { display: flex; flex-direction: column; align-items: 
 
 .mode-toggle.pill { position: relative; isolation: isolate; }
 .mode-toggle.pill::before { content: ''; position: absolute; z-index: -1; top: 4px; bottom: 4px; left: var(--pill-x); width: var(--pill-w); border-radius: var(--r-full); background: var(--canvas); box-shadow: var(--shadow); transition: left var(--dur-medium) var(--ease-spring), width var(--dur-medium) var(--ease-spring); }
-.search-row .mode-toggle.pill::before { background: var(--accent); }
+.search-row .mode-toggle.pill::before, .wizard .mode-toggle.pill::before { background: var(--accent); }
 .mode-toggle.pill button { transition: color var(--dur-base); }
 .mode-toggle.pill button.active { background: transparent; box-shadow: none; }
 

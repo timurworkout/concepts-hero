@@ -194,9 +194,9 @@ function usePill(ref, active) {
     const place = () => {
       const b = root?.querySelector('button.active')
       if (!b) return
+      root.classList.add('pill')
       root.style.setProperty('--pill-x', `${b.offsetLeft}px`)
       root.style.setProperty('--pill-w', `${b.offsetWidth}px`)
-      root.classList.add('pill')
     }
     place()
     window.addEventListener('resize', place)
