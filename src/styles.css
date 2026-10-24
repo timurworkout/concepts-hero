@@ -45,7 +45,7 @@
 * { box-sizing: border-box; }
 body { margin: 0; background: var(--canvas); }
 button { font: inherit; color: inherit; cursor: pointer; }
-.arrow-icon { width: 1em; height: 1em; flex: none; fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
+.arrow-icon { width: 1em; height: 1em; flex: none; vertical-align: -0.125em; fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
 .arrow-left { transform: scaleX(-1); }
 /* Фокус с клавиатуры: графит на светлом, акцент на тёмных блоках */
 :focus-visible { outline: 2px solid var(--ink); outline-offset: 2px; }
@@ -434,7 +434,7 @@ h2 { font-size: 22px; font-weight: 500; letter-spacing: -0.44px; margin: 0 0 24p
 /* Финал: машина ждёт, конец концепта */
 .final { min-height: 100vh; padding: 48px var(--gutter) 64px; }
 .final-in { max-width: 1040px; margin: 0 auto; display: grid; grid-template-columns: 1.2fr 1fr; gap: 40px; align-items: start; }
-.final-kick { color: var(--good); font-weight: 700; font-size: 14px; text-transform: uppercase; letter-spacing: 0.06em; }
+.final-kick { color: var(--good); font-weight: 700; font-size: 15px; }
 .final-title { font-size: 44px; line-height: 1.05; margin: 8px 0 20px; letter-spacing: -0.02em; }
 .final-map { border-radius: var(--r-lg); overflow: hidden; background: var(--surface-strong); aspect-ratio: 4 / 3; }
 .final-meet { color: var(--body); font-size: 15px; line-height: 1.5; }
@@ -709,7 +709,7 @@ label.wz-seg, .wz-seg-btn { display: flex; flex-direction: column; align-items: 
 .picking-bar { position: absolute; left: 0; top: 0; height: 3px; width: 100%; background: var(--accent); transform-origin: left; animation: picking-bar var(--total) linear; }
 @keyframes picking-bar { from { transform: scaleX(0); } }
 .picking-in { display: grid; gap: 22px; width: min(520px, 100%); }
-.picking-kicker { font-size: 13px; font-weight: 600; letter-spacing: .06em; text-transform: uppercase; color: rgba(255,255,255,0.55); }
+.picking-kicker { font-size: 15px; font-weight: 600; color: rgba(255,255,255,0.55); }
 .picking-steps { display: grid; gap: 12px; margin: 0; padding: 0; list-style: none; }
 .picking-step { display: flex; align-items: baseline; gap: 12px; font-size: 18px; line-height: 1.35; opacity: 0; transform: translateY(10px); transition: opacity var(--dur-medium), transform var(--dur-slow) var(--ease-spring); }
 .picking-step.in { opacity: 1; transform: none; }

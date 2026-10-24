@@ -1558,7 +1558,7 @@ function Picking({ query, onDone }) {
         <ul className="picking-steps">
           {lines.map(([b, hint], i) => (
             <li key={b} className={`picking-step ${t > i ? 'in' : ''}`}>
-              <i aria-hidden="true">✓</i><div><b>{b}</b> <span>→ {hint}</span></div>
+              <i aria-hidden="true">✓</i><div><b>{b}</b> <span><Arrow /> {hint}</span></div>
             </li>
           ))}
         </ul>
@@ -1602,10 +1602,10 @@ function E2({ query, setQuery, fav, onBack, onPick, openPicker }) {
   const togglePref = (id) => change({ prefs: query.prefs.includes(id) ? query.prefs.filter((x) => x !== id) : [...query.prefs, id] })
 
   const reasons = []
-  if (goal) reasons.push(<><b>{goal.label}</b> → {goal.hint.toLowerCase()}</>)
+  if (goal) reasons.push(<><b>{goal.label}</b> <Arrow /> {goal.hint.toLowerCase()}</>)
   else reasons.push(<>Цель не выбрана — берём самую выгодную машину</>)
-  places.filter((p) => !skipped.includes(p)).forEach((p) => reasons.push(<><b>{p.label}</b> → {p.hint.toLowerCase()}</>))
-  if (companion && !skipped.includes(companion)) reasons.push(<><b>{companion.label}</b> → {companion.hint}</>)
+  places.filter((p) => !skipped.includes(p)).forEach((p) => reasons.push(<><b>{p.label}</b> <Arrow /> {p.hint.toLowerCase()}</>))
+  if (companion && !skipped.includes(companion)) reasons.push(<><b>{companion.label}</b> <Arrow /> {companion.hint}</>)
   skipped.forEach((s) => reasons.push(<>Под «{s.label.toLowerCase()}» отдельно машин не нашлось — учли остальное</>))
   active.forEach((o) => reasons.push(<>Авто: <b>{o.label}</b></>))
   if (car) reasons.push(<>Подходят {res.count} из {res.total} машин — взяли самую выгодную</>)
