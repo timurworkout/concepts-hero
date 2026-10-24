@@ -1,4 +1,4 @@
-import { Fragment, useEffect, useRef, useState } from 'react'
+import { Fragment, useEffect, useLayoutEffect, useRef, useState } from 'react'
 import { createPortal } from 'react-dom'
 import { locations, locationGroups, cars, scenarios, rub, carDetails, rentTerms, cities, inCity, cityPrice, extras, plans, prefOptions, companions, promises, faq, addressHints } from './data.js'
 
@@ -1451,13 +1451,35 @@ function Park({ query, fav, onPickCar, onFind }) {
   const dragCars = useDragScroll()
   const tabs = scenarios.filter((s) => s.carIds)
   const [tab, setTab] = useState(tabs[0].id)
-  const ids = tabs.find((t) => t.id === tab).carIds
+  // Карточки меняем с задержкой: старые успевают погаснуть, новые поднимаются лесенкой
+  const [shownTab, setShownTab] = useState(tab)
+  const switched = useRef(false)
+  useEffect(() => {
+    if (tab === shownTab) return
+    switched.current = true
+    const t = setTimeout(() => setShownTab(tab), reducedMotion() ? 0 : 150)
+    return () => clearTimeout(t)
+  }, [tab, shownTab])
+  const tabsRef = useRef(null)
+  useLayoutEffect(() => {
+    // Линия-индикатор переезжает под выбранную цель
+    const box = tabsRef.current, b = box?.querySelector(`[data-tab="${tab}"]`)
+    if (!b) return
+    const move = () => { box.style.setProperty('--ind-x', b.offsetLeft + 'px'); box.style.setProperty('--ind-w', b.offsetWidth + 'px') }
+    move()
+    addEventListener('resize', move)
+    return () => removeEventListener('resize', move)
+  }, [tab])
+  const ids = tabs.find((t) => t.id === shownTab).carIds
   const list = cars.filter((c) => ids.includes(c.id) && inCity(c, cityId)).sort((a, b) => a.pricePerDay - b.pricePerDay)
   const three = list.length <= 3 ? list : [list[0], list[Math.floor(list.length / 2)], list[list.length - 1]]
   return (
     <section className="section park">
-      <h2>Наши машины <CitySelect query={{ ...query, cityId }} setQuery={(f) => setCityId(f(query).cityId)} inCity /></h2>
-      <div className="scenarios" role="tablist" {...dragTabs} onKeyDown={(e) => {
+      <div className="park-head">
+        <h2>Наши машины <CitySelect query={{ ...query, cityId }} setQuery={(f) => setCityId(f(query).cityId)} inCity /></h2>
+        <button type="button" className="park-find" onClick={onFind}>Подобрать под{'\u00a0'}поездку<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6" /></svg></button>
+      </div>
+      <div className="scenarios" role="tablist" ref={tabsRef} {...dragTabs} onKeyDown={(e) => {
         // Стрелки переключают сценарий, фокус едет вместе с выбранной вкладкой
         const step = { ArrowRight: 1, ArrowLeft: -1 }[e.key]
         if (!step) return
@@ -1471,9 +1493,9 @@ function Park({ query, fav, onPickCar, onFind }) {
           </button>
         ))}
       </div>
-      <div className="park-grid" {...dragCars}>
-        {three.map((c) => (
-          <div key={c.id} className="park-card" role="button" tabIndex={0} onClick={() => onPickCar(c.id)} onKeyDown={(e) => onActivateKey(e, () => onPickCar(c.id))}>
+      <div className={`park-grid ${tab !== shownTab ? 'leave' : ''}`} {...dragCars}>
+        {three.map((c, i) => (
+          <div key={shownTab + c.id} style={{ '--i': i }} className={`park-card ${switched.current ? 'enter' : ''}`} role="button" tabIndex={0} onClick={() => onPickCar(c.id)} onKeyDown={(e) => onActivateKey(e, () => onPickCar(c.id))}>
             <div className="park-photo photo-car" style={carPhoto(c, 'lg')}><FavToggle id={c.id} fav={fav} /></div>
             <div className="park-body">
               <span>{c.model}</span>
@@ -1482,7 +1504,6 @@ function Park({ query, fav, onPickCar, onFind }) {
           </div>
         ))}
       </div>
-      <button type="button" className="park-find" onClick={onFind}>Подобрать авто</button>
     </section>
   )
 }
