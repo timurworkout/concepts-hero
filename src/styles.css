@@ -9,6 +9,7 @@
   --ease-spring: cubic-bezier(.3,.7,.2,1);
   --primary: #3a3f44;
   --primary-active: #24282c;
+  --serif: "Playfair Display", Georgia, serif; /* акцентные заголовки */
   --accent: #d7f25c; /* акцент хиро — заменить при выборе визуала */
   --ink: #222222;
   --body: #3f3f3f;
@@ -21,7 +22,7 @@
   --good: #1f6b3a;
   --error: #c13515;
   --hover: #e8e8e8;
-  --range: #e9fb8f;
+  --range: rgb(215 242 92 / 0.35);
   --warn-bg: #fff8e6;
   --warn-line: #e9c46a;
   --warn-ink: #8a5a00;
@@ -115,7 +116,7 @@ h2 { font-size: 22px; font-weight: 500; letter-spacing: -0.44px; margin: 0 0 24p
 .hero { position: relative; margin: 16px; border-radius: var(--r-lg); background: var(--night); color: #fff; }
 .hero-inner { position: relative; width: 100%; padding: 104px calc(var(--gutter) - 16px) 40px; display: flex; flex-direction: column; align-items: center; text-align: center; gap: 28px; }
 .hero-inner > form { width: 100%; }
-.hero-title { margin: 0; max-width: 900px; font-size: clamp(28px, 3.2vw, 44px); line-height: 0.95; font-weight: 900; letter-spacing: -0.03em; text-transform: uppercase; color: var(--accent); }
+.hero-title { margin: 0; max-width: 900px; font-family: var(--serif); font-size: clamp(30px, 3.8vw, 52px); line-height: 1.05; font-weight: 700; color: var(--accent); }
 .hero-sub { margin: 0 0 8px; font-size: 20px; max-width: 560px; }
 
 /* Форма «где и когда» */
@@ -156,7 +157,7 @@ h2 { font-size: 22px; font-weight: 500; letter-spacing: -0.44px; margin: 0 0 24p
 
 /* Секции лендинга */
 .section { padding: 80px var(--gutter) 0; }
-.section h2 { font-size: 36px; font-weight: 700; letter-spacing: -0.03em; margin-bottom: 12px; }
+.section h2 { font-family: var(--serif); font-size: 36px; font-weight: 700; margin-bottom: 12px; }
 .section > .muted { margin: 0 0 28px; font-size: 16px; }
 
 /* Какие планы */
@@ -177,7 +178,6 @@ h2 { font-size: 22px; font-weight: 500; letter-spacing: -0.44px; margin: 0 0 24p
 .plan.on { border-color: var(--ink); background: var(--ink); color: #fff; }
 .plan.on .plan-hint { color: rgba(255,255,255,0.75); }
 .plan-local { background: var(--surface-soft); }
-.plan-badge { justify-self: start; font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.04em; background: var(--accent); color: #000; border-radius: var(--r-full); padding: 3px 8px; }
 .plan-label { font-size: 18px; font-weight: 700; }
 .plan-hint { font-size: 14px; color: var(--muted); line-height: 1.4; }
 .rows { display: grid; grid-template-columns: repeat(auto-fill, minmax(320px, 1fr)); gap: 8px; }
@@ -190,9 +190,9 @@ h2 { font-size: 22px; font-weight: 500; letter-spacing: -0.44px; margin: 0 0 24p
 
 /* Манифест */
 .manifest { margin: 80px var(--gutter) 0; padding: 72px; border-radius: var(--r-lg); background: var(--night); color: #fff; }
-.manifest-title { font-size: clamp(40px, 6vw, 80px); font-weight: 900; line-height: 1; letter-spacing: -0.04em; margin: 0 0 24px; }
+.manifest-title { font-family: var(--serif); font-size: clamp(40px, 6vw, 80px); font-weight: 700; line-height: 1.05; margin: 0 0 24px; }
 .manifest-text { max-width: 720px; font-size: 20px; line-height: 1.5; color: rgba(255,255,255,0.8); margin: 0 0 32px; }
-.manifest-punch { font-size: clamp(28px, 4vw, 48px); font-weight: 800; color: var(--accent); margin: 0 0 40px; letter-spacing: -0.02em; }
+.manifest-punch { font-family: var(--serif); font-size: clamp(28px, 4vw, 48px); font-weight: 700; color: var(--accent); margin: 0 0 40px; }
 .btn-on-dark { background: transparent; color: #fff; border-color: #fff; }
 
 /* Парк */
@@ -552,7 +552,7 @@ h2 { font-size: 22px; font-weight: 500; letter-spacing: -0.44px; margin: 0 0 24p
 /* Бронирования */
 .trips { max-width: 860px; margin: 0 auto; padding: 32px 16px 80px; }
 .trips h1 { margin: 12px 0 8px; }
-.trips-group { font-size: 13px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.05em; color: var(--muted); margin: 28px 0 10px; }
+.trips-group { font-size: 17px; font-weight: 600; color: var(--ink); margin: 28px 0 10px; }
 .trip { display: grid; grid-template-columns: 200px 1fr; gap: 20px; border: 1.5px solid var(--hairline); border-radius: 18px; padding: 14px; margin-bottom: 12px; }
 .trip-past { opacity: 0.6; }
 .trip-photo { border-radius: 12px; aspect-ratio: 4 / 3; }

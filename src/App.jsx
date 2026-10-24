@@ -1220,7 +1220,7 @@ function Landing({ query, setQuery, fav, onSubmit, onPickCar, openPicker }) {
     <main className="landing">
       <section className="hero">
         <div className="hero-inner">
-          <h1 className="hero-title">Расскажите, что в планах, — подберём лучшую машину для твоей цели</h1>
+          <h1 className="hero-title">{'Расскажите, что в\u00a0планах,\u00a0— подберём лучшую машину для\u00a0твоей цели'}</h1>
           <Wizard ref={formRef} query={query} setQuery={setQuery} step={step} setStep={setStep} onSubmit={submit} />
         </div>
       </section>
