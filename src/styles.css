@@ -657,6 +657,10 @@ label.wz-seg, .wz-seg-btn { display: flex; flex-direction: column; align-items: 
 .wz-item b { display: block; font-weight: 500; }
 .wz-item small { color: var(--muted); font-size: 13px; }
 .wz-ico { flex: none; width: 48px; height: 48px; border-radius: 12px; background: var(--surface-strong); display: grid; place-items: center; }
+.wz-chip { display: inline-flex; align-items: center; gap: 8px; margin: 0 8px 8px; padding: 6px 8px 6px 14px; border: 0; border-radius: var(--r-full); background: var(--ink); color: #fff; font-size: 14px; font-weight: 500; }
+.wz-chip span { display: grid; place-items: center; width: 20px; height: 20px; border-radius: 50%; background: rgb(255 255 255 / 0.2); font-size: 11px; }
+.wz-seg.flash { animation: wzFlash 0.7s var(--ease-out); }
+@keyframes wzFlash { 0% { box-shadow: 0 0 0 0 var(--accent); } 40% { box-shadow: 0 0 0 4px var(--accent); } 100% { box-shadow: 0 0 0 0 transparent; } }
 .wz-back { display: inline-flex; align-items: center; gap: 6px; border: 0; background: none; padding: 4px 8px 8px; color: var(--muted); font-size: 14px; }
 .wz-cal { display: grid; grid-template-columns: 1fr 1fr; gap: 48px; }
 .wz-month-head { display: flex; justify-content: space-between; align-items: center; margin-bottom: 4px; }

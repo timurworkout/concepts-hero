@@ -110,8 +110,7 @@ export default function App() {
       openPicker={(g) => setSheet({ picker: g })} />
   )
   else page = (
-    <Landing query={query} setQuery={setQuery} fav={fav} onSubmit={() => { setScreen('e2'); setPicking(true) }} onPickCar={(id, cityId) => { setQuery((q) => (q.cityId ? q : { ...q, cityId })); openCar(id, 'e1') }}
-      openPicker={(g) => setSheet({ picker: g })} />
+    <Landing query={query} setQuery={setQuery} fav={fav} onSubmit={() => { setScreen('e2'); setPicking(true) }} onPickCar={(id, cityId) => { setQuery((q) => (q.cityId ? q : { ...q, cityId })); openCar(id, 'e1') }} />
   )
 
   return (
@@ -919,7 +918,7 @@ function CityDrum() {
   return <span className="drum" aria-hidden="true"><span key={i} className="drum-word">{names[i]}</span></span>
 }
 
-function PlacePanel({ query, isReturn, text, onPick, onReturn }) {
+function PlacePanel({ query, isReturn, text, type, onClearType, onPick, onReturn }) {
   const location = findPlace(query)
   const [cityId, setCityId] = useState(isReturn ? location?.city : location?.city ?? '')
   const t = isReturn ? '' : text.trim().toLowerCase()
@@ -955,6 +954,16 @@ function PlacePanel({ query, isReturn, text, onPick, onReturn }) {
         {servicePoints(cityId).filter((l) => l.id !== query.locationId).map((l) => row(l, l.name, l.meet, () => onReturn({ returnMode: 'point', returnId: l.id })))}
         {opt('later', 'Решу по дороге', 'Точку возврата можно выбрать позже', () => onReturn({ returnMode: 'point', returnId: '' }), query.returnMode === 'point' && !query.returnId)}
         {opt('free', 'Где удобно', 'Как в каршеринге: на любой парковке в зоне города', () => onReturn({ returnMode: 'free', returnId: '' }), query.returnMode === 'free')}
+      </>
+    )
+  }
+  // Пришли с плитки «Машина там, где ты» — сразу точки этого типа, фильтр снимается чипом
+  if (type) {
+    const g = locationGroups.find((x) => x.type === type)
+    return (
+      <>
+        <button type="button" className="wz-chip" onClick={onClearType}>{g.label}<span aria-hidden="true">✕</span></button>
+        {locations.filter((l) => l.type === type && (!cityId || l.city === cityId)).map((l) => row(l, cityId ? l.name : `${l.name} · ${cities[l.city].name}`))}
       </>
     )
   }
@@ -1077,7 +1086,7 @@ const wizardWhen = (query) => query.mode === 'hours'
   ? `${query.start === 'now' ? 'Сейчас' : `Сегодня, ${query.start}`} · ${query.hours} ч`
   : query.dateFrom ? `${fmtDay(query.dateFrom)}, ${query.timeFrom} — ${query.dateTo ? `${fmtDay(query.dateTo)}, ${query.timeTo}` : '…'}` : ''
 
-function Wizard({ ref, query, setQuery, step, setStep, onSubmit }) {
+function Wizard({ ref, query, setQuery, step, setStep, placeType, setPlaceType, onSubmit }) {
   const [text, setText] = useState('')
   const barRef = useRef(null)
   const rootRef = useRef(null)
@@ -1093,6 +1102,9 @@ function Wizard({ ref, query, setQuery, step, setStep, onSubmit }) {
   const segs = ['place', withReturn && 'return', 'when', 'params'].filter(Boolean)
   const next = (id) => segs[segs.indexOf(id) + 1]
   const go = (id) => { setStep(id); if (id === 'place') inputRef.current?.focus() }
+
+  // Фильтр с плитки живёт, пока открыт шаг места
+  useEffect(() => { if (step !== 'place') setPlaceType?.(null) }, [step, setPlaceType])
 
   // Панель закрывается кликом мимо и по Esc; шторки на мобилке закрываются сами
   useEffect(() => {
@@ -1160,7 +1172,7 @@ function Wizard({ ref, query, setQuery, step, setStep, onSubmit }) {
           </button>
           {step && !mobile && (
             <div className={`wz-panel ${step === 'when' ? 'wz-panel-wide' : ''}`} style={step === 'when' ? undefined : { left: panelLeft }} data-step={step} data-after={segs.indexOf(step)}>
-              {step === 'place' && <PlacePanel key={location?.city ?? ''} query={query} text={text} onPick={pickPlace} />}
+              {step === 'place' && <PlacePanel key={location?.city ?? ''} query={query} text={text} type={placeType} onClearType={() => setPlaceType(null)} onPick={pickPlace} />}
               {step === 'return' && location && <PlacePanel isReturn query={query} text="" onReturn={(p) => { set(p); setStep('when') }} />}
               {step === 'return' && !location && <div className="wz-cap">Сначала скажи, где забрать</div>}
               {step === 'when' && (query.mode === 'days'
@@ -1171,7 +1183,7 @@ function Wizard({ ref, query, setQuery, step, setStep, onSubmit }) {
           )}
       </div>
       {/* Мобилка: полноэкранные шторки по очереди — выбрал и сразу следующая */}
-      {mobile && step === 'place' && <PlacePicker query={query} group="all" onPick={pickPlace} onClose={() => setStep(null)} />}
+      {mobile && step === 'place' && <PlacePicker query={query} group={placeType ?? 'all'} onPick={pickPlace} onClose={() => setStep(null)} />}
       {mobile && step === 'return' && <ReturnPicker query={query} onApply={(p) => { set(p); setStep('when') }} onClose={() => setStep(null)} />}
       {mobile && step === 'when' && (query.mode === 'days'
         ? <DatePicker query={query} onApply={(p) => { set(p); setStep(next('when')) }} onClose={() => setStep(null)} />
@@ -1219,11 +1231,12 @@ function StickySearch({ shown, query, onOpen }) {
 }
 
 
-function Landing({ query, setQuery, fav, onSubmit, onPickCar, openPicker }) {
+function Landing({ query, setQuery, fav, onSubmit, onPickCar }) {
   const formRef = useRef(null)
   const plansRef = useRef(null)
   const [formVisible, setFormVisible] = useState(true)
   const [step, setStep] = useState(null) // открытый шаг визарда
+  const [placeType, setPlaceType] = useState(null) // фильтр места с плитки «Машина там, где ты»
 
   useEffect(() => {
     const io = new IntersectionObserver(([e]) => setFormVisible(e.isIntersecting))
@@ -1238,6 +1251,14 @@ function Landing({ query, setQuery, fav, onSubmit, onPickCar, openPicker }) {
   // Липкая шапка: на мобилке шторка шага открывается поверх, на десктопе сначала едем к визарду
   const mobile = useMobile()
   const openStep = (id) => { if (mobile) setStep(id); else { scrollToForm(); setTimeout(() => setStep(id), 400) } }
+  // Плитка места — тот же визард с отфильтрованным списком; поле «Куда» коротко подсвечиваем, чтобы было видно, куда перенесло
+  const pickPlaceType = (type) => {
+    setPlaceType(type)
+    openStep('place')
+    if (mobile || reducedMotion()) return
+    const seg = formRef.current.querySelector('[data-seg="place"]')
+    setTimeout(() => { seg.classList.add('flash'); setTimeout(() => seg.classList.remove('flash'), 800) }, 450)
+  }
 
   // Допы выбранных планов кладём в запрос — их можно снять на Э3
   const submit = () => {
@@ -1256,14 +1277,14 @@ function Landing({ query, setQuery, fav, onSubmit, onPickCar, openPicker }) {
       <section className="hero">
         <div className="hero-inner">
           <h1 className="hero-title">{'Машина уже ждёт. Время\u00a0— на\u00a0места, а\u00a0не\u00a0на\u00a0стойку проката'}</h1>
-          <Wizard ref={formRef} query={query} setQuery={setQuery} step={step} setStep={setStep} onSubmit={submit} />
+          <Wizard ref={formRef} query={query} setQuery={setQuery} step={step} setStep={setStep} placeType={placeType} setPlaceType={setPlaceType} onSubmit={submit} />
         </div>
       </section>
 
       <Park query={query} fav={fav} onPickCar={onPickCar} onFind={toCityStep} />
       {query.cityId && <Plans ref={plansRef} query={query} setQuery={setQuery} onPick={pickPlan} />}
       <Manifest onGoal={query.cityId ? scrollToPlans : toCityStep} />
-      <WhereYouAre openPicker={openPicker} />
+      <WhereYouAre onPick={pickPlaceType} />
 
       <section className="section">
         <h2>Без сюрпризов</h2>
@@ -1547,7 +1568,7 @@ const whereCopy = {
   'Парковка': 'Наш центр проката — забери сам, когда удобно',
 }
 
-function WhereYouAre({ openPicker }) {
+function WhereYouAre({ onPick }) {
   const order = ['Адрес', 'Аэропорт', 'Вокзал', 'Отель', 'Парковка']
   return (
     <section className="section where">
@@ -1557,7 +1578,7 @@ function WhereYouAre({ openPicker }) {
         {order.map((type) => {
           const g = locationGroups.find((x) => x.type === type)
           return (
-            <button key={type} className="where-tile" onClick={() => openPicker(type)}>
+            <button key={type} className="where-tile" onClick={() => onPick(type)}>
               <span className="where-icon"><PlaceIcon type={g.type} /></span>
               <b>{g.label}</b>
               <span className="muted">{whereCopy[type]}</span>
