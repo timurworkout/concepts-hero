@@ -1072,6 +1072,11 @@ function useMobile() {
 
 // Полоса сегментов, панель выбранного шага раскрывается под ней.
 // Одиночный выбор сразу ведёт дальше; даты и параметры — по кнопке
+// Значение «Когда» — для визарда и липкой шапки
+const wizardWhen = (query) => query.mode === 'hours'
+  ? `${query.start === 'now' ? 'Сейчас' : `Сегодня, ${query.start}`} · ${query.hours} ч`
+  : query.dateFrom ? `${fmtDay(query.dateFrom)}, ${query.timeFrom} — ${query.dateTo ? `${fmtDay(query.dateTo)}, ${query.timeTo}` : '…'}` : ''
+
 function Wizard({ ref, query, setQuery, step, setStep, onSubmit }) {
   const [text, setText] = useState('')
   const barRef = useRef(null)
@@ -1113,12 +1118,9 @@ function Wizard({ ref, query, setQuery, step, setStep, onSubmit }) {
   const missing = () => (!query.locationId ? 'place' : query.mode === 'days' && !(query.dateFrom && query.dateTo && query.dateTo > query.dateFrom) ? 'when' : null)
   const submit = () => { const m = missing(); if (m) go(m); else { setStep(null); onSubmit() } }
 
-  const whenValue = query.mode === 'hours'
-    ? `${query.start === 'now' ? 'Сейчас' : `Сегодня, ${query.start}`} · ${query.hours} ч`
-    : query.dateFrom ? `${fmtDay(query.dateFrom)}, ${query.timeFrom} — ${query.dateTo ? `${fmtDay(query.dateTo)}, ${query.timeTo}` : '…'}` : ''
   const values = {
     return: location ? returnText(query) : '',
-    when: whenValue,
+    when: wizardWhen(query),
     params: paramsText(query),
   }
   const labels = { return: 'Где вернуть', when: query.mode === 'days' ? 'Когда' : 'Начало · на сколько', params: 'Параметры' }
@@ -1186,6 +1188,36 @@ function Wizard({ ref, query, setQuery, step, setStep, onSubmit }) {
 
 /* ---------- Э1 Лендинг ---------- */
 
+// Липкая шапка с поиском: въезжает сверху, когда визард ушёл за экран
+function StickySearch({ shown, query, onOpen }) {
+  const location = findPlace(query)
+  const when = wizardWhen(query)
+  const params = paramsText(query)
+  const searchIcon = <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="10.5" cy="10.5" r="6.5" /><path d="M15.5 15.5L21 21" /></svg>
+  const segs = [
+    ['place', 'Куда едешь', location?.name, 'Город или адрес'],
+    ['when', query.mode === 'days' ? 'Когда' : 'Начало · на\u00a0сколько', when, 'Даты и\u00a0время'],
+    ['params', 'Параметры', params, 'Цель, с\u00a0кем, авто'],
+  ]
+  return (
+    <div className={`sticky-search ${shown ? 'on' : ''}`} aria-hidden={!shown} inert={!shown}>
+      <button type="button" className="logo ss-logo" onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })} aria-label="Наверх">вольно</button>
+      <div className="ss-bar">
+        {segs.map(([id, label, value, ph]) => (
+          <button key={id} type="button" className="ss-seg" onClick={() => onOpen(id)}>
+            <b>{label}</b><span className={value ? 'filled' : ''}>{value || ph}</span>
+          </button>
+        ))}
+        <button type="button" className="wz-go ss-go" aria-label="Подобрать машину" onClick={() => onOpen(location ? 'when' : 'place')}>{searchIcon}</button>
+      </div>
+      <button type="button" className="ss-pill" onClick={() => onOpen('place')}>
+        {searchIcon}
+        <span><b>{location?.name || 'Куда едешь'}</b><small>{[when || 'Даты и\u00a0время', params || 'параметры'].join(' · ')}</small></span>
+      </button>
+    </div>
+  )
+}
+
 
 function Landing({ query, setQuery, fav, onSubmit, onPickCar, openPicker }) {
   const formRef = useRef(null)
@@ -1203,6 +1235,9 @@ function Landing({ query, setQuery, fav, onSubmit, onPickCar, openPicker }) {
   const scrollToPlans = () => plansRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' })
   // «Подобрать авто» из парка — к визарду, сразу с раскрытым выбором, куда подать
   const toCityStep = () => { scrollToForm(); setTimeout(() => setStep('place'), 400) }
+  // Липкая шапка: на мобилке шторка шага открывается поверх, на десктопе сначала едем к визарду
+  const mobile = useMobile()
+  const openStep = (id) => { if (mobile) setStep(id); else { scrollToForm(); setTimeout(() => setStep(id), 400) } }
 
   // Допы выбранных планов кладём в запрос — их можно снять на Э3
   const submit = () => {
@@ -1246,11 +1281,7 @@ function Landing({ query, setQuery, fav, onSubmit, onPickCar, openPicker }) {
         ))}
       </section>
 
-      {!formVisible && (
-        <div className="sticky-cta">
-          <button className="btn-primary" onClick={scrollToForm}>Подобрать машину</button>
-        </div>
-      )}
+      <StickySearch shown={!formVisible} query={query} onOpen={openStep} />
     </main>
   )
 }
