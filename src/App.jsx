@@ -168,7 +168,7 @@ function Header({ dark, user, favs, onHome, onFavs, onLogin, onLogout, bookingsC
           </button>
           {user && menu && (
             <div className="account-menu">
-              <div className="account-who"><span className="muted">Вы вошли</span><b>{user.phone}</b></div>
+              <div className="account-who"><span className="muted">Ты в\u00a0аккаунте</span><b>{user.phone}</b></div>
               <button className="account-item" onClick={() => { setMenu(false); onBookings() }}>Бронирования<span className="muted">{bookingsCount}</span></button>
               <button className="account-item" onClick={() => { setMenu(false); onFavs() }}>Избранное<span className="muted">{favs.length}</span></button>
               <button className="account-item account-out" onClick={() => { setMenu(false); onLogout() }}>Выйти</button>
@@ -349,7 +349,7 @@ function FavSheet({ query, fav, user, onLogin, onOpen, onClose }) {
         <button className="icon-btn" aria-label="Закрыть" onClick={onClose}>×</button>
       </div>
       {list.length === 0 ? (
-        <p className="muted">Нажмите на сердце на машине — она появится здесь, и можно будет быстро к ней вернуться.</p>
+        <p className="muted">Пока пусто. Жми сердечко на машине — она подождёт здесь.</p>
       ) : (
         <div className="fav-list">
           {list.map((c) => (
@@ -364,7 +364,7 @@ function FavSheet({ query, fav, user, onLogin, onOpen, onClose }) {
         </div>
       )}
       {!user && list.length > 0 && (
-        <p className="muted fav-note">Избранное хранится в этом браузере. <button className="link" onClick={onLogin}>Войдите</button>, чтобы не потерять его.</p>
+        <p className="muted fav-note">Сохранено только в этом браузере. <button className="link" onClick={onLogin}>Войди</button>, чтобы не потерять.</p>
       )}
     </Sheet>
   )
@@ -374,7 +374,7 @@ function LoginSheet({ forBooking, onLogin, onClose }) {
   return (
     <Sheet className="sheet-center" onClose={onClose}>
       <div className="sheet-head">
-        <h2>{forBooking ? 'Войдите, чтобы забронировать' : 'Вход'}</h2>
+        <h2>{forBooking ? 'Войди, чтобы забронировать' : 'Вход'}</h2>
         <button className="icon-btn" aria-label="Закрыть" onClick={onClose}>×</button>
       </div>
       <p className="muted">{forBooking
@@ -430,10 +430,10 @@ function PlacePicker({ query, group, onPick, onClose }) {
     <Sheet className="sheet-full sheet-modal" onClose={onClose}>
       <div className="picker-head">
         <button className="icon-btn" aria-label="Назад" onClick={onClose}><Arrow dir="left" /></button>
-        <h2>Выберите место получения</h2>
+        <h2>Куда привезти машину?</h2>
       </div>
       <input ref={inputRef} className="picker-search" autoFocus placeholder="Аэропорт, вокзал или адрес отеля / дома" value={text} onChange={(e) => setText(e.target.value)} />
-      <div className="picker-city">Привезём к аэропорту, вокзалу или по любому адресу в городе — без доплаты</div>
+      <div className="picker-city">Привезём хоть к трапу, хоть к подъезду. Бесплатно</div>
       {!t && <div className="picker-city">Город: <b>{cities[cityId].name}</b></div>}
       <div className="picker-list">
         {locationGroups.map((g) => {
@@ -457,12 +457,12 @@ function PlacePicker({ query, group, onPick, onClose }) {
           {t ? addrs.map((a) => (
             <button key={a} className="picker-item" onClick={() => onPick(addrPlace, a)}>
               <span className="picker-icon"><PlaceIcon type="Адрес" /></span>
-              <span>{a}<span className="picker-meet">Привезём к подъезду или ко входу отеля</span></span>
+              <span>{a}<span className="picker-meet">Привезём к подъезду или к дверям отеля</span></span>
             </button>
           )) : (
             <button className="picker-item" onClick={() => inputRef.current?.focus()}>
               <span className="picker-icon"><PlaceIcon type="Адрес" /></span>
-              <span>Введите адрес<span className="picker-meet">Начните вводить улицу или название отеля</span></span>
+              <span>Введи адрес<span className="picker-meet">Начни с улицы или названия отеля</span></span>
             </button>
           )}
         </div>
@@ -615,8 +615,8 @@ function SearchForm({ ref, query, setQuery, onSubmit, openPicker, layout = 'stac
   const submit = (e) => {
     e.preventDefault()
     const err = {}
-    if (!query.locationId) err.location = 'Выберите, где забрать машину'
-    if (query.mode === 'days' && (!query.dateFrom || !query.dateTo)) err.dates = 'Укажите даты'
+    if (!query.locationId) err.location = 'Выбери, где забрать машину'
+    if (query.mode === 'days' && (!query.dateFrom || !query.dateTo)) err.dates = 'Укажи даты'
     else if (query.mode === 'days' && query.dateTo < query.dateFrom) err.dates = 'Возврат раньше получения'
     setErrors(err)
     if (Object.keys(err).length === 0) onSubmit(query)
@@ -728,9 +728,9 @@ function ParamsPicker({ query, onApply, onClose }) {
   )
   return (
     <Sheet className="sheet-dates" onClose={onClose}>
-      <h2 className="dates-title">Параметры поездки</h2>
+      <h2 className="dates-title">Расскажи про поездку</h2>
       <div className="dates-scroll">
-        <p className="muted">Необязательно. Чем больше расскажете, тем точнее подбор.</p>
+        <p className="muted">Можно пропустить. Но если скажешь «в горы с детьми», подберём точнее.</p>
         <div className="chips-label">Еду</div>
         <div className="chips">{cityPlans(query.cityId).filter((p) => !p.local).map((p) => chip(planIds.includes(p.id), p.label, () => setPlanIds(togglePlanIds(planIds, p.id))))}</div>
         <div className="chips-label">С кем</div>
@@ -765,7 +765,7 @@ function ReturnPicker({ query, onApply, onClose }) {
     <Sheet className="sheet-dates" onClose={onClose}>
       <h2 className="dates-title">Где вернуть машину</h2>
       <div className="dates-scroll">
-        {opt('same', 'Где забрали', location?.name ?? 'Там же, где получите')}
+        {opt('same', 'Где забрали', location?.name ?? 'Там же, где заберёшь')}
         {opt('point', 'В нашей точке', points.map((l) => l.name).join(', '), true)}
         {mode === 'point' && (
           <div className="chips return-points">
@@ -774,7 +774,7 @@ function ReturnPicker({ query, onApply, onClose }) {
             ))}
           </div>
         )}
-        {opt('free', 'Где удобно', 'Как в каршеринге: оставьте на любой парковке в зоне города и завершите аренду в SMS', true)}
+        {opt('free', 'Где удобно', 'Как в каршеринге: оставь на любой парковке в зоне города и заверши аренду в SMS', true)}
       </div>
       <div className="dates-foot">
         <button type="button" className="btn-secondary" onClick={onClose}>Отмена</button>
@@ -863,7 +863,7 @@ function DatePicker({ query, onApply, onClose }) {
 
   return (
     <Sheet className="sheet-dates" onClose={onClose}>
-      <h2 className="dates-title">Выберите даты</h2>
+      <h2 className="dates-title">Когда и надолго ли</h2>
       <div className="dates-times">
         <TimeSelect label="Время получения" value={timeFrom} onChange={setTimeFrom} />
         <TimeSelect label="Время возврата" value={timeTo} onChange={setTimeTo} />
@@ -895,7 +895,7 @@ function DatePicker({ query, onApply, onClose }) {
         <button type="button" className="btn-secondary" onClick={onClose}>Отмена</button>
         <button type="button" className="btn-primary btn-accent" disabled={!days}
           onClick={() => onApply({ dateFrom: from, dateTo: to, timeFrom, timeTo })}>
-          {days ? `Готово · ${days} ${plural(days, 'сутки', 'суток', 'суток')}` : 'Выберите возврат'}
+          {days ? `Готово · ${days} ${plural(days, 'сутки', 'суток', 'суток')}` : 'Выбери возврат'}
         </button>
       </div>
     </Sheet>
@@ -907,7 +907,7 @@ function DatePicker({ query, onApply, onClose }) {
 const plainText = (x) => x.replace(/ /g, ' ').toLowerCase() // в данных неразрывные пробелы
 const cityHints = { sochi: 'Море, Красная Поляна, Абхазия', spb: 'Карелия, Выборг, Финский залив', msk: 'Дача, Суздаль, Золотое кольцо', kgd: 'Куршская коса и Балтика', mmk: 'Териберка и северное сияние', kzn: 'Свияжск и Раифа' }
 
-// Пустое поле «Куда едете»: города сменяют друг друга, как на барабане
+// Пустое поле «Куда едешь»: города сменяют друг друга, как на барабане
 function CityDrum() {
   const names = Object.values(cities).map((c) => c.name)
   const [i, setI] = useState(0)
@@ -939,7 +939,7 @@ function PlacePanel({ query, isReturn, text, onPick, onReturn }) {
         {found.length > 0 && <div className="wz-cap">Найдено</div>}
         {found.map((l) => row(l, `${l.name} · ${cities[l.city].name}`))}
         <div className="wz-cap">Адрес · {cities[city].name}</div>
-        {(hints.length ? hints : [text.trim()]).map((a) => row(addrPlace, a, 'Привезём к подъезду или ко входу отеля', () => onPick(addrPlace, a)))}
+        {(hints.length ? hints : [text.trim()]).map((a) => row(addrPlace, a, 'Привезём к подъезду или к дверям отеля', () => onPick(addrPlace, a)))}
       </>
     )
   }
@@ -969,7 +969,7 @@ function PlacePanel({ query, isReturn, text, onPick, onReturn }) {
   }
   return (
     <>
-      <div className="wz-cap">Где начнёте поездку</div>
+      <div className="wz-cap">Откуда стартуешь</div>
       {Object.entries(cities).map(([id, c]) => (
         // Город — не выбор, а раскрытие его точек
         <button key={id} type="button" className="wz-item" onClick={() => setCityId(id)}>
@@ -1019,7 +1019,7 @@ function DatesPanel({ query, set, onNext }) {
         <div className="wz-times">
           <TimeSelect label="Получение" value={query.timeFrom} onChange={(v) => set({ timeFrom: v })} />
           <TimeSelect label="Возврат" value={query.timeTo} onChange={(v) => set({ timeTo: v })} />
-          <span className="muted">{!from ? 'Выберите день получения' : !to ? 'Теперь — день возврата' : `${days} ${plural(days, 'сутки', 'суток', 'суток')}`}</span>
+          <span className="muted">{!from ? 'Выбери, когда заберёшь' : !to ? 'Теперь — день возврата' : `${days} ${plural(days, 'сутки', 'суток', 'суток')}`}</span>
         </div>
         <button type="button" className="btn-primary" disabled={!days} onClick={onNext}>Далее</button>
       </div>
@@ -1052,7 +1052,7 @@ function ParamsPanel({ query, set, onSubmit }) {
       <div className="chips">{companions.map((c) => chip(query.companion === c.id, c.label, () => set({ companion: query.companion === c.id ? '' : c.id })))}</div>
       <div className="chips-label">Авто</div>
       <div className="chips">{prefOptions.map((o) => chip(query.prefs.includes(o.id), o.label, () => set({ prefs: query.prefs.includes(o.id) ? query.prefs.filter((x) => x !== o.id) : [...query.prefs, o.id] })))}</div>
-      <div className="wz-foot"><span className="muted">Необязательно — чем больше расскажете, тем точнее подбор</span>
+      <div className="wz-foot"><span className="muted">Можно пропустить. Но если скажешь «в горы с детьми», подберём точнее</span>
         <button type="button" className="btn-primary btn-accent" onClick={onSubmit}>Подобрать машину</button></div>
     </>
   )
@@ -1137,8 +1137,8 @@ function Wizard({ ref, query, setQuery, step, setStep, onSubmit }) {
       </div>
         <div ref={barRef} className={`wz-bar ${step ? 'has-active' : ''}`}>
           <label data-seg="place" data-i="0" className={`wz-seg wz-wide ${step === 'place' ? 'active' : ''}`}>
-            <b>Куда едете</b>
-            <input ref={inputRef} value={placeValue} autoComplete="off" aria-label="Куда едете"
+            <b>Куда едешь</b>
+            <input ref={inputRef} value={placeValue} autoComplete="off" aria-label="Куда едешь"
               readOnly={mobile} onFocus={() => step !== 'place' && setStep('place')}
               onChange={(e) => { setText(e.target.value); if (location) set({ locationId: '', address: '' }) }} />
             {!placeValue && (step === 'place' ? <span className="drum">Город, аэропорт или адрес</span> : <CityDrum />)}
@@ -1160,7 +1160,7 @@ function Wizard({ ref, query, setQuery, step, setStep, onSubmit }) {
             <div className={`wz-panel ${step === 'when' ? 'wz-panel-wide' : ''}`} style={step === 'when' ? undefined : { left: panelLeft }} data-step={step} data-after={segs.indexOf(step)}>
               {step === 'place' && <PlacePanel key={location?.city ?? ''} query={query} text={text} onPick={pickPlace} />}
               {step === 'return' && location && <PlacePanel isReturn query={query} text="" onReturn={(p) => { set(p); setStep('when') }} />}
-              {step === 'return' && !location && <div className="wz-cap">Сначала выберите, где забрать</div>}
+              {step === 'return' && !location && <div className="wz-cap">Сначала скажи, где забрать</div>}
               {step === 'when' && (query.mode === 'days'
                 ? <DatesPanel query={query} set={set} onNext={() => setStep(next('when'))} />
                 : <HoursPanel query={query} set={set} onNext={() => setStep(next('when'))} />)}
@@ -1220,7 +1220,7 @@ function Landing({ query, setQuery, fav, onSubmit, onPickCar, openPicker }) {
     <main className="landing">
       <section className="hero">
         <div className="hero-inner">
-          <h1 className="hero-title">{'Расскажите, что в\u00a0планах,\u00a0— подберём лучшую машину для\u00a0твоей цели'}</h1>
+          <h1 className="hero-title">{'Машина уже ждёт. Время\u00a0— на\u00a0места, а\u00a0не\u00a0на\u00a0стойку проката'}</h1>
           <Wizard ref={formRef} query={query} setQuery={setQuery} step={step} setStep={setStep} onSubmit={submit} />
         </div>
       </section>
@@ -1231,7 +1231,7 @@ function Landing({ query, setQuery, fav, onSubmit, onPickCar, openPicker }) {
       <WhereYouAre openPicker={openPicker} />
 
       <section className="section">
-        <h2>Что мы обещаем</h2>
+        <h2>Без сюрпризов</h2>
         <div className="promises">
           {promises.map((p, i) => (
             <div key={p.title} className="promise"><span className="promise-n">0{i + 1}</span><b>{p.title}</b><p>{p.text}</p></div>
@@ -1240,7 +1240,7 @@ function Landing({ query, setQuery, fav, onSubmit, onPickCar, openPicker }) {
       </section>
 
       <section className="section faq">
-        <h2>Вопросы, которые нам задают</h2>
+        <h2>Что обычно спрашивают</h2>
         {faq.map((f) => (
           <details key={f.q}><summary>{f.q}</summary><p>{f.a}</p></details>
         ))}
@@ -1308,7 +1308,7 @@ function Plans({ ref, query, setQuery, onPick }) {
   return (
     <section ref={ref} className="section plans-section">
       <h2 className="plans-title">Какие планы <CitySelect query={query} setQuery={setQuery} />?</h2>
-      <p className="muted">Места, о которых вы могли не знать, — выберите, сразу подберём машину</p>
+      <p className="muted">Места, о которых ты мог не знать, — выбери, и сразу подберём машину</p>
       <div className="rows">{list.filter((p) => p.local).map(row)}</div>
     </section>
   )
@@ -1320,7 +1320,7 @@ const demoTotal = 48
 const demoFit = [3, 7, 12, 18, 22, 27, 31, 38, 44]
 const demoWin = 22
 const demoSegs = [
-  ['Куда едете', 'Город или место', 'Аэропорт Сочи'],
+  ['Куда едешь', 'Город или место', 'Аэропорт Сочи'],
   ['Когда', 'Даты и время', '12–15\u00a0марта'],
   ['Параметры', 'Цель, с кем, авто', 'В горы, нас четверо'],
 ]
@@ -1513,7 +1513,7 @@ const whereCopy = {
   'Аэропорт': 'Ждём на парковке у терминала с табличкой',
   'Вокзал': 'Парковка у главного входа, пять минут пешком',
   'Отель': 'Подгоним ко входу и договоримся о парковке',
-  'Парковка': 'Наш центр проката — заберите сами, когда удобно',
+  'Парковка': 'Наш центр проката — забери сам, когда удобно',
 }
 
 function WhereYouAre({ openPicker }) {
@@ -1521,7 +1521,7 @@ function WhereYouAre({ openPicker }) {
   return (
     <section className="section where">
       <h2>Машина там, где ты</h2>
-      <p className="muted">Выберите, где удобнее забрать — покажем точки в вашем городе и точное место встречи</p>
+      <p className="muted">Выбери, где удобнее забрать, — покажем точки в твоём городе и точное место встречи</p>
       <div className="where-grid">
         {order.map((type) => {
           const g = locationGroups.find((x) => x.type === type)
@@ -1656,7 +1656,7 @@ function E2({ query, setQuery, fav, onBack, onPick, openPicker }) {
     <div className={`cells ${cls}`}>
       <button type="button" className="cell" onClick={() => openPicker('all')}>
         <PlaceIcon type={location?.type ?? 'Адрес'} />
-        <span className="cell-text"><span className="cell-label">Где забрать</span>{location ? location.name : 'Выберите место'}{query.returnMode !== 'same' && <span className="muted"> · вернуть: {returnText(query).toLowerCase()}</span>}</span>
+        <span className="cell-text"><span className="cell-label">Где забрать</span>{location ? location.name : 'Выбери место'}{query.returnMode !== 'same' && <span className="muted"> · вернуть: {returnText(query).toLowerCase()}</span>}</span>
         <span className="cell-arrow"><Arrow chevron /></span>
       </button>
       <button type="button" className="cell" onClick={() => setDatesOpen(true)}>
@@ -1693,7 +1693,7 @@ function E2({ query, setQuery, fav, onBack, onPick, openPicker }) {
               <div className="pick-photo photo-car" style={carPhoto(car, 'lg')}>
                 {/* прошлая машина гаснет поверх новой — фото перетекает */}
                 {prev && prev.id !== car.id && <div key={`prev-${car.id}`} className="pick-photo-prev photo-car" style={carPhoto(prev, 'lg')} />}
-                <span className="badge">{paramsText(query) ? 'Под ваши параметры' : 'Подобрали для вас'}</span>
+                <span className="badge">{paramsText(query) ? 'Под твои параметры' : 'Подобрали для тебя'}</span>
                 <FavToggle id={car.id} fav={fav} />
               </div>
               <div className="pick-body">
@@ -1718,7 +1718,7 @@ function E2({ query, setQuery, fav, onBack, onPick, openPicker }) {
 
           {car && tiles.length > 0 && (
             <div className="alts">
-              <div className="why-title">Или посмотрите</div>
+              <div className="why-title">Или глянь</div>
               <div className="alt-grid">
                 {tiles.map((t) => (
                   <button key={t.car.id} type="button" className="alt" onClick={() => choose(t.car.id)}>
@@ -1768,7 +1768,7 @@ function E2({ query, setQuery, fav, onBack, onPick, openPicker }) {
               <button key={c.id} type="button" className={`more-row ${av !== 'ok' ? 'off' : ''}`} disabled={av !== 'ok'} onClick={() => choose(c.id)}>
                 <span className="more-photo photo-car" style={carPhoto(c)} />
                 <span className="more-text"><b>{c.model}</b>
-                  <span className="muted">{av === 'sold' ? 'Разобрали на ваши даты' : av === 'place' ? 'Нет в этой точке' : goods(car, c, query).slice(0, 2).join(', ') || c.kind}</span></span>
+                  <span className="muted">{av === 'sold' ? 'На эти даты все уехали' : av === 'place' ? 'Нет в этой точке' : goods(car, c, query).slice(0, 2).join(', ') || c.kind}</span></span>
                 <span className="more-side">{av === 'ok' ? priceDelta(car, c, query) : '—'}
                   {av === 'ok' && c.stock > 0 && <span className="badge badge-hot">{stockText(c.stock)}</span>}
                   {av === 'sold' && <span className="badge badge-muted">Разобрали</span>}</span>
@@ -1848,13 +1848,13 @@ function E3({ query, setQuery, carId, cameFrom, fav, onBack, onPickOther, openPi
           </section>
 
           <section className="e3-section">
-            <h2>Как получите машину</h2>
+            <h2>Как заберёшь машину</h2>
             <ol className="steps">
-              <li><b>{location ? location.name : 'Выберите точку получения'}</b>
+              <li><b>{location ? location.name : 'Выбери, где забрать'}</b>
                 <span>{location ? location.meet : 'аэропорт, вокзал, отель, парковка или к дому'}
                   {location && isNow(query) ? ` — подадим через ${location.etaMin + car.etaAdd} мин` : ''}</span></li>
               <li><b>Встречает сотрудник — 10 минут</b>
-                <span>Вместе обходите машину и фотографируете её — акт с фото приходит в телефон, так старые царапины не станут вашими. Показываем, как работают допы, и отдаём ключи</span></li>
+                <span>Вместе обходим машину и фотографируем её — акт с фото приходит в телефон, так чужие царапины не станут твоими. Показываем, как работают допы, и отдаём ключи</span></li>
               <li><b>Сразу в путь</b><span>Бак полный, допы уже в машине, маршрут — в навигаторе</span></li>
             </ol>
           </section>
@@ -1871,7 +1871,7 @@ function E3({ query, setQuery, carId, cameFrom, fav, onBack, onPickOther, openPi
           <section className="e3-section">
             <h2>Условия</h2>
             <dl className="terms">
-              <dt>Пробег</dt><dd>{query.extraIds.includes('unlimited') ? 'Без ограничений — безлимит в вашем расчёте' : `${rentTerms.mileage}. Или возьмите безлимит в допах ниже`}</dd>
+              <dt>Пробег</dt><dd>{query.extraIds.includes('unlimited') ? 'Без ограничений — безлимит в твоём расчёте' : `${rentTerms.mileage}. Или возьми безлимит в допах ниже`}</dd>
               <dt>Водитель</dt><dd>{rentTerms.driver}</dd>
               <dt>Куда можно</dt><dd>{city.regions}</dd>
               <dt>Страховка</dt><dd>{rentTerms.insurance}</dd>
@@ -1910,7 +1910,7 @@ function E3({ query, setQuery, carId, cameFrom, fav, onBack, onPickOther, openPi
               </div>
             )}
             {[
-              ['Где', location ? location.name : 'Выберите место', location?.type ?? 'Адрес', () => openPicker('all')],
+              ['Где', location ? location.name : 'Выбери место', location?.type ?? 'Адрес', () => openPicker('all')],
               ['Когда', whenText(query), 'Даты', () => setEdit('when')],
               ['Вернуть', returnText(query), 'Возврат', () => setEdit('return')],
             ].map(([label, value, icon, onClick]) => (
@@ -1980,7 +1980,7 @@ function E3({ query, setQuery, carId, cameFrom, fav, onBack, onPickOther, openPi
       <div className="e3-bar">
         <div>
           <div className="price">{status === 'ok' ? rub(total) : `${rub(car.pricePerDay)} / сутки`}</div>
-          <div className="muted">{status === 'ok' ? `за ${unitsText(query)}, с допами` : status ? 'недоступна' : 'укажите, где и когда'}</div>
+          <div className="muted">{status === 'ok' ? `за ${unitsText(query)}, с допами` : status ? 'недоступна' : 'укажи, где и когда'}</div>
         </div>
         <button className="btn-primary" onClick={status === 'ok' ? book : scrollToWidget}>{status === 'ok' ? 'Забронировать' : 'Где и когда'}</button>
       </div>
@@ -2021,7 +2021,7 @@ function Login({ onLogin }) {
     setError('')
   }
   const sendCode = () => {
-    if (digits.length < 10) { setError('Введите номер полностью'); return }
+    if (digits.length < 10) { setError('Введи номер полностью'); return }
     setCodeSent(true); setResend(59)
   }
   const onCode = (e) => {
@@ -2086,14 +2086,14 @@ function Final({ booking, onHome, onBookings }) {
   const location = findPlace(query)
   const inCar = extras.filter((x) => query.extraIds.includes(x.id) && (x.group === 'trip' || x.id === 'child-seat'))
   const startText = isNow(query) ? `через ${location.etaMin + car.etaAdd} мин` : query.mode === 'hours' ? `сегодня в ${query.start}` : `${fmtDate(query.dateFrom)} ${query.timeFrom}`
-  const sms = `Машина ждёт вас: ${car.model}, ${location.name}, ${startText}.${inCar.length ? ` ${inCar.map((x) => x.name.replace(/\s+в\s+машине$/, '')).join(', ')} — уже внутри.` : ''} Открыть: rent.ru/b/${booking.id}`
+  const sms = `Машина ждёт тебя: ${car.model}, ${location.name}, ${startText}.${inCar.length ? ` ${inCar.map((x) => x.name.replace(/\s+в\s+машине$/, '')).join(', ')} — уже внутри.` : ''} Открыть: rent.ru/b/${booking.id}`
 
   return (
     <main className="final">
       <div className="final-in">
         <div>
           <div className="final-kick">Забронировано</div>
-          <h1 className="final-title">Машина будет ждать вас здесь</h1>
+          <h1 className="final-title">Машина будет ждать тебя здесь</h1>
           <div className="final-map">
             <svg viewBox="0 0 400 300" width="100%" height="100%" aria-hidden="true">
               <path d="M0 210 L400 150" stroke="#ffffff" strokeWidth="18" />
@@ -2181,7 +2181,7 @@ function Bookings({ bookings, onHome, onShow, onRepeat, onCancel }) {
       {bookings.length === 0 ? (
         <div className="trips-empty">
           <b>Пока нет поездок</b>
-          <p className="muted">Расскажите о планах — подберём машину</p>
+          <p className="muted">Расскажи о планах — подберём машину</p>
           <button className="btn-primary btn-accent" onClick={onHome}>Подобрать машину</button>
         </div>
       ) : (
