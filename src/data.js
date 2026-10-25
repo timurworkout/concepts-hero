@@ -95,21 +95,21 @@ export const rentTerms = {
 
 // Условия и маршруты по городу подачи (допущение). routes: null — маршруты машины (Сочи)
 export const cities = {
-  sochi: { priceK: 1.15, parkSkip: 3, name: 'Сочи', in: 'в Сочи', regions: 'Краснодарский край и Адыгея; в Абхазию — с доверенностью, 1 000 ₽',
+  sochi: { priceK: 1.15, parkSkip: 3, name: 'Сочи', in: 'в Сочи', from: 'из Сочи', regions: 'Краснодарский край и Адыгея; в Абхазию — с доверенностью, 1 000 ₽',
     dropoff: 'возврат в другой точке Сочи — бесплатно', routes: null },
-  spb: { priceK: 1, parkSkip: 2, name: 'Петербург', in: 'в Петербурге', regions: 'Ленинградская область и Карелия',
+  spb: { priceK: 1, parkSkip: 2, name: 'Петербург', in: 'в Петербурге', from: 'из Петербурга', regions: 'Ленинградская область и Карелия',
     dropoff: 'возврат у дома или в любой точке Петербурга — бесплатно',
     routes: ['Выборг и Монрепо', 'Карелия: Рускеала и Сортавала', 'Финский залив: Зеленогорск'] },
-  msk: { priceK: 1.05, parkSkip: 5, name: 'Москва', in: 'в Москве', regions: 'Московская, Владимирская, Ярославская и Тверская области',
+  msk: { priceK: 1.05, parkSkip: 5, name: 'Москва', in: 'в Москве', from: 'из Москвы', regions: 'Московская, Владимирская, Ярославская и Тверская области',
     dropoff: 'возврат у дома или в любой точке Москвы — бесплатно',
     routes: ['На дачу', 'Суздаль и Владимир', 'Переславль и Ростов Великий'] },
-  kgd: { priceK: 0.95, parkSkip: 4, name: 'Калининград', in: 'в Калининграде', regions: 'Калининградская область',
+  kgd: { priceK: 0.95, parkSkip: 4, name: 'Калининград', in: 'в Калининграде', from: 'из Калининграда', regions: 'Калининградская область',
     dropoff: 'возврат в аэропорту или в Калининграде — бесплатно',
     routes: ['Куршская коса', 'Зеленоградск и Светлогорск', 'Балтийск'] },
-  mmk: { priceK: 1.2, parkSkip: 6, name: 'Мурманск', in: 'в Мурманске', regions: 'Мурманская область',
+  mmk: { priceK: 1.2, parkSkip: 6, name: 'Мурманск', in: 'в Мурманске', from: 'из Мурманска', regions: 'Мурманская область',
     dropoff: 'возврат в аэропорту или в Мурманске — бесплатно',
     routes: ['Териберка', 'Хибины и Кировск', 'Охота за северным сиянием'] },
-  kzn: { priceK: 0.9, parkSkip: 7, name: 'Казань', in: 'в Казани', regions: 'Татарстан, Марий Эл и Чувашия',
+  kzn: { priceK: 0.9, parkSkip: 7, name: 'Казань', in: 'в Казани', from: 'из Казани', regions: 'Татарстан, Марий Эл и Чувашия',
     dropoff: 'возврат на вокзале или в аэропорту Казани — бесплатно',
     routes: ['Свияжск', 'Раифский монастырь', 'Йошкар-Ола'] },
 }
@@ -219,23 +219,6 @@ for (const [id, model, kind, pricePerDay, seats, drive, trunk, clearance, fuel, 
 }
 
 export const kinds = ['Седан', 'Кроссовер', 'Внедорожник', 'Универсал', 'Минивэн', 'Пикап', 'Фургон']
-
-// Сценарии «Куда едете» на Э2: подборка машин и почему их рекомендуем
-export const scenarios = [
-  { id: 'all', label: 'Все' },
-  { id: 'city', label: 'Город и побережье',
-    why: 'Седаны и кроссоверы для асфальта: Сочи, побережье, Абхазия по трассе. Расход 6,5–8 л на 100 км — на бензин уйдёт меньше. Сначала дешёвые.',
-    carIds: ['lada-vesta', 'changan-alsvin', 'chery-arrizo-8', 'omoda-c5', 'jaecoo-j7', 'toyota-camry', 'volkswagen-t-roc'] },
-  { id: 'mountains', label: 'Горы и серпантины',
-    why: 'Полный привод и клиренс от 180 мм: серпантин на Красную Поляну, Лаго-Наки, снег зимой. Зимой все на шипах, под лыжи можно взять бокс.',
-    carIds: ['haval-f7', 'geely-monjaro', 'haval-dargo', 'toyota-rav4', 'changan-uni-k', 'haval-h9'] },
-  { id: 'family', label: 'Семьёй и с багажом',
-    why: '7 мест или багажник от 560 л: семья, коляска и чемоданы помещаются без бокса.',
-    carIds: ['lada-largus', 'toyota-highlander', 'changan-cs95', 'jetour-x70-plus', 'gac-gs8-traveller', 'jaecoo-j8', 'lada-vesta-sw'] },
-  { id: 'offroad', label: 'Бездорожье',
-    why: 'Рамные внедорожники и пикап с клиренсом от 220 мм: грунтовки Абхазии, Ауадхара, броды. На асфальте расход выше — 10–12 л на 100 км.',
-    carIds: ['tank-300', 'jetour-t2', 'changan-hunter-plus', 'haval-h9'] },
-]
 
 // Характеристики для подбора и карточки (оценка): коробка, мотор, топливо, цена за час
 const manual = ['lada-granta-se', 'lada-granta-lb', 'lada-granta-cross', 'lada-largus', 'lada-largus-furgon', 'lada-vesta-sw']
@@ -351,4 +334,4 @@ export const faq = [
 
 export const rub = (n) => n.toLocaleString('ru-RU') + ' ₽'
 
-for (const d of [locations, addressHints, cars, carDetails, rentTerms, cities, extras, scenarios, plans, companions, prefOptions, promises, faq]) typo(d)
+for (const d of [locations, addressHints, cars, carDetails, rentTerms, cities, extras, plans, companions, prefOptions, promises, faq]) typo(d)

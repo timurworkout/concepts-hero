@@ -1,6 +1,6 @@
-import { Fragment, useEffect, useLayoutEffect, useRef, useState } from 'react'
+import { Fragment, useEffect, useRef, useState } from 'react'
 import { createPortal } from 'react-dom'
-import { locations, locationGroups, cars, scenarios, rub, carDetails, rentTerms, cities, inCity, cityPrice, extras, plans, prefOptions, companions, promises, faq, addressHints } from './data.js'
+import { locations, locationGroups, cars, nb, rub, carDetails, rentTerms, cities, inCity, cityPrice, extras, plans, prefOptions, companions, promises, faq, addressHints } from './data.js'
 
 const carPhoto = (c, size = 'sm') => ({ backgroundImage: `url(${import.meta.env.BASE_URL}cars/${size}/${c.id}.webp)` })
 
@@ -110,7 +110,7 @@ export default function App() {
       openPicker={(g) => setSheet({ picker: g })} />
   )
   else page = (
-    <Landing query={query} setQuery={setQuery} fav={fav} onSubmit={() => { setScreen('e2'); setPicking(true) }} onPickCar={(id, cityId) => { setQuery((q) => (q.cityId ? q : { ...q, cityId })); openCar(id, 'e1') }} />
+    <Landing query={query} setQuery={setQuery} onSubmit={() => { setScreen('e2'); setPicking(true) }} />
   )
 
   return (
@@ -152,8 +152,8 @@ function Header({ dark, user, favs, onHome, onFavs, onLogin, onLogout, bookingsC
   }, [menu])
   return (
     <header className={`header ${dark ? 'header-dark' : ''}`}>
-      <button className="logo" onClick={onHome} aria-label="вольно — на главную">
-        вольно
+      <button className="logo" onClick={onHome} aria-label="ON MOVE — на главную">
+        <span className="logo-on">ON</span>MOVE
       </button>
       <nav className="header-nav">
         <button ref={favHeart} className="header-btn" onClick={onFavs} aria-label={`Избранное: ${favs.length}`}>
@@ -247,10 +247,6 @@ function CountText({ text }) {
 
 function CountNum({ value }) {
   return useCountUp(value)
-}
-
-function CountRub({ value }) {
-  return rub(useCountUp(value))
 }
 
 // Заливка чипа расходится от точки нажатия
@@ -1213,7 +1209,7 @@ function StickySearch({ shown, query, onOpen }) {
   ]
   return (
     <div className={`sticky-search ${shown ? 'on' : ''}`} aria-hidden={!shown} inert={!shown}>
-      <button type="button" className="logo ss-logo" onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })} aria-label="Наверх">вольно</button>
+      <button type="button" className="logo ss-logo" onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })} aria-label="Наверх"><span className="logo-on">ON</span>MOVE</button>
       <div className="ss-bar">
         {segs.map(([id, label, value, ph]) => (
           <button key={id} type="button" className="ss-seg" onClick={() => onOpen(id)}>
@@ -1231,9 +1227,8 @@ function StickySearch({ shown, query, onOpen }) {
 }
 
 
-function Landing({ query, setQuery, fav, onSubmit, onPickCar }) {
+function Landing({ query, setQuery, onSubmit }) {
   const formRef = useRef(null)
-  const plansRef = useRef(null)
   const [formVisible, setFormVisible] = useState(true)
   const [step, setStep] = useState(null) // открытый шаг визарда
   const [placeType, setPlaceType] = useState(null) // фильтр места с плитки «Машина там, где ты»
@@ -1245,9 +1240,6 @@ function Landing({ query, setQuery, fav, onSubmit, onPickCar }) {
   }, [])
 
   const scrollToForm = () => formRef.current.scrollIntoView({ behavior: 'smooth', block: 'center' })
-  const scrollToPlans = () => plansRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' })
-  // «Подобрать авто» из парка — к визарду, сразу с раскрытым выбором, куда подать
-  const toCityStep = () => { scrollToForm(); setTimeout(() => setStep('place'), 400) }
   // Липкая шапка: на мобилке шторка шага открывается поверх, на десктопе сначала едем к визарду
   const mobile = useMobile()
   const openStep = (id) => { if (mobile) setStep(id); else { scrollToForm(); setTimeout(() => setStep(id), 400) } }
@@ -1265,7 +1257,7 @@ function Landing({ query, setQuery, fav, onSubmit, onPickCar }) {
     setQuery((q) => ({ ...q, extraIds: union(q.extraIds, plans.filter((p) => q.planIds.includes(p.id)).flatMap((p) => p.extraIds ?? [])) }))
     onSubmit()
   }
-  // Клик по цели или месту — сразу на подбор с этим планом
+  // Клик по месту в «Направлениях» — сразу на подбор с этим планом
   const pickPlan = (p) => {
     const ids = p.local && p.goal ? [p.goal, p.id] : [p.id]
     setQuery((q) => ({ ...q, planIds: ids, extraIds: union(q.extraIds, plans.filter((x) => ids.includes(x.id)).flatMap((x) => x.extraIds ?? [])) }))
@@ -1276,14 +1268,12 @@ function Landing({ query, setQuery, fav, onSubmit, onPickCar }) {
     <main className="landing">
       <section className="hero">
         <div className="hero-inner">
-          <h1 className="hero-title">{'Машина уже ждёт. Время\u00a0— на\u00a0места, а\u00a0не\u00a0на\u00a0стойку проката'}</h1>
+          <h1 className="hero-title">{'Скажи, куда едешь. Машину подберём сами\u00a0— без\u00a050\u00a0вкладок и\u00a0сравнений'}</h1>
           <Wizard ref={formRef} query={query} setQuery={setQuery} step={step} setStep={setStep} placeType={placeType} setPlaceType={setPlaceType} onSubmit={submit} />
         </div>
       </section>
 
-      <Park query={query} fav={fav} onPickCar={onPickCar} onFind={toCityStep} />
-      {query.cityId && <Plans ref={plansRef} query={query} setQuery={setQuery} onPick={pickPlan} />}
-      <Manifest onGoal={query.cityId ? scrollToPlans : toCityStep} />
+      <Directions onPick={(cityId, p) => { setQuery((q) => changeCity(q, cityId)); pickPlan(p) }} />
       <WhereYouAre onPick={pickPlaceType} />
 
       <section className="section">
@@ -1314,162 +1304,55 @@ const changeCity = (q, cityId) => ({
   planIds: q.planIds.filter((id) => cityPlans(cityId).some((p) => p.id === id)),
 })
 
-function CitySelect({ query, setQuery, inCity }) {
-  const [open, setOpen] = useState(false)
-  const ref = useRef(null)
-  // Список закрывается кликом мимо и по Esc
-  useEffect(() => {
-    if (!open) return
-    const onClick = (e) => !ref.current?.contains(e.target) && setOpen(false)
-    const onKey = (e) => e.key === 'Escape' && setOpen(false)
-    document.addEventListener('mousedown', onClick)
-    window.addEventListener('keydown', onKey)
-    return () => { document.removeEventListener('mousedown', onClick); window.removeEventListener('keydown', onKey) }
-  }, [open])
-  const change = (cityId) => { setQuery((q) => changeCity(q, cityId)); setOpen(false) }
+// Фон-заглушка места до фото: свой градиент у каждого места, остальным — общий
+const placeBg = {
+  'sochi-ski': '#2e4a63,#8fb0c9 60%,#e9eef2', 'sochi-ritsa': '#123d3a,#2f7d72 55%,#8cc7b5', 'sochi-imereti': '#0f4c75,#3282b8 55%,#f3d9a4',
+  'sochi-lagonaki': '#3b4a2a,#7a8f4e 55%,#d9d3a0', 'spb-karelia': '#1f3d36,#3f6f5f 55%,#9cc2b0', 'spb-vyborg': '#3a3550,#6c6487 55%,#c9bfd9',
+  'spb-ladoga': '#22344a,#4d6d8f 55%,#d6c4a0', 'msk-ring': '#4a2a2a,#9a5b3c 55%,#e7c08a', 'msk-yakhroma': '#2d3a4f,#7f93ad 55%,#eef1f5',
+  'msk-ikea': '#2f4a2b,#6d9a52 55%,#d8e6a8', 'kgd-spit': '#24425a,#5f8aa3 55%,#e8dcb8', 'kgd-castles': '#3a3030,#7a6658 55%,#c9b8a2',
+  'kgd-coast': '#1f4d5c,#4f9aa8 55%,#f0e2c0', 'mmk-teriberka': '#1d2a3a,#4a6280 55%,#dfe7ef', 'mmk-aurora': '#0d1b2a,#1f4e5f 55%,#5fd3a0',
+  'mmk-khibiny': '#2a3646,#7d8fa6 55%,#eef1f5', 'kzn-sviyazhsk': '#3b2f2a,#8a6a4f 55%,#e3cfa8', 'kzn-raifa': '#22382c,#4f7a5c 55%,#c9dcb8',
+  'kzn-bolgar': '#3a3328,#8a7a5a 55%,#e6d8b0',
+}
+const placeGradient = (id) => `linear-gradient(160deg, ${placeBg[id] ?? '#2b3446,#56627a 55%,#a7a9b8'})`
+
+// Направления: город → места, где важны и направление, и машина под него. Машину не называем — её показывает подбор
+function Directions({ onPick }) {
+  const drag = useDragScroll()
+  const [cityId, setCityId] = useState('sochi')
+  const [active, setActive] = useState(0)
+  const places = cityPlans(cityId).filter((p) => p.local).slice(0, 4)
+  const fromPrice = (p) => Math.min(...cars.filter((c) => inCity(c, cityId) && p.test(c)).map((c) => cityPrice(c, cityId)))
+  const goalLabel = (p) => plans.find((g) => g.id === p.goal)?.label
+  const all = Object.keys(cities).flatMap((id) => cityPlans(id).filter((p) => p.local).slice(0, 4))
+  const city = (id) => { setCityId(id); setActive(0) }
   return (
-    <span className="city-wrap" ref={ref}>
-      <button type="button" className={`city-select ${query.cityId ? '' : 'city-empty'}`} aria-expanded={open} onClick={() => setOpen(!open)}>
-        {!query.cityId ? 'в городе' : inCity ? cities[query.cityId].in : cities[query.cityId].name}
-        <svg className="city-chevron" viewBox="0 0 12 12" aria-hidden="true"><path d="M2 4.5l4 4 4-4" /></svg>
-      </button>
-      {open && (
-        <span className="city-pop" role="listbox">
+    <section className="dir">
+      {all.map((p) => (
+        <div key={p.id} className={`dir-bg ${p.id === places[active]?.id ? 'on' : ''}`} style={{ backgroundImage: placeGradient(p.id) }} aria-hidden="true" />
+      ))}
+      <div className="dir-top">
+        <h2>{nb(`Куда съездить ${cities[cityId].from}`)}</h2>
+        <div className="dir-tabs" role="tablist" {...drag}>
           {Object.entries(cities).map(([id, c]) => (
-            <button key={id} type="button" role="option" aria-selected={id === query.cityId} className="city-option" onClick={() => change(id)}>
-              {c.name}{id === query.cityId && <span aria-hidden="true">✓</span>}
-            </button>
+            <button key={id} type="button" role="tab" aria-selected={id === cityId} className={`dir-tab ${id === cityId ? 'on' : ''}`} onClick={() => city(id)}>{c.name}</button>
           ))}
-        </span>
-      )}
-    </span>
-  )
-}
-
-function Plans({ ref, query, setQuery, onPick }) {
-  const list = cityPlans(query.cityId)
-  const row = (p) => (
-    <button key={p.id} type="button" className="row-cell" onClick={() => onPick(p)}>
-      <span className="row-text">
-        <span className="plan-label">{p.label}</span>
-        <span className="plan-hint">{p.hint}</span>
-      </span>
-      <span className="row-arrow"><Arrow /></span>
-    </button>
-  )
-  return (
-    <section ref={ref} className="section plans-section">
-      <h2 className="plans-title">Какие планы <CitySelect query={query} setQuery={setQuery} />?</h2>
-      <p className="muted">Места, о которых ты мог не знать, — выбери, и сразу подберём машину</p>
-      <div className="rows">{list.filter((p) => p.local).map(row)}</div>
-    </section>
-  )
-}
-
-// Демо подбора: форма заполняется как в визарде, каталог сжимается до одной машины.
-// Крутится по кругу, пока блок на экране
-const demoTotal = 48
-const demoFit = [3, 7, 12, 18, 22, 27, 31, 38, 44]
-const demoWin = 22
-const demoSegs = [
-  ['Куда едешь', 'Город или место', 'Аэропорт Сочи'],
-  ['Когда', 'Даты и время', '12–15\u00a0марта'],
-  ['Параметры', 'Цель, с кем, авто', 'В горы, нас четверо'],
-]
-
-function ManifestDemo() {
-  const car = cars.find((c) => c.id === 'haval-f7') ?? cars[0]
-  const rootRef = useRef(null)
-  const fieldRef = useRef(null)
-  const [size, setSize] = useState({ w: 0, h: 0 })
-  const [typed, setTyped] = useState(['', '', ''])
-  const [active, setActive] = useState(-1)
-  const [press, setPress] = useState(false)
-  const [stage, setStage] = useState('catalog') // 'catalog' | 'filter' | 'win'
-  const [run, setRun] = useState(0) // номер прогона: смена перезапускает демо
-  const [visible, setVisible] = useState(false)
-  const num = useCountUp(stage === 'catalog' ? demoTotal : stage === 'filter' ? demoFit.length : 1, demoTotal, 500)
-
-  useEffect(() => {
-    const ro = new ResizeObserver(([e]) => setSize({ w: e.contentRect.width, h: e.contentRect.height }))
-    ro.observe(fieldRef.current)
-    const io = new IntersectionObserver(([e]) => setVisible(e.isIntersecting), { threshold: 0.5 })
-    io.observe(rootRef.current)
-    return () => { ro.disconnect(); io.disconnect() }
-  }, [])
-
-  useEffect(() => {
-    if (!visible) return
-    setTyped(['', '', '']); setActive(-1); setStage('catalog')
-    const timers = []
-    const at = (ms, f) => timers.push(setTimeout(f, ms))
-    let t = 600
-    demoSegs.forEach(([, , text], i) => {
-      at(t, () => setActive(i))
-      ;[...text].forEach((_, k) => at(t + 120 + k * 45, () => setTyped((v) => v.map((x, j) => (j === i ? text.slice(0, k + 1) : x)))))
-      t += 120 + text.length * 45 + 400
-    })
-    at(t + 200, () => { setActive(-1); setPress(true) })
-    at(t + 350, () => setPress(false))
-    at(t + 500, () => setStage('filter'))
-    at(t + 2000, () => setStage('win'))
-    if (!reducedMotion()) at(t + 6000, () => setRun((r) => r + 1))
-    return () => timers.forEach(clearTimeout)
-  }, [visible, run])
-
-  // Раскладка плиток: сетка каталога → подходящие → одна крупная
-  const { w: W, h: H } = size
-  const cols = W < 500 ? 8 : 12, rows = Math.ceil(demoTotal / cols), gap = 6
-  const tw = (W - gap * (cols - 1)) / cols
-  const th = Math.max(0, Math.min((H - gap * (rows - 1)) / rows, tw * 0.62))
-  const oy = (H - (rows * th + (rows - 1) * gap)) / 2
-  const winW = Math.min(W, 560), winH = Math.min(H, winW * 0.5), winY = (H - winH) / 2
-  const tile = (i) => {
-    const fit = demoFit.includes(i)
-    if (stage === 'win' && i === demoWin) return { cls: 'win', x: 0, y: winY, w: winW, h: winH }
-    const cls = stage === 'filter' ? (fit ? 'fit' : 'out') : stage === 'win' ? 'out' : ''
-    return { cls, x: (i % cols) * (tw + gap), y: oy + Math.floor(i / cols) * (th + gap), w: tw, h: th }
-  }
-  const caption = { catalog: 'машин в\u00a0каталоге', filter: 'подходят: клиренс, 4×4, 5\u00a0мест', win: 'твоя машина' }[stage]
-
-  return (
-    <div className="demo" ref={rootRef}>
-      <div className="demo-bar" aria-hidden="true">
-        {demoSegs.map(([label, placeholder], i) => (
-          <div key={label} className={`demo-seg ${active === i ? 'active' : ''} ${typed[i] ? 'filled' : ''}`}>
-            <b>{label}</b>
-            <span>{typed[i] || (active === i ? '' : placeholder)}{active === i && <i className="demo-caret" />}</span>
-          </div>
-        ))}
-        <span className={`demo-go ${press ? 'press' : ''}`}><svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="6.5" /><path d="M16 16l4 4" /></svg></span>
-      </div>
-      <div className="demo-count" aria-live="polite"><strong>{num}</strong><span>{caption}</span></div>
-      <div className="demo-field" ref={fieldRef}>
-        {W > 0 && Array.from({ length: demoTotal }, (_, i) => {
-          const { cls, x, y, w, h } = tile(i)
-          return <div key={i} className={`demo-tile ${cls}`} style={{ width: w, height: h, transform: `translate(${x}px, ${y}px)` }} />
-        })}
-        <div className={`demo-win ${stage === 'win' ? 'in' : ''}`} style={{ transform: `translate(0, ${winY}px)` }}>
-          <b>{car.model}</b>
-          <small>{car.drive === 'полный' ? '4×4' : car.drive} · {car.seats}{'\u00a0'}мест · от {rub(cityPrice(car, 'sochi'))}/сутки</small>
         </div>
       </div>
-      <button type="button" className="demo-replay" onClick={() => setRun((r) => r + 1)}>↻ Ещё раз</button>
-    </div>
-  )
-}
-
-function Manifest({ onGoal }) {
-  return (
-    <section className="manifest">
-      <h2 className="manifest-title">Это не маркетплейс.</h2>
-      <p className="manifest-text">
-        Не трать вечер на 50 вкладок и сравнение Changan с Haval. Назови цель — мы подберём одну машину и объясним, почему она.
-        Не подошла — переключи, что важнее, и увидишь, что стало лучше, а что хуже.
-      </p>
-      <p className="manifest-punch">С тебя цель. С нас машина.</p>
-      <ManifestDemo />
-      <button className="btn-secondary btn-on-dark" onClick={onGoal}>Назвать цель</button>
+      <div className="dir-places" key={cityId}>
+        {places.map((p, i) => {
+          const price = fromPrice(p)
+          return (
+            <button key={p.id} type="button" style={{ '--i': i }} className={`dir-place ${i === active ? 'on' : ''}`}
+              onMouseEnter={() => setActive(i)} onFocus={() => setActive(i)} onClick={() => onPick(cityId, p)}>
+              {goalLabel(p) && <small>{goalLabel(p)}</small>}
+              <b>{p.label}</b>
+              <span className="dir-hint">{p.hint}</span>
+              {Number.isFinite(price) && <span className="dir-price">от {rub(price)} в{' '}сутки</span>}
+            </button>
+          )
+        })}
+      </div>
     </section>
   )
 }
@@ -1493,71 +1376,6 @@ function useDragScroll() {
     onPointerLeave: () => { drag.current = null },
     onClickCapture: (e) => { if (drag.current?.moved) { e.stopPropagation(); e.preventDefault() } },
   }
-}
-
-function Park({ query, fav, onPickCar, onFind }) {
-  // У парка свой город: по умолчанию Сочи, после выбора места в визарде — город поездки
-  const [cityId, setCityId] = useState(query.cityId || 'sochi')
-  useEffect(() => { if (query.cityId) setCityId(query.cityId) }, [query.cityId])
-  const dragTabs = useDragScroll()
-  const dragCars = useDragScroll()
-  const tabs = scenarios.filter((s) => s.carIds)
-  const [tab, setTab] = useState(tabs[0].id)
-  // Карточки меняем с задержкой: старые успевают погаснуть, новые поднимаются лесенкой
-  const [shownTab, setShownTab] = useState(tab)
-  const switched = useRef(false)
-  useEffect(() => {
-    if (tab === shownTab) return
-    switched.current = true
-    const t = setTimeout(() => setShownTab(tab), reducedMotion() ? 0 : 150)
-    return () => clearTimeout(t)
-  }, [tab, shownTab])
-  const tabsRef = useRef(null)
-  useLayoutEffect(() => {
-    // Линия-индикатор переезжает под выбранную цель
-    const box = tabsRef.current, b = box?.querySelector(`[data-tab="${tab}"]`)
-    if (!b) return
-    const move = () => { box.style.setProperty('--ind-x', b.offsetLeft + 'px'); box.style.setProperty('--ind-w', b.offsetWidth + 'px') }
-    move()
-    addEventListener('resize', move)
-    return () => removeEventListener('resize', move)
-  }, [tab])
-  const ids = tabs.find((t) => t.id === shownTab).carIds
-  const list = cars.filter((c) => ids.includes(c.id) && inCity(c, cityId)).sort((a, b) => a.pricePerDay - b.pricePerDay)
-  const three = list.length <= 3 ? list : [list[0], list[Math.floor(list.length / 2)], list[list.length - 1]]
-  return (
-    <section className="section park">
-      <div className="park-head">
-        <h2>Наши машины <CitySelect query={{ ...query, cityId }} setQuery={(f) => setCityId(f(query).cityId)} inCity /></h2>
-        <button type="button" className="park-find" onClick={onFind}>Подобрать под{'\u00a0'}поездку<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6" /></svg></button>
-      </div>
-      <div className="scenarios" role="tablist" ref={tabsRef} {...dragTabs} onKeyDown={(e) => {
-        // Стрелки переключают сценарий, фокус едет вместе с выбранной вкладкой
-        const step = { ArrowRight: 1, ArrowLeft: -1 }[e.key]
-        if (!step) return
-        const next = tabs[(tabs.findIndex((t) => t.id === tab) + step + tabs.length) % tabs.length]
-        setTab(next.id)
-        e.currentTarget.querySelector(`[data-tab="${next.id}"]`)?.focus()
-      }}>
-        {tabs.map((t) => (
-          <button key={t.id} role="tab" data-tab={t.id} aria-selected={tab === t.id} tabIndex={tab === t.id ? 0 : -1} className={`scenario ${tab === t.id ? 'active' : ''}`} onClick={() => setTab(t.id)}>
-            {t.label}
-          </button>
-        ))}
-      </div>
-      <div className={`park-grid ${tab !== shownTab ? 'leave' : ''}`} {...dragCars}>
-        {three.map((c, i) => (
-          <div key={shownTab + c.id} style={{ '--i': i }} className={`park-card ${switched.current ? 'enter' : ''}`} role="button" tabIndex={0} onClick={() => onPickCar(c.id, cityId)} onKeyDown={(e) => onActivateKey(e, () => onPickCar(c.id, cityId))}>
-            <div className="park-photo photo-car" style={carPhoto(c, 'lg')}><FavToggle id={c.id} fav={fav} /></div>
-            <div className="park-body">
-              <span>{c.model}</span>
-              <span className="muted">от <CountRub value={cityPrice(c, cityId)} />/сутки</span>
-            </div>
-          </div>
-        ))}
-      </div>
-    </section>
-  )
 }
 
 const whereCopy = {
