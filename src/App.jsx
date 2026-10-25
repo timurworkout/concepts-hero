@@ -1441,55 +1441,89 @@ function WhereYouAre({ onPick }) {
 
 // Показывает логику подбора по шагам, как в «Что учли», и уходит на Э2 сама или по клику
 function Picking({ query, onDone }) {
+  // Сетка всех машин сужается до подобранной, и она перелетает на место главного фото Э2.
+  // Механика из рефа Дениса (shoe-finder): лишние рассыпаются, подходящие съезжаются, победитель выходит вперёд
   const res = pickCar(query)
-  const { goal, places, companion, skipped, car, count, total } = res
-  const lines = []
-  if (goal) lines.push([goal.label, goal.hint.toLowerCase()])
-  else lines.push(['Цель не\u00a0выбрана', 'берём самую выгодную'])
-  places.filter((p) => !skipped.includes(p)).forEach((p) => lines.push([p.label, p.hint.toLowerCase()]))
-  if (companion && !skipped.includes(companion)) lines.push([companion.label, companion.hint])
-
-  const step = 320
-  const tFunnel = 150 + lines.length * step
-  const tResult = tFunnel + 600
-  const totalMs = tResult + 800
-  const [t, setT] = useState(0) // сколько этапов уже показано
-  const [funnel, setFunnel] = useState(false)
-  const num = useCountUp(funnel ? count : total, total, 500)
+  const { goal, places, companion, skipped, car, fit, count } = res
+  const pool = cars.filter((c) => availability(c, query.locationId) === 'ok')
+  const top = car ? [car, ...fit.filter((c) => c.id !== car.id)].slice(0, 9) : []
+  const topIds = top.map((c) => c.id)
+  const why = goal ? `${goal.label} → ${goal.hint}` : 'Цель не выбрана → берём самую выгодную'
+  const who = [...places, companion].filter((s) => s && !skipped.includes(s)).map((s) => s.label).join(', ')
+  const caps = [
+    `${pool.length} машин ${query.cityId ? cities[query.cityId].in : ''}`,
+    nb(why.toLowerCase()),
+    nb(`${who ? who.toLowerCase() + ' → ' : ''}сортируем по цене`),
+    'Твоя машина',
+  ]
+  const [stage, setStage] = useState(0)
+  const num = useCountUp(stage === 0 ? pool.length : stage === 1 || stage === 2 ? count : 1, pool.length, 600)
+  const tiles = useRef({})
+  const [fly, setFly] = useState(false)
 
   useEffect(() => {
-    const timers = [
-      ...lines.map((_, i) => setTimeout(() => setT(i + 1), 150 + i * step)),
-      setTimeout(() => setFunnel(true), tFunnel),
-      setTimeout(() => setT(lines.length + 1), tResult),
-      setTimeout(onDone, totalMs),
-    ]
-    const onKey = (e) => e.key === 'Escape' && onDone()
+    const W = innerWidth, H = innerHeight, phone = W < 744
+    // Плитки в пропорции главного фото Э2 — тогда перелёт идёт одним масштабом, без искажений
+    const target = document.querySelector('.pick-photo')?.getBoundingClientRect()
+    const ratio = target ? target.width / target.height : 1.5
+    const cols = phone ? 6 : 10, rows = Math.ceil(pool.length / cols), gap = phone ? 4 : 8
+    const gTop = H * 0.22, avail = H - gTop - H * 0.08
+    const tw = Math.min((W * 0.9 - gap * (cols - 1)) / cols, ((avail - gap * (rows - 1)) / rows) * ratio), th = tw / ratio
+    const ox = (W - (cols * tw + (cols - 1) * gap)) / 2
+    const place = (el, x, y, k = 1) => { if (el) el.style.transform = `translate(${x}px,${y}px) scale(${k})` }
+    pool.forEach((c, i) => {
+      const el = tiles.current[c.id]
+      el.style.width = tw + 'px'; el.style.height = th + 'px'
+      place(el, ox + (i % cols) * (tw + gap), gTop + Math.floor(i / cols) * (th + gap))
+    })
+    const finish = () => onDone()
+    const onKey = (e) => e.key === 'Escape' && finish()
     window.addEventListener('keydown', onKey)
+    const slow = reducedMotion()
+    const timers = slow ? [setTimeout(() => setFly(true), 900), setTimeout(finish, 1400)] : [
+      // 1. Фильтр: неподходящие гаснут, каждая со своей случайной задержкой
+      setTimeout(() => {
+        setStage(1)
+        pool.forEach((c) => {
+          const el = tiles.current[c.id]
+          if (topIds.includes(c.id)) return
+          el.style.transitionDelay = Math.random() * 300 + 'ms'
+          el.classList.add('gone')
+          el.style.transform += ' scale(.8)'
+        })
+      }, 500),
+      // 2. Подходящие съезжаются в плотную сетку 3×3
+      setTimeout(() => {
+        setStage(2)
+        const n = Math.min(3, top.length), k = Math.min(W * 0.8 / (n * tw), H * 0.6 / (3 * th)) / 1.04, g = 10
+        const cw = tw * k, ch = th * k, x0 = (W - (n * cw + (n - 1) * g)) / 2
+        top.forEach((c, i) => place(tiles.current[c.id], x0 + (i % n) * (cw + g), H * 0.24 + Math.floor(i / n) * (ch + g), k))
+      }, 1300),
+      // 3. Победитель выходит вперёд, остальные приглушаются
+      setTimeout(() => {
+        setStage(3)
+        top.forEach((c) => tiles.current[c.id]?.classList.add(c.id === car.id ? 'win' : 'dim'))
+      }, 1900),
+      // 4. Перелёт на место главного фото Э2, заставка растворяется
+      setTimeout(() => {
+        setFly(true)
+        const el = tiles.current[car?.id], r = document.querySelector('.pick-photo')?.getBoundingClientRect()
+        top.forEach((c) => c.id !== car.id && tiles.current[c.id]?.classList.add('gone'))
+        if (el && r) place(el, r.left, r.top, r.width / tw)
+      }, 2500),
+      setTimeout(finish, 3300),
+    ]
     return () => { timers.forEach(clearTimeout); window.removeEventListener('keydown', onKey) }
   }, [])
 
   return createPortal(
-    <div className="picking" role="status" aria-live="polite" onClick={onDone} style={{ '--total': `${totalMs}ms` }}>
-      <div className="picking-bar" />
-      <div className="picking-in">
-        <div className="picking-kicker">Подбираем машину {query.cityId ? cities[query.cityId].in : ''}</div>
-        <ul className="picking-steps">
-          {lines.map(([b, hint], i) => (
-            <li key={b} className={`picking-step ${t > i ? 'in' : ''}`}>
-              <i aria-hidden="true">✓</i><div><b>{b}</b> <span><Arrow /> {hint}</span></div>
-            </li>
-          ))}
-        </ul>
-        <div className={`picking-funnel ${funnel ? 'in' : ''}`}>подходят <strong>{num}</strong> из {total} машин</div>
-        {car && (
-          <div className={`picking-result ${t > lines.length ? 'in' : ''}`}>
-            <div className="picking-photo photo-car" style={carPhoto(car)} />
-            <div><b>{car.model}</b><span>от {rub(cityPrice(car, query.cityId))}/сутки</span></div>
-          </div>
-        )}
-      </div>
-      <button type="button" className="picking-skip" onClick={(e) => { e.stopPropagation(); onDone() }}>Пропустить</button>
+    <div className={`pickgrid ${fly ? 'fly' : ''}`} role="status" aria-live="polite" onClick={onDone}>
+      <div className="pickgrid-bg" />
+      <div className="pickgrid-head"><strong>{num}</strong><span>{caps[stage]}</span></div>
+      {pool.map((c) => (
+        <div key={c.id} ref={(el) => { tiles.current[c.id] = el }} className="pickgrid-tile photo-car" style={carPhoto(c, c.id === car?.id ? 'lg' : 'sm')} />
+      ))}
+      <button type="button" className="pickgrid-skip" onClick={(e) => { e.stopPropagation(); onDone() }}>Пропустить</button>
     </div>,
     document.body,
   )

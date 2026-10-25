@@ -731,30 +731,23 @@ label.wz-seg, .wz-seg-btn { display: flex; flex-direction: column; align-items: 
 @keyframes bump { 40% { transform: translateY(-5px) scale(1.2); } }
 
 /* Заставка «Подбираем машину» */
-.picking { position: fixed; inset: 0; z-index: 60; display: grid; place-items: center; padding: 24px 16px; background: var(--night); color: #fff; animation: fadeIn var(--dur-medium); cursor: pointer; }
-.picking-bar { position: absolute; left: 0; top: 0; height: 3px; width: 100%; background: var(--accent); transform-origin: left; animation: picking-bar var(--total) linear; }
-@keyframes picking-bar { from { transform: scaleX(0); } }
-.picking-in { display: grid; gap: 22px; width: min(520px, 100%); }
-.picking-kicker { font-size: 15px; font-weight: 600; color: rgba(255,255,255,0.55); }
-.picking-steps { display: grid; gap: 12px; margin: 0; padding: 0; list-style: none; }
-.picking-step { display: flex; align-items: baseline; gap: 12px; font-size: 18px; line-height: 1.35; opacity: 0; transform: translateY(10px); transition: opacity var(--dur-medium), transform var(--dur-slow) var(--ease-spring); }
-.picking-step.in { opacity: 1; transform: none; }
-.picking-step i { flex: none; display: grid; place-items: center; width: 20px; height: 20px; border: 1.5px solid rgba(255,255,255,0.35); border-radius: 50%; font-size: 12px; font-style: normal; color: transparent; transition: background var(--dur-base) .2s, border-color var(--dur-base) .2s, color var(--dur-base) .2s; }
-.picking-step.in i { background: var(--accent); border-color: var(--accent); color: #000; }
-.picking-step b { font-weight: 600; }
-.picking-step span { color: rgba(255,255,255,0.7); }
-.picking-funnel { display: flex; align-items: baseline; gap: 10px; font-size: 15px; color: rgba(255,255,255,0.7); opacity: 0; transition: opacity var(--dur-medium); }
-.picking-funnel.in { opacity: 1; }
-.picking-funnel strong { min-width: 2ch; font-size: 40px; font-weight: 700; color: #fff; font-variant-numeric: tabular-nums; }
-.picking-result { display: flex; align-items: center; gap: 16px; padding: 16px; border-radius: var(--r-lg); background: rgba(255,255,255,0.08); opacity: 0; transform: scale(.96); transition: opacity var(--dur-medium), transform var(--dur-slow) var(--ease-spring); }
-.picking-result.in { opacity: 1; transform: none; }
-.picking-photo { flex: none; width: 96px; aspect-ratio: 4 / 3; border-radius: var(--r-md); }
-.picking-result b { display: block; font-size: 20px; }
-.picking-result span { font-size: 14px; color: rgba(255,255,255,0.7); }
-.picking-skip { position: absolute; right: 16px; bottom: 20px; border: 0; background: none; padding: 8px; font-size: 14px; color: rgba(255,255,255,0.6); }
-.picking-skip:hover { color: #fff; }
 
 /* Смена машины на Э2: фото перетекает, название въезжает */
+/* Заставка подбора: сетка машин сужается до одной */
+.pickgrid { position: fixed; inset: 0; z-index: 60; color: #fff; cursor: pointer; }
+.pickgrid-bg { position: absolute; inset: 0; background: var(--night); animation: fadeIn var(--dur-medium); transition: opacity .5s; }
+.pickgrid.fly .pickgrid-bg { opacity: 0; }
+.pickgrid-head { position: absolute; left: 16px; right: 16px; top: 7vh; display: grid; gap: 6px; text-align: center; animation: fadeIn var(--dur-medium); transition: opacity var(--dur-base); }
+.pickgrid.fly .pickgrid-head, .pickgrid.fly .pickgrid-skip { opacity: 0; }
+.pickgrid-head strong { font-size: clamp(36px, 5vw, 56px); font-weight: 800; letter-spacing: -0.03em; font-variant-numeric: tabular-nums; }
+.pickgrid-head span { min-height: 1.4em; font-size: 16px; color: rgba(255,255,255,0.7); }
+.pickgrid-tile { position: absolute; left: 0; top: 0; border-radius: var(--r-sm); transform-origin: 0 0; background-color: #2a2c2e; animation: fadeIn var(--dur-medium); transition: transform .55s var(--ease-spring), opacity .35s, filter .35s; will-change: transform; }
+.pickgrid-tile.gone { opacity: 0; }
+.pickgrid-tile.dim { opacity: .35; filter: grayscale(1); }
+.pickgrid-tile.win { z-index: 2; box-shadow: 0 20px 50px rgba(0,0,0,0.45); }
+.pickgrid.fly .pickgrid-tile.win { box-shadow: none; transition: transform .7s var(--ease-spring), box-shadow .7s; }
+.pickgrid-skip { position: absolute; right: 16px; bottom: 20px; border: 0; background: none; padding: 8px; font-size: 14px; color: rgba(255,255,255,0.6); }
+.pickgrid-skip:hover { color: #fff; }
 .pick-photo-prev { position: absolute; inset: 0; animation: fadeOut var(--dur-slow) var(--ease-out) forwards; pointer-events: none; }
 .pick-photo .badge, .pick-photo .fav-toggle { z-index: 1; }
 @keyframes fadeOut { to { opacity: 0; } }
@@ -775,6 +768,6 @@ label.wz-seg, .wz-seg-btn { display: flex; flex-direction: column; align-items: 
   .btn-primary, .btn-secondary, .wz-go, .wz-go svg, .chip, .chip::before, .filter, .mode-toggle.pill::before { transition-property: background, color, border-color, opacity; }
   .btn-primary.ready, .wz-go.ready, .has-error, .pop .heart, .deflate .heart, .bump .heart { animation: none; }
   .sheet-center { animation: fadeIn var(--dur-base); }
-  .picking-step, .picking-result { transform: none; transition-property: opacity; }
+  .pickgrid-tile { transition-property: opacity; }
   .swap-in { animation: fadeIn var(--dur-medium); }
 }
