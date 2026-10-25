@@ -1,0 +1,99 @@
+<!doctype html><html lang="ru"><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Метафора «кино» — превью</title>
+<link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@300;500&family=Cormorant+Garamond:ital,wght@0,500;1,500&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+:root{--ink:#1b1a18;--paper:#f4f1ea;--muted:#6b675f;--warm:#e9b872;--ease:cubic-bezier(.2,.8,.2,1)}
+*{box-sizing:border-box}body{margin:0;font-family:Inter,system-ui,sans-serif;color:var(--ink);background:var(--paper)}
+main{max-width:1120px;margin:0 auto;padding:48px 24px 96px;display:grid;gap:56px}
+h1{font-family:'Cormorant Garamond',serif;font-weight:400;font-size:clamp(36px,5vw,64px);line-height:1;margin:0}
+h2{font-size:13px;font-weight:600;color:var(--muted);margin:0 0 16px;letter-spacing:.02em}
+p.lead{max-width:640px;color:var(--muted);line-height:1.5;margin:12px 0 0}
+.logos{display:grid;grid-template-columns:repeat(auto-fit,minmax(250px,1fr));gap:16px}
+.logo{background:#fff;border-radius:20px;padding:20px;display:grid;gap:14px}
+.stage{height:150px;border-radius:12px;display:grid;place-items:center;background:var(--ink);color:#fff;position:relative;overflow:hidden}
+.logo b{font-size:16px}.logo p{margin:0;font-size:14px;color:var(--muted);line-height:1.45}
+.fav{display:flex;gap:10px;align-items:center;font-size:12px;color:var(--muted)}
+.fav i{width:32px;height:32px;border-radius:8px;background:var(--ink);display:grid;place-items:center;color:#fff;font-style:normal;position:relative;overflow:hidden}
+/* A титр */
+.a{font-family:Montserrat;font-weight:300;font-size:30px;letter-spacing:.32em;padding-left:.32em}
+/* B кадр */
+.b{position:absolute;inset:0;display:grid;place-items:center}
+.b::before,.b::after{content:"";position:absolute;left:0;right:0;height:26px;background:#000}
+.b::before{top:0}.b::after{bottom:0}
+.b span{font-family:'Cormorant Garamond';font-size:44px;position:relative}
+.bf::before,.bf::after{content:"";position:absolute;left:0;right:0;height:7px;background:#000}.bf::before{top:0}.bf::after{bottom:0}
+/* C движение */
+.c{font-family:'Cormorant Garamond';font-size:46px;white-space:nowrap}
+.c em{font-style:normal}.c em:nth-child(2){opacity:.45}.c em:nth-child(3){opacity:.2}.c em:nth-child(4){opacity:.08}
+.stage:hover .c em{animation:roll 1.2s var(--ease) infinite}
+@keyframes roll{50%{opacity:1}}
+/* D титр-курсив */
+.d{font-family:'Cormorant Garamond';font-style:italic;font-size:48px}
+.d small{display:block;font-family:Montserrat;font-style:normal;font-size:9px;letter-spacing:.4em;text-align:center;opacity:.7;margin-top:2px}
+/* кадр */
+.still{position:relative;aspect-ratio:2.39/1;border-radius:4px;overflow:hidden;background:linear-gradient(160deg,#0f4c75,#3282b8 50%,#f3d9a4);filter:saturate(.85)}
+.still::before{content:"";position:absolute;inset:0;background:radial-gradient(120% 90% at 50% 40%,transparent 50%,rgba(0,0,0,.45));}
+.grain{position:absolute;inset:-50%;opacity:.12;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.9' numOctaves='2'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");animation:g .4s steps(2) infinite}
+@keyframes g{50%{transform:translate(3%,-2%)}}
+.sub{position:absolute;left:0;right:0;bottom:8%;text-align:center;color:#fff;font-size:clamp(14px,1.8vw,20px);text-shadow:0 1px 3px rgba(0,0,0,.8);padding:0 16px}
+.tc{position:absolute;left:16px;top:12px;color:#fff;font:500 11px/1 Montserrat;letter-spacing:.2em;opacity:.75}
+.scene{position:absolute;right:16px;top:12px;color:#fff;font:500 11px/1 Montserrat;letter-spacing:.2em;opacity:.75}
+table{width:100%;border-collapse:collapse;background:#fff;border-radius:20px;overflow:hidden;font-size:15px}
+td,th{padding:14px 18px;text-align:left;vertical-align:top;border-bottom:1px solid #eee;line-height:1.4}th{font-size:12px;color:var(--muted);font-weight:600}
+td:first-child{color:var(--muted);width:24%}
+.rule{background:#fff;border-radius:20px;padding:20px;line-height:1.5}
+.rule ul{margin:8px 0 0;padding-left:18px}
+@media(max-width:743px){main{padding:32px 16px 64px;gap:40px}td,th{padding:12px}}
+@media (prefers-reduced-motion:reduce){.grain,.stage:hover .c em{animation:none}}
+</style>
+<main>
+<header>
+ <h1>Путешествие как&nbsp;кино</h1>
+ <p class="lead">Movie&nbsp;— move. Поездка&nbsp;— это движение и&nbsp;кадры за&nbsp;окном, а&nbsp;машина&nbsp;— камера, которая их&nbsp;снимает. Ниже&nbsp;— варианты лого, как&nbsp;метафора ложится на&nbsp;фото и&nbsp;на&nbsp;тексты. Шрифты&nbsp;— для&nbsp;ощущения, не&nbsp;финальный выбор.</p>
+</header>
+
+<section>
+ <h2>ЛОГО — 4 НАПРАВЛЕНИЯ, НАЗВАНИЕ «ВОЛЬНО» ОСТАВЛЕНО</h2>
+ <div class="logos">
+  <div class="logo"><div class="stage"><span class="a">вольно</span></div>
+   <b>A. Титр</b><p>Широкий разреженный шрифт, как&nbsp;вступительные титры. Тихо, дорого, без&nbsp;картинки.</p>
+   <div class="fav"><i style="font:300 15px Montserrat">в</i>иконка вкладки</div></div>
+  <div class="logo"><div class="stage"><div class="b"><span>вольно</span></div></div>
+   <b>B. Кадр</b><p>Слово в&nbsp;широкоэкранной рамке 2.39:1. Рамка становится системой: все фото на&nbsp;сайте&nbsp;— в&nbsp;этом формате.</p>
+   <div class="fav"><i class="bf" style="font:18px 'Cormorant Garamond'">в</i>иконка вкладки</div></div>
+  <div class="logo"><div class="stage"><span class="c">вольн<em>о</em><em>о</em><em>о</em><em>о</em></span></div>
+   <b>C. Движение</b><p>Последняя «о» тянется следом, как&nbsp;кадры плёнки при&nbsp;движении. Наведи&nbsp;— «едет».</p>
+   <div class="fav"><i style="font:18px 'Cormorant Garamond'">о<span style="opacity:.35">о</span></i>иконка вкладки</div></div>
+  <div class="logo"><div class="stage"><span class="d">вольно<small>В ПУТЬ</small></span></div>
+   <b>D. Постер</b><p>Курсив как&nbsp;название фильма на&nbsp;афише, под&nbsp;ним&nbsp;— мелкий титр. Самый эмоциональный, но&nbsp;ближе к&nbsp;курсиву, который Илья называл слопом.</p>
+   <div class="fav"><i style="font:italic 19px 'Cormorant Garamond'">в</i>иконка вкладки</div></div>
+ </div>
+</section>
+
+<section>
+ <h2>ФОТО — КАДР ИЗ ФИЛЬМА</h2>
+ <div class="still"><div class="grain"></div><span class="tc">СЦЕНА 3</span><span class="scene">СОЧИ</span><div class="sub">Парковка у&nbsp;пляжа, багажник под&nbsp;зонт и&nbsp;шезлонги</div></div>
+ <p class="lead">Все фото&nbsp;— широкий кадр 2.39:1, одна цветокоррекция (тёплые света, холодные тени, чуть приглушённый цвет), лёгкое зерно и&nbsp;виньетка. Подписи к&nbsp;местам&nbsp;— как&nbsp;субтитры. Машина в&nbsp;кадре&nbsp;— в&nbsp;движении или&nbsp;в&nbsp;пейзаже, не&nbsp;в&nbsp;студии. Градиент&nbsp;— заглушка под&nbsp;фото Имеретинки.</p>
+</section>
+
+<section>
+ <h2>TONE OF VOICE — ГДЕ ЖИВЁТ КИНО</h2>
+ <table>
+  <tr><th>Место</th><th>Сейчас</th><th>В метафоре кино</th></tr>
+  <tr><td>Подбор, анимация сетки</td><td>Смотрим на&nbsp;клиренс, багажник и&nbsp;твои планы… → Нашли. Вот она</td><td><b>Кастинг на&nbsp;главную роль…</b> → <b>В&nbsp;главной роли&nbsp;— Haval F7</b></td></tr>
+  <tr><td>Направления</td><td>Куда съездить из&nbsp;Сочи</td><td><b>Сцены, которые стоит снять в&nbsp;Сочи</b> или&nbsp;оставить «Куда съездить» и&nbsp;кино дать только картинкой</td></tr>
+  <tr><td>Загрузка</td><td>Прогреваем двигатель…</td><td><b>Мотор…</b></td></tr>
+  <tr><td>Финал брони</td><td>Машина будет ждать тебя здесь</td><td><b>Машина на&nbsp;месте. Дальше снимаешь ты</b></td></tr>
+  <tr><td>404</td><td>Свернули не&nbsp;туда. Бывает</td><td><b>Эту сцену вырезали при&nbsp;монтаже</b></td></tr>
+  <tr><td>Кнопки, цены, залог</td><td colspan="2">Без кино и&nbsp;без шуток&nbsp;— как&nbsp;в&nbsp;ToV сейчас</td></tr>
+ </table>
+</section>
+
+<section class="rule">
+ <b>Правило, чтобы не&nbsp;скатиться в&nbsp;каламбуры</b>
+ <ul>
+  <li>Кино&nbsp;— в&nbsp;первую очередь в&nbsp;картинке: кадр, цвет, зерно, субтитры, движение.</li>
+  <li>В&nbsp;словах&nbsp;— 3–4 момента на&nbsp;весь сайт: кастинг в&nbsp;подборе, финал, загрузка, 404.</li>
+  <li>Голос остаётся прежним: друг на&nbsp;«ты», факт плюс улыбка. Кино&nbsp;— его хобби, а&nbsp;не&nbsp;новый персонаж.</li>
+ </ul>
+</section>
+</main>
