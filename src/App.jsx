@@ -1304,7 +1304,7 @@ const changeCity = (q, cityId) => ({
   planIds: q.planIds.filter((id) => cityPlans(cityId).some((p) => p.id === id)),
 })
 
-// Фон-заглушка места до фото: свой градиент у каждого места, остальным — общий
+// Фон-заглушка места, пока нет фото: свой градиент у каждого места, остальным — общий
 const placeBg = {
   'sochi-ski': '#2e4a63,#8fb0c9 60%,#e9eef2', 'sochi-ritsa': '#123d3a,#2f7d72 55%,#8cc7b5', 'sochi-imereti': '#0f4c75,#3282b8 55%,#f3d9a4',
   'sochi-lagonaki': '#3b4a2a,#7a8f4e 55%,#d9d3a0', 'spb-karelia': '#1f3d36,#3f6f5f 55%,#9cc2b0', 'spb-vyborg': '#3a3550,#6c6487 55%,#c9bfd9',
@@ -1315,6 +1315,30 @@ const placeBg = {
   'kzn-bolgar': '#3a3328,#8a7a5a 55%,#e6d8b0',
 }
 const placeGradient = (id) => `linear-gradient(160deg, ${placeBg[id] ?? '#2b3446,#56627a 55%,#a7a9b8'})`
+
+// Фото мест — Wikimedia Commons: автор, лицензия, страница файла. Без фото остаётся градиент
+const placePhoto = {
+  'kgd-castles': ['Ruth Leiserowitz', 'CC BY-SA 4.0', 'File:Burgruine_in_Balga,_1995.jpg'],
+  'kgd-coast': ['Alexander Grebenkov', 'CC BY 3.0', 'File:Yantarny,_Kaliningrad_Oblast_-_Colorful_sea_and_sky_at_the_beach.jpg'],
+  'kgd-spit': ['Alexander Grebenkov', 'CC BY 3.0', 'File:Curonian_Spit_-_Dunes_view_from_Epha_Berg_5.jpg'],
+  'kgd-yantarny': ['Alexander Grebenkov', 'CC BY 3.0', 'File:Yantarny,_Kaliningrad_Oblast_-_Sun_shines_through_clouds_on_the_beach.jpg'],
+  'kzn-bolgar': ['Alexxx1979', 'CC BY-SA 4.0', 'File:Bolgar._Volga_River_P5181971_2200.jpg'],
+  'kzn-raifa': ['Alexxx1979', 'CC BY-SA 4.0', 'File:Raifa_Bogoroditsky_Monastery._Raifskoye_Lake_P6200612_2410.jpg'],
+  'kzn-sviyazhsk': ['A.Savin', 'FAL', 'File:View_of_Makaryevsky_Monastery_from_Sviyazhsk_Island_08-2016.jpg'],
+  'mmk-khibiny': ['Ninara', 'CC BY 2.0', 'File:Kirovsk,_Russia_(21990875622).jpg'],
+  'mmk-teriberka': ['Андрей Сачков', 'CC BY-SA 4.0', 'File:DJI_0200_Андрей_Сачков.jpg'],
+  'msk-ikea': ['Velga', 'CC BY-SA 3.0', 'File:Всадник_на_дороге_к_храму..jpg'],
+  'msk-ring': ['Ludvig14', 'CC BY-SA 4.0', 'File:Banner_Suzdal_191_1296.jpg'],
+  'msk-yakhroma': ['Alexey V. Kurochkin', 'CC BY-SA 4.0', 'File:Hot_air_balloons_near_Yakhroma_(Russia,_Moscow_Oblast)_IMGP0548a1.jpg'],
+  'sochi-imereti': ['SKas', 'CC BY-SA 4.0', 'File:Sunset_in_Sochi.jpg'],
+  'sochi-lagonaki': ['Alexxx1979', 'CC BY-SA 4.0', 'File:Krasnodar_Krai._Apsheronsky_District._Lago-Naki_P6111675_2575.jpg'],
+  'sochi-ritsa': ['Alexxx1979', 'CC BY-SA 4.0', 'File:Abkhazia._Lake_Ritsa_P9100178_2600.jpg'],
+  'sochi-ski': ['SKas', 'CC BY-SA 4.0', 'File:Autumn_in_the_Sochi_National_Park_near_Krasnaya_Polyana.JPG'],
+  'spb-karelia': ['GAlexandrova', 'CC BY-SA 4.0', 'File:9814._Ruskeala._Italian_canyon.jpg'],
+  'spb-ladoga': ['Sergey A. Demidov', 'CC BY 4.0', 'File:20210523_Lake_Ladoga_19.jpg'],
+  'spb-vyborg': ['Sergey A. Demidov', 'CC BY 4.0', 'File:20240522_Vyborg_Castle_182.jpg'],
+}
+const placeImage = (id) => (placePhoto[id] ? `url(${import.meta.env.BASE_URL}places/${id}.webp), ` : '') + placeGradient(id)
 
 // Направления: город → места, где важны и направление, и машина под него. Машину не называем — её показывает подбор
 function Directions({ onPick }) {
@@ -1329,7 +1353,7 @@ function Directions({ onPick }) {
   return (
     <section className="dir">
       {all.map((p) => (
-        <div key={p.id} className={`dir-bg ${p.id === places[active]?.id ? 'on' : ''}`} style={{ backgroundImage: placeGradient(p.id) }} aria-hidden="true" />
+        <div key={p.id} className={`dir-bg ${p.id === places[active]?.id ? 'on' : ''}`} style={{ backgroundImage: placeImage(p.id) }} aria-hidden="true" />
       ))}
       <div className="dir-top">
         <h2>{nb(`Куда съездить ${cities[cityId].from}`)}</h2>
@@ -1339,6 +1363,10 @@ function Directions({ onPick }) {
           ))}
         </div>
       </div>
+      {placePhoto[places[active]?.id] && (() => {
+        const [author, license, file] = placePhoto[places[active].id]
+        return <a className="dir-credit" href={`https://commons.wikimedia.org/wiki/${file}`} target="_blank" rel="noreferrer">Фото: {author} · {license}</a>
+      })()}
       <div className="dir-places" key={cityId}>
         {places.map((p, i) => {
           const price = fromPrice(p)
