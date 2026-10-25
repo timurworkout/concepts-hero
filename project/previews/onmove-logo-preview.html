@@ -1,0 +1,101 @@
+<!doctype html><html lang="ru"><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Лого ON MOVE — превью</title>
+<link href="https://fonts.googleapis.com/css2?family=Archivo:ital,wdth,wght@0,100,700;0,125,300;0,125,600;0,125,800;1,125,700&family=Instrument+Serif:ital@0;1&family=IBM+Plex+Mono:wght@400;500&family=Golos+Text:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+:root{--ink:#161513;--paper:#f2efe8;--muted:#6b675f;--rec:#ff3b2f;--ease:cubic-bezier(.2,.8,.2,1)}
+*{box-sizing:border-box}body{margin:0;font-family:'Golos Text',system-ui,sans-serif;color:var(--ink);background:var(--paper)}
+main{max-width:1160px;margin:0 auto;padding:48px 24px 96px;display:grid;gap:40px}
+h1{font:400 clamp(36px,5vw,60px)/1 'Instrument Serif',serif;margin:0}
+.lead{max-width:680px;color:var(--muted);line-height:1.5;margin:12px 0 0}
+.v{background:#fff;border-radius:24px;padding:20px;display:grid;grid-template-columns:minmax(0,1.6fr) minmax(0,1fr);gap:20px;align-items:center}
+.frames{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.f{position:relative;aspect-ratio:2.39/1;border-radius:6px;overflow:hidden;display:grid;place-items:center;color:#fff;background:var(--ink)}
+.f.photo{background:linear-gradient(160deg,#24425a,#5f8aa3 55%,#e8c890);filter:saturate(.9)}
+.f.photo::before{content:"";position:absolute;inset:0;background:radial-gradient(120% 90% at 50% 40%,transparent 45%,rgba(0,0,0,.5))}
+.f.light{background:var(--paper);color:var(--ink)}
+.f>*{position:relative}
+.info b{font-size:20px;font-weight:600}.info p{margin:8px 0 0;color:var(--muted);line-height:1.5;font-size:15px}
+.ru{margin-top:14px;font-size:14px;color:var(--ink)}.ru span{color:var(--muted)}
+.fav{display:flex;gap:8px;align-items:center;margin-top:12px;font-size:13px;color:var(--muted)}
+.fav i{width:32px;height:32px;border-radius:8px;background:var(--ink);color:#fff;display:grid;place-items:center;font-style:normal;overflow:hidden}
+/* 1 REC */
+.l1{font:600 26px/1 Archivo;font-stretch:125%;letter-spacing:.06em;display:flex;align-items:center;gap:.45em}
+.dot{width:.42em;height:.42em;border-radius:50%;background:var(--rec);animation:blink 1.6s steps(1) infinite}
+@keyframes blink{50%{opacity:.25}}
+/* 2 табло */
+.l2{font:800 26px/1 Archivo;font-stretch:125%;letter-spacing:.04em;display:flex;align-items:center;gap:.35em}
+.l2 .on{padding:.18em .32em;border:2px solid currentColor;border-radius:.3em;font-size:.72em;transition:background .3s,color .3s,border-color .3s}
+.f:hover .l2 .on,.f.lit .l2 .on{background:var(--rec);border-color:var(--rec);color:#fff}
+/* 3 титр */
+.l3{font:400 40px/1 'Instrument Serif',serif;letter-spacing:.01em}.l3 i{font-style:italic}
+.l3 small{display:block;text-align:center;font:500 10px/1 'IBM Plex Mono',monospace;letter-spacing:.3em;margin-top:8px;opacity:.75}
+/* 4 видоискатель */
+.l4{position:relative;padding:14px 22px;font:500 22px/1 'IBM Plex Mono',monospace;letter-spacing:.12em}
+.l4::before,.l4::after{content:"";position:absolute;width:12px;height:12px;border:2px solid currentColor}
+.l4::before{left:0;top:0;border-right:0;border-bottom:0}.l4::after{right:0;bottom:0;border-left:0;border-top:0}
+.l4 b{color:var(--rec);font-weight:500}
+/* 5 движение */
+.l5{font:italic 700 28px/1 Archivo;font-stretch:125%;letter-spacing:.02em;white-space:nowrap}
+.l5 em{font-style:inherit}.l5 em:nth-of-type(2){opacity:.45;margin-left:-.42em}.l5 em:nth-of-type(3){opacity:.18;margin-left:-.42em}
+.f:hover .l5 em{transition:margin .5s var(--ease)}.f:hover .l5 em:nth-of-type(2){margin-left:-.2em}.f:hover .l5 em:nth-of-type(3){margin-left:-.2em}
+.note{color:var(--muted);font-size:14px;line-height:1.5;max-width:760px}
+@media(max-width:860px){.v{grid-template-columns:1fr}.frames{grid-template-columns:1fr}}
+@media (prefers-reduced-motion:reduce){.dot{animation:none}}
+</style>
+<main>
+<header>
+ <h1>ON MOVE</h1>
+ <p class="lead">Пять направлений лого. Каждое&nbsp;— на&nbsp;тёмном, на&nbsp;кадре-заглушке 2.39:1 и&nbsp;на&nbsp;светлом. Справа&nbsp;— идея, русская подпись «на&nbsp;муве» и&nbsp;иконка вкладки. Наведи на&nbsp;кадр&nbsp;— у&nbsp;некоторых есть движение.</p>
+</header>
+
+<section class="v">
+ <div class="frames">
+  <div class="f"><span class="l1"><i class="dot"></i>ON MOVE</span></div>
+  <div class="f photo"><span class="l1"><i class="dot"></i>ON MOVE</span></div>
+ </div>
+ <div class="info"><b>1. Запись</b><p>Красная точка перед&nbsp;ON&nbsp;— как&nbsp;индикатор REC на&nbsp;камере. Мягко мигает. Объясняет «ON» без&nbsp;слов: идёт съёмка твоей поездки. Самый простой и&nbsp;понятный.</p>
+  <p class="ru">на муве <span>— аренда машин для&nbsp;путешествий</span></p>
+  <div class="fav"><i><span class="dot" style="width:10px;height:10px;display:block"></span></i>иконка&nbsp;— просто точка записи</div></div>
+</section>
+
+<section class="v">
+ <div class="frames">
+  <div class="f lit"><span class="l2"><span class="on">ON</span>MOVE</span></div>
+  <div class="f light"><span class="l2"><span class="on">ON</span>MOVE</span></div>
+ </div>
+ <div class="info"><b>2. Табло</b><p>ON&nbsp;— в&nbsp;рамке, как&nbsp;табло «ON&nbsp;AIR» над&nbsp;дверью студии. В&nbsp;покое контур, при&nbsp;наведении загорается красным. Сильнее всего снимает вопрос «on&nbsp;the&nbsp;move»: ON читается как&nbsp;отдельный знак.</p>
+  <p class="ru">на муве <span>— аренда машин для&nbsp;путешествий</span></p>
+  <div class="fav"><i style="font:800 11px Archivo;font-stretch:125%;border:2px solid #fff;width:26px;height:20px;border-radius:5px">ON</i>иконка&nbsp;— табло</div></div>
+</section>
+
+<section class="v">
+ <div class="frames">
+  <div class="f"><span class="l3">On <i>Move</i><small>SC.01 · TAKE 1</small></span></div>
+  <div class="f photo"><span class="l3">On <i>Move</i><small>SC.01 · TAKE 1</small></span></div>
+ </div>
+ <div class="info"><b>3. Титр</b><p>Название фильма на&nbsp;заставке: антиква, Move&nbsp;— курсивом, под&nbsp;ним мелкая строка с&nbsp;хлопушки. Самый кинематографичный и&nbsp;спокойный. Риск&nbsp;— курсив, который Илья отмечал как&nbsp;слоп.</p>
+  <p class="ru">на муве <span>— аренда машин для&nbsp;путешествий</span></p>
+  <div class="fav"><i style="font:italic 20px 'Instrument Serif'">M</i>иконка&nbsp;— курсивная M</div></div>
+</section>
+
+<section class="v">
+ <div class="frames">
+  <div class="f"><span class="l4"><b>ON</b> MOVE</span></div>
+  <div class="f photo"><span class="l4"><b>ON</b> MOVE</span></div>
+ </div>
+ <div class="info"><b>4. Видоискатель</b><p>Уголки рамки камеры и&nbsp;моноширинный шрифт, как&nbsp;надписи на&nbsp;экране камеры. Уголки потом работают по&nbsp;всему сайту: в&nbsp;них берутся фото мест и&nbsp;машина в&nbsp;подборе.</p>
+  <p class="ru">на муве <span>— аренда машин для&nbsp;путешествий</span></p>
+  <div class="fav"><i style="font:500 11px 'IBM Plex Mono';color:#ff3b2f">ON</i>иконка&nbsp;— красное ON</div></div>
+</section>
+
+<section class="v">
+ <div class="frames">
+  <div class="f"><span class="l5">ON MOV<em>E</em><em>E</em><em>E</em></span></div>
+  <div class="f photo"><span class="l5">ON MOV<em>E</em><em>E</em><em>E</em></span></div>
+ </div>
+ <div class="info"><b>5. Движение</b><p>Наклонный широкий шрифт, последняя E тянется следом угасающими кадрами&nbsp;— движение плёнки и&nbsp;машины. При&nbsp;наведении след растягивается. Самый динамичный, ближе к&nbsp;«стремительным линиям» из&nbsp;твоей таблицы.</p>
+  <p class="ru">на муве <span>— аренда машин для&nbsp;путешествий</span></p>
+  <div class="fav"><i style="font:italic 700 15px Archivo;font-stretch:125%">M<span style="opacity:.35">›</span></i>иконка&nbsp;— M со&nbsp;следом</div></div>
+</section>
+
+<p class="note">Шрифты&nbsp;— для&nbsp;ощущения, финальный подберём вместе со&nbsp;стилем. Красный&nbsp;— цвет индикатора записи, кандидат в&nbsp;акцент. Кадр&nbsp;— заглушка под&nbsp;фото места.</p>
+</main>
