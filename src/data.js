@@ -13,7 +13,7 @@ function typo(v) {
   }
 }
 
-// Моки из project/mock-data.md
+// Моки из project/archive/mock-data.md
 
 // meet — где именно ждёт машина
 export const locations = [
