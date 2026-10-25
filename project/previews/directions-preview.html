@@ -1,0 +1,78 @@
+<!doctype html><html lang="ru"><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Направления — превью</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+:root{--ink:#222;--muted:#6a6a6a;--ease:cubic-bezier(.2,.8,.2,1)}
+*{box-sizing:border-box}body{margin:0;font-family:Inter,system-ui,sans-serif;color:var(--ink);background:#fff}
+.dir{position:relative;margin:16px;border-radius:28px;overflow:hidden;color:#fff;min-height:640px;padding:56px 48px;display:grid;grid-template-columns:minmax(0,1fr);align-content:space-between;gap:40px}
+.bg{position:absolute;inset:0;opacity:0;transition:opacity .8s var(--ease)}.bg.on{opacity:1}
+.bg::after{content:"";position:absolute;inset:0;background:linear-gradient(180deg,rgba(0,0,0,.15),rgba(0,0,0,.55))}
+.bg span{position:absolute;right:24px;top:20px;font-size:12px;opacity:.6;z-index:1}
+.top,.places{position:relative;z-index:1}
+h2{margin:0 0 20px;font-size:clamp(28px,4vw,48px);line-height:1.05;letter-spacing:-.02em;max-width:720px}
+.tabs{display:flex;gap:8px;flex-wrap:wrap}
+.tab{font:inherit;font-size:15px;font-weight:500;padding:10px 18px;border-radius:999px;border:1px solid rgba(255,255,255,.4);background:transparent;color:#fff;cursor:pointer;transition:background .2s,color .2s}
+.tab.on{background:#fff;color:var(--ink);border-color:#fff}
+.places{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:12px}
+.place{font:inherit;text-align:left;cursor:pointer;border:0;border-radius:20px;padding:20px;background:rgba(255,255,255,.12);backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px);color:#fff;display:grid;gap:10px;align-content:start;
+ opacity:0;transform:translateY(12px);animation:in .5s var(--ease) forwards;transition:background .2s,transform .2s}
+.place:hover{background:rgba(255,255,255,.22);transform:translateY(-4px)}
+@keyframes in{to{opacity:1;transform:none}}
+.place small{font-size:12px;opacity:.7}.place b{font-size:18px;font-weight:600}.place p{margin:0;font-size:14px;line-height:1.4;opacity:.85}
+.car{display:flex;align-items:center;gap:10px;margin-top:6px;padding-top:12px;border-top:1px solid rgba(255,255,255,.2);font-size:14px}
+.car img{width:72px;height:40px;object-fit:contain}.car em{font-style:normal;opacity:.7;display:block;font-size:12px}
+.note{position:fixed;bottom:16px;left:50%;transform:translateX(-50%) translateY(80px);background:var(--ink);color:#fff;padding:12px 20px;border-radius:999px;font-size:14px;transition:transform .35s var(--ease);max-width:calc(100% - 32px);text-align:center}
+.note.on{transform:translateX(-50%)}
+.ctx{max-width:760px;margin:40px auto;padding:0 16px;color:var(--muted);font-size:14px;line-height:1.5}
+@media(max-width:743px){.dir{margin:8px;padding:32px 16px;min-height:auto;border-radius:20px}.places{grid-template-columns:1fr}.tabs{flex-wrap:nowrap;overflow-x:auto;scrollbar-width:none}}
+@media (prefers-reduced-motion:reduce){.place{animation:none;opacity:1;transform:none}.bg{transition:none}}
+</style>
+<section class="dir" id="dir">
+ <div id="bgs"></div>
+ <div class="top">
+  <h2 id="title"></h2>
+  <div class="tabs" id="tabs"></div>
+ </div>
+ <div class="places" id="places"></div>
+</section>
+<div class="ctx">Превью блока «Направления»: заменяет «Наши машины в&nbsp;[город]» и&nbsp;«Какие планы». Фон&nbsp;— заглушка-градиент, на&nbsp;его месте будет затемнённое фото города. Клик по&nbsp;месту в&nbsp;коде подставит город и&nbsp;цель в&nbsp;визард и&nbsp;запустит подбор.</div>
+<div class="note" id="note"></div>
+<script>
+const C=location.protocol==='file:'?'../../public/cars/lg/':'/concepts-hero/cars/lg/'
+const cities=[
+ {id:'sochi',name:'Сочи',from:'из Сочи',bg:'linear-gradient(135deg,#1d4e5f,#3f7d6b 55%,#c9a46a)',places:[
+  ['Горы','Горнолыжка в Красной Поляне','Бокс и крепление для лыж уже стоят. Тебе осталось взять лыжи','geely-monjaro','Geely Monjaro',7480],
+  ['Горы','Абхазия, озеро Рица','Доверенность на выезд сделаем сами, маршрут в подарок','haval-f7','Haval F7',4370],
+  ['Море','Имеретинская набережная','Парковка у пляжа и багажник под зонт и шезлонги','lada-vesta','LADA Vesta',3340],
+  ['Горы','Плато Лаго-Наки','Грунтовка на подъёме — полный привод и клиренс от 200 мм','geely-monjaro','Geely Monjaro',7480]]},
+ {id:'spb',name:'Петербург',from:'из Петербурга',bg:'linear-gradient(135deg,#2b3446,#56627a 55%,#a7a9b8)',places:[
+  ['Природа','Карелия, Рускеала','280 км и грунтовки — клиренс от 190 мм, запас хода от 600 км','haval-f7','Haval F7',3800],
+  ['Выходные','Выборг на выходные','140 км по трассе — экономичная и с автоматом','lada-vesta','LADA Vesta',2900],
+  ['Природа','Ладога с палаткой','Палатка, коврики и мангал уже в багажнике. Шашлык — с тебя','jaecoo-j7','Jaecoo J7',4200]]},
+ {id:'msk',name:'Москва',from:'из Москвы',bg:'linear-gradient(135deg,#4a2a2a,#8a4b3a 55%,#d6a26b)',places:[
+  ['Выходные','Золотое кольцо за выходные','600+ км — расход до 8 л и запас хода от 650 км','jaecoo-j7','Jaecoo J7',4410],
+  ['Горы','Горнолыжка в Яхроме','Бокс и крепление для лыж, клиренс от 180 мм','haval-f7','Haval F7',3990],
+  ['Дача','Дача, рассада и IKEA','Универсал — багажник от 560 л','lada-largus','LADA Largus',4730]]},
+ {id:'kgd',name:'Калининград',from:'из Калининграда',bg:'linear-gradient(135deg,#1f3b4d,#4c7a8c 55%,#d9c9a3)',places:[
+  ['Море','Куршская коса','Экосбор оплатим заранее — на КПП просто проедешь','lada-vesta','LADA Vesta',2760],
+  ['История','Замки Пруссии','Грунтовки к руинам — клиренс от 190 мм','haval-f7','Haval F7',3610],
+  ['Море','Светлогорск и Зеленоградск','Крепление для велосипеда — катайся по променаду','jaecoo-j7','Jaecoo J7',3990]]}]
+const nb=s=>{for(let i=0;i<2;i++)s=s.replace(/(^|[  ])(в|с|на|и|к|по|до|от|за|из|для|не|—) /gi,'$1$2 ');return s.replace(/ —/g,' —')}
+const rub=n=>n.toLocaleString('ru-RU')+' ₽'
+const $=id=>document.getElementById(id)
+$('bgs').innerHTML=cities.map(c=>`<div class="bg" data-id="${c.id}" style="background:${c.bg}"><span>фото: ${c.name}</span></div>`).join('')
+$('tabs').innerHTML=cities.map(c=>`<button class="tab" data-id="${c.id}">${c.name}</button>`).join('')
+function show(id){
+ const c=cities.find(x=>x.id===id)
+ $('title').textContent=nb(`Куда съездить ${c.from} — и на чём`)
+ document.querySelectorAll('.tab').forEach(t=>t.classList.toggle('on',t.dataset.id===id))
+ document.querySelectorAll('.bg').forEach(b=>b.classList.toggle('on',b.dataset.id===id))
+ $('places').innerHTML=c.places.map(([tag,name,hint,img,car,p],i)=>`<button class="place" style="animation-delay:${i*70}ms" data-name="${name}">
+  <small>${tag}</small><b>${nb(name)}</b><p>${nb(hint)}</p>
+  <span class="car"><img src="${C+img}.webp" alt=""><span>${car}<em>от ${rub(p)} в сутки</em></span></span></button>`).join('')
+ $('places').querySelectorAll('.place').forEach(b=>b.onclick=()=>{
+  const n=$('note');n.textContent=nb(`В визард: ${c.name} · ${b.dataset.name} → подбор`);n.classList.add('on')
+  clearTimeout(n.t);n.t=setTimeout(()=>n.classList.remove('on'),2200)})
+}
+$('tabs').onclick=e=>{const t=e.target.closest('.tab');if(t)show(t.dataset.id)}
+show('sochi')
+</script>
