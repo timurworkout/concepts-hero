@@ -1,0 +1,54 @@
+{
+  "sourcePage": "https://www.tbank.ru/auto/catalog/model/lada-niva-travel-97/",
+  "photos": [
+    {
+      "file": "01-exterior.webp",
+      "kind": "exterior",
+      "width": 1372,
+      "height": 960,
+      "sourceImage": "https://nfs-ls-tauto-static-prod.t-static.ru/images/16_Lada/97_niva_travel/3_front/2e9f3c0458754368936ed12d1c284764.webp"
+    },
+    {
+      "file": "02-exterior.webp",
+      "kind": "exterior",
+      "width": 1372,
+      "height": 960,
+      "sourceImage": "https://nfs-ls-tauto-static-prod.t-static.ru/images/16_Lada/97_niva_travel/3_front/7305cede1e03416da00d5a5bd9a3d8b2.webp"
+    },
+    {
+      "file": "03-exterior.webp",
+      "kind": "exterior",
+      "width": 1372,
+      "height": 960,
+      "sourceImage": "https://nfs-ls-tauto-static-prod.t-static.ru/images/16_Lada/97_niva_travel/3_front/23e3ccd773b94a23be3ef872c3c589c8.webp"
+    },
+    {
+      "file": "04-interior.webp",
+      "kind": "interior",
+      "width": 1372,
+      "height": 960,
+      "sourceImage": "https://nfs-ls-tauto-static-prod.t-static.ru/images/16_Lada/97_niva_travel/7_interior/980a7f5a109246c4a2c68f255294ee91.webp"
+    },
+    {
+      "file": "05-interior.webp",
+      "kind": "interior",
+      "width": 1372,
+      "height": 960,
+      "sourceImage": "https://nfs-ls-tauto-static-prod.t-static.ru/images/16_Lada/97_niva_travel/7_interior/cce87a55d5e24e6188489fe272641db2.webp"
+    },
+    {
+      "file": "06-interior.webp",
+      "kind": "interior",
+      "width": 1372,
+      "height": 960,
+      "sourceImage": "https://nfs-ls-tauto-static-prod.t-static.ru/images/16_Lada/97_niva_travel/7_interior/4a1f048fca4342cb8b63ddf72e1fedca.webp"
+    },
+    {
+      "file": "07-interior.webp",
+      "kind": "interior",
+      "width": 1372,
+      "height": 960,
+      "sourceImage": "https://nfs-ls-tauto-static-prod.t-static.ru/images/16_Lada/97_niva_travel/7_interior/04f5eada6e3148aaa6c983e62310f781.webp"
+    }
+  ]
+}

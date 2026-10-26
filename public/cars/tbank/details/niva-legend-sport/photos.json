@@ -1,0 +1,54 @@
+{
+  "sourcePage": "https://www.tbank.ru/auto/catalog/model/lada-niva-legend-sport-346/",
+  "photos": [
+    {
+      "file": "01-exterior.webp",
+      "kind": "exterior",
+      "width": 1372,
+      "height": 960,
+      "sourceImage": "https://nfs-ls-tauto-static-prod.t-static.ru/images/16_Lada/346_niva_legend_sport_i_rest/3_front/18410ddc5d2840b1aebfca70a77a6f7b.webp"
+    },
+    {
+      "file": "02-exterior.webp",
+      "kind": "exterior",
+      "width": 1372,
+      "height": 960,
+      "sourceImage": "https://nfs-ls-tauto-static-prod.t-static.ru/images/16_Lada/346_niva_legend_sport_i_rest/3_front/0f2a0e7fcd1844f5b71f0e268a483e39.webp"
+    },
+    {
+      "file": "03-exterior.webp",
+      "kind": "exterior",
+      "width": 1372,
+      "height": 960,
+      "sourceImage": "https://nfs-ls-tauto-static-prod.t-static.ru/images/16_Lada/346_niva_legend_sport_i_rest/3_front/053332eb898246c8b40c5440509a747c.webp"
+    },
+    {
+      "file": "04-exterior.webp",
+      "kind": "exterior",
+      "width": 1372,
+      "height": 960,
+      "sourceImage": "https://nfs-ls-tauto-static-prod.t-static.ru/images/16_Lada/346_niva_legend_sport_i_rest/3_front/3675922fba9d4af78b8050bc73d686c1.webp"
+    },
+    {
+      "file": "05-interior.webp",
+      "kind": "interior",
+      "width": 1372,
+      "height": 960,
+      "sourceImage": "https://nfs-ls-tauto-static-prod.t-static.ru/images/16_Lada/346_niva_legend_sport_i_rest/7_interior/47d2772e44ec4182a4c1ac96f3432f88.webp"
+    },
+    {
+      "file": "06-interior.webp",
+      "kind": "interior",
+      "width": 1372,
+      "height": 960,
+      "sourceImage": "https://nfs-ls-tauto-static-prod.t-static.ru/images/16_Lada/346_niva_legend_sport_i_rest/7_interior/f721dca8940945e6b83d3fb7cf688bbe.webp"
+    },
+    {
+      "file": "07-interior.webp",
+      "kind": "interior",
+      "width": 1372,
+      "height": 960,
+      "sourceImage": "https://nfs-ls-tauto-static-prod.t-static.ru/images/16_Lada/346_niva_legend_sport_i_rest/7_interior/53976086900d47759a897875b8aab0c5.webp"
+    }
+  ]
+}

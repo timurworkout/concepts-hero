@@ -1,0 +1,507 @@
+{
+  "source": "https://www.tbank.ru/auto/catalog/",
+  "retrievedAt": "2026-10-26",
+  "priceNote": "Цена покупки с сайта, только для отбора доступных моделей. Не тариф аренды.",
+  "cars": [
+    {
+      "id": "tank-300-69",
+      "name": "TANK 300",
+      "image": "cars/tbank/tank-300-69.webp",
+      "sourcePage": "https://www.tbank.ru/auto/catalog/model/tank-300-69/",
+      "purchasePriceRub": 4399000,
+      "selectedForDetailedPresentation": true,
+      "width": 1092,
+      "height": 552
+    },
+    {
+      "id": "geely-monjaro-75",
+      "name": "Geely Monjaro",
+      "image": "cars/tbank/geely-monjaro-75.webp",
+      "sourcePage": "https://www.tbank.ru/auto/catalog/model/geely-monjaro-75/",
+      "purchasePriceRub": 4090000,
+      "selectedForDetailedPresentation": false,
+      "width": 1092,
+      "height": 552
+    },
+    {
+      "id": "mazda-cx-5-184",
+      "name": "Mazda CX-5 II Рестайлинг",
+      "image": "cars/tbank/mazda-cx-5-184.webp",
+      "sourcePage": "https://www.tbank.ru/auto/catalog/model/mazda-cx-5-184/",
+      "purchasePriceRub": 3760000,
+      "selectedForDetailedPresentation": false,
+      "width": 1092,
+      "height": 552
+    },
+    {
+      "id": "jetour-t2-49",
+      "name": "Jetour T2",
+      "image": "cars/tbank/jetour-t2-49.webp",
+      "sourcePage": "https://www.tbank.ru/auto/catalog/model/jetour-t2-49/",
+      "purchasePriceRub": 3550000,
+      "selectedForDetailedPresentation": false,
+      "width": 819,
+      "height": 414
+    },
+    {
+      "id": "toyota-rav4-195",
+      "name": "Toyota RAV4 V",
+      "image": "cars/tbank/toyota-rav4-195.webp",
+      "sourcePage": "https://www.tbank.ru/auto/catalog/model/toyota-rav4-195/",
+      "purchasePriceRub": 4900000,
+      "selectedForDetailedPresentation": true,
+      "width": 1092,
+      "height": 552
+    },
+    {
+      "id": "haval-dargo-16",
+      "name": "Haval Dargo",
+      "image": "cars/tbank/haval-dargo-16.webp",
+      "sourcePage": "https://www.tbank.ru/auto/catalog/model/haval-dargo-16/",
+      "purchasePriceRub": 3499000,
+      "selectedForDetailedPresentation": false,
+      "width": 1092,
+      "height": 552
+    },
+    {
+      "id": "geely-atlas-102",
+      "name": "Geely Atlas II",
+      "image": "cars/tbank/geely-atlas-102.webp",
+      "sourcePage": "https://www.tbank.ru/auto/catalog/model/geely-atlas-102/",
+      "purchasePriceRub": 3180000,
+      "selectedForDetailedPresentation": false,
+      "width": 1092,
+      "height": 552
+    },
+    {
+      "id": "geely-cityray-105",
+      "name": "Geely Cityray",
+      "image": "cars/tbank/geely-cityray-105.webp",
+      "sourcePage": "https://www.tbank.ru/auto/catalog/model/geely-cityray-105/",
+      "purchasePriceRub": 2760000,
+      "selectedForDetailedPresentation": false,
+      "width": 1092,
+      "height": 552
+    },
+    {
+      "id": "bmw-x3-200",
+      "name": "BMW X3 IV (G45/G48)",
+      "image": "cars/tbank/bmw-x3-200.webp",
+      "sourcePage": "https://www.tbank.ru/auto/catalog/model/bmw-x3-200/",
+      "purchasePriceRub": 7810000,
+      "selectedForDetailedPresentation": true,
+      "width": 1092,
+      "height": 552
+    },
+    {
+      "id": "tank-400-161",
+      "name": "TANK 400",
+      "image": "cars/tbank/tank-400-161.webp",
+      "sourcePage": "https://www.tbank.ru/auto/catalog/model/tank-400-161/",
+      "purchasePriceRub": 6299000,
+      "selectedForDetailedPresentation": false,
+      "width": 1092,
+      "height": 552
+    },
+    {
+      "id": "omoda-c7-155",
+      "name": "Omoda C7",
+      "image": "cars/tbank/omoda-c7-155.webp",
+      "sourcePage": "https://www.tbank.ru/auto/catalog/model/omoda-c7-155/",
+      "purchasePriceRub": 2620000,
+      "selectedForDetailedPresentation": false,
+      "width": 1092,
+      "height": 552
+    },
+    {
+      "id": "haval-f7-70",
+      "name": "Haval F7 II",
+      "image": "cars/tbank/haval-f7-70.webp",
+      "sourcePage": "https://www.tbank.ru/auto/catalog/model/haval-f7-70/",
+      "purchasePriceRub": 2899000,
+      "selectedForDetailedPresentation": false,
+      "width": 1092,
+      "height": 552
+    },
+    {
+      "id": "changan-uni-t-3",
+      "name": "Changan UNI-T",
+      "image": "cars/tbank/changan-uni-t-3.webp",
+      "sourcePage": "https://www.tbank.ru/auto/catalog/model/changan-uni-t-3/",
+      "purchasePriceRub": 2990000,
+      "selectedForDetailedPresentation": false,
+      "width": 1260,
+      "height": 636
+    },
+    {
+      "id": "geely-coolray-347",
+      "name": "Geely Coolray I Рестайлинг 2",
+      "image": "cars/tbank/geely-coolray-347.webp",
+      "sourcePage": "https://www.tbank.ru/auto/catalog/model/geely-coolray-347/",
+      "purchasePriceRub": 2964990,
+      "selectedForDetailedPresentation": false,
+      "width": 1092,
+      "height": 552
+    },
+    {
+      "id": "volkswagen-t-roc-295",
+      "name": "Volkswagen T-Roc I (China Market)",
+      "image": "cars/tbank/volkswagen-t-roc-295.webp",
+      "sourcePage": "https://www.tbank.ru/auto/catalog/model/volkswagen-t-roc-295/",
+      "purchasePriceRub": 2845000,
+      "selectedForDetailedPresentation": false,
+      "width": 1092,
+      "height": 552
+    },
+    {
+      "id": "changan-uni-v-12",
+      "name": "Changan UNI-V I Рестайлинг",
+      "image": "cars/tbank/changan-uni-v-12.webp",
+      "sourcePage": "https://www.tbank.ru/auto/catalog/model/changan-uni-v-12/",
+      "purchasePriceRub": 3070000,
+      "selectedForDetailedPresentation": false,
+      "width": 1092,
+      "height": 552
+    },
+    {
+      "id": "lada-niva-legend-342",
+      "name": "LADA Niva Legend I Рестайлинг",
+      "image": "cars/tbank/lada-niva-legend-342.webp",
+      "sourcePage": "https://www.tbank.ru/auto/catalog/model/lada-niva-legend-342/",
+      "purchasePriceRub": 1199000,
+      "selectedForDetailedPresentation": false,
+      "width": 1092,
+      "height": 552
+    },
+    {
+      "id": "lada-niva-travel-97",
+      "name": "LADA Niva Travel I",
+      "image": "cars/tbank/lada-niva-travel-97.webp",
+      "sourcePage": "https://www.tbank.ru/auto/catalog/model/lada-niva-travel-97/",
+      "purchasePriceRub": 1343000,
+      "selectedForDetailedPresentation": false,
+      "width": 1092,
+      "height": 552
+    },
+    {
+      "id": "lada-niva-travel-181",
+      "name": "LADA Niva Travel I Рестайлинг",
+      "image": "cars/tbank/lada-niva-travel-181.webp",
+      "sourcePage": "https://www.tbank.ru/auto/catalog/model/lada-niva-travel-181/",
+      "purchasePriceRub": 1419000,
+      "selectedForDetailedPresentation": false,
+      "width": 1092,
+      "height": 552
+    },
+    {
+      "id": "lada-niva-legend-bronto-153",
+      "name": "LADA Niva Legend Bronto",
+      "image": "cars/tbank/lada-niva-legend-bronto-153.webp",
+      "sourcePage": "https://www.tbank.ru/auto/catalog/model/lada-niva-legend-bronto-153/",
+      "purchasePriceRub": 1517000,
+      "selectedForDetailedPresentation": false,
+      "width": 1092,
+      "height": 552
+    },
+    {
+      "id": "belgee-s50-174",
+      "name": "Belgee S50",
+      "image": "cars/tbank/belgee-s50-174.webp",
+      "sourcePage": "https://www.tbank.ru/auto/catalog/model/belgee-s50-174/",
+      "purchasePriceRub": 1590000,
+      "selectedForDetailedPresentation": false,
+      "width": 1092,
+      "height": 552
+    },
+    {
+      "id": "jetta-va3-186",
+      "name": "Jetta VA3",
+      "image": "cars/tbank/jetta-va3-186.webp",
+      "sourcePage": "https://www.tbank.ru/auto/catalog/model/jetta-va3-186/",
+      "purchasePriceRub": 1699000,
+      "selectedForDetailedPresentation": false,
+      "width": 1092,
+      "height": 552
+    },
+    {
+      "id": "changan-alsvin-4",
+      "name": "Changan Alsvin",
+      "image": "cars/tbank/changan-alsvin-4.webp",
+      "sourcePage": "https://www.tbank.ru/auto/catalog/model/changan-alsvin-4/",
+      "purchasePriceRub": 1730000,
+      "selectedForDetailedPresentation": false,
+      "width": 1092,
+      "height": 552
+    },
+    {
+      "id": "lada-niva-legend-sport-346",
+      "name": "LADA Niva Legend Sport I Рестайлинг",
+      "image": "cars/tbank/lada-niva-legend-sport-346.webp",
+      "sourcePage": "https://www.tbank.ru/auto/catalog/model/lada-niva-legend-sport-346/",
+      "purchasePriceRub": 1752000,
+      "selectedForDetailedPresentation": true,
+      "width": 1092,
+      "height": 552
+    },
+    {
+      "id": "moskvich-3-32",
+      "name": "Москвич 3",
+      "image": "cars/tbank/moskvich-3-32.webp",
+      "sourcePage": "https://www.tbank.ru/auto/catalog/model/moskvich-3-32/",
+      "purchasePriceRub": 1952000,
+      "selectedForDetailedPresentation": false,
+      "width": 1092,
+      "height": 552
+    },
+    {
+      "id": "omoda-c5-239",
+      "name": "Omoda C5 II",
+      "image": "cars/tbank/omoda-c5-239.webp",
+      "sourcePage": "https://www.tbank.ru/auto/catalog/model/omoda-c5-239/",
+      "purchasePriceRub": 1990000,
+      "selectedForDetailedPresentation": false,
+      "width": 1092,
+      "height": 552
+    },
+    {
+      "id": "tenet-t4-170",
+      "name": "TENET T4",
+      "image": "cars/tbank/tenet-t4-170.webp",
+      "sourcePage": "https://www.tbank.ru/auto/catalog/model/tenet-t4-170/",
+      "purchasePriceRub": 2010000,
+      "selectedForDetailedPresentation": false,
+      "width": 1092,
+      "height": 552
+    },
+    {
+      "id": "belgee-x50-352",
+      "name": "Belgee X50 I Рестайлинг",
+      "image": "cars/tbank/belgee-x50-352.webp",
+      "sourcePage": "https://www.tbank.ru/auto/catalog/model/belgee-x50-352/",
+      "purchasePriceRub": 2060000,
+      "selectedForDetailedPresentation": false,
+      "width": 1092,
+      "height": 552
+    },
+    {
+      "id": "haval-m6-14",
+      "name": "Haval M6",
+      "image": "cars/tbank/haval-m6-14.webp",
+      "sourcePage": "https://www.tbank.ru/auto/catalog/model/haval-m6-14/",
+      "purchasePriceRub": 2099000,
+      "selectedForDetailedPresentation": false,
+      "width": 1092,
+      "height": 552
+    },
+    {
+      "id": "haval-jolion-255",
+      "name": "Haval Jolion I Рестайлинг 2",
+      "image": "cars/tbank/haval-jolion-255.webp",
+      "sourcePage": "https://www.tbank.ru/auto/catalog/model/haval-jolion-255/",
+      "purchasePriceRub": 2099000,
+      "selectedForDetailedPresentation": false,
+      "width": 1092,
+      "height": 552
+    },
+    {
+      "id": "jetta-vs5-190",
+      "name": "Jetta VS5 I Рестайлинг",
+      "image": "cars/tbank/jetta-vs5-190.webp",
+      "sourcePage": "https://www.tbank.ru/auto/catalog/model/jetta-vs5-190/",
+      "purchasePriceRub": 2149000,
+      "selectedForDetailedPresentation": false,
+      "width": 1092,
+      "height": 552
+    },
+    {
+      "id": "jaecoo-j6-240",
+      "name": "Jaecoo J6 I Рестайлинг",
+      "image": "cars/tbank/jaecoo-j6-240.webp",
+      "sourcePage": "https://www.tbank.ru/auto/catalog/model/jaecoo-j6-240/",
+      "purchasePriceRub": 2170000,
+      "selectedForDetailedPresentation": false,
+      "width": 1092,
+      "height": 552
+    },
+    {
+      "id": "changan-cs35plus-new-6",
+      "name": "Changan CS35Plus New",
+      "image": "cars/tbank/changan-cs35plus-new-6.webp",
+      "sourcePage": "https://www.tbank.ru/auto/catalog/model/changan-cs35plus-new-6/",
+      "purchasePriceRub": 2190000,
+      "selectedForDetailedPresentation": false,
+      "width": 1092,
+      "height": 552
+    },
+    {
+      "id": "changan-eadoplus-1",
+      "name": "Changan EadoPlus",
+      "image": "cars/tbank/changan-eadoplus-1.webp",
+      "sourcePage": "https://www.tbank.ru/auto/catalog/model/changan-eadoplus-1/",
+      "purchasePriceRub": 2190000,
+      "selectedForDetailedPresentation": false,
+      "width": 653,
+      "height": 232
+    },
+    {
+      "id": "jeland-j6-292",
+      "name": "Jeland J6 I Рестайлинг",
+      "image": "cars/tbank/jeland-j6-292.webp",
+      "sourcePage": "https://www.tbank.ru/auto/catalog/model/jeland-j6-292/",
+      "purchasePriceRub": 2190000,
+      "selectedForDetailedPresentation": false,
+      "width": 1092,
+      "height": 552
+    },
+    {
+      "id": "belgee-x50-103",
+      "name": "Belgee X50 I",
+      "image": "cars/tbank/belgee-x50-103.webp",
+      "sourcePage": "https://www.tbank.ru/auto/catalog/model/belgee-x50-103/",
+      "purchasePriceRub": 2190000,
+      "selectedForDetailedPresentation": false,
+      "width": 1092,
+      "height": 552
+    },
+    {
+      "id": "jetta-vs7-191",
+      "name": "Jetta VS7 I Рестайлинг",
+      "image": "cars/tbank/jetta-vs7-191.webp",
+      "sourcePage": "https://www.tbank.ru/auto/catalog/model/jetta-vs7-191/",
+      "purchasePriceRub": 2249000,
+      "selectedForDetailedPresentation": false,
+      "width": 1092,
+      "height": 552
+    },
+    {
+      "id": "baic-u5-plus-36",
+      "name": "BAIC U5 Plus",
+      "image": "cars/tbank/baic-u5-plus-36.webp",
+      "sourcePage": "https://www.tbank.ru/auto/catalog/model/baic-u5-plus-36/",
+      "purchasePriceRub": 2279000,
+      "selectedForDetailedPresentation": false,
+      "width": 1092,
+      "height": 552
+    },
+    {
+      "id": "belgee-x50+-254",
+      "name": "Belgee X50+",
+      "image": "cars/tbank/belgee-x50+-254.webp",
+      "sourcePage": "https://www.tbank.ru/auto/catalog/model/belgee-x50+-254/",
+      "purchasePriceRub": 2290000,
+      "selectedForDetailedPresentation": false,
+      "width": 1092,
+      "height": 552
+    },
+    {
+      "id": "tenet-t4l-291",
+      "name": "TENET T4L",
+      "image": "cars/tbank/tenet-t4l-291.webp",
+      "sourcePage": "https://www.tbank.ru/auto/catalog/model/tenet-t4l-291/",
+      "purchasePriceRub": 2310000,
+      "selectedForDetailedPresentation": false,
+      "width": 1092,
+      "height": 552
+    },
+    {
+      "id": "hyundai-elantra-353",
+      "name": "Hyundai Elantra VII Рестайлинг",
+      "image": "cars/tbank/hyundai-elantra-353.webp",
+      "sourcePage": "https://www.tbank.ru/auto/catalog/model/hyundai-elantra-353/",
+      "purchasePriceRub": 2340000,
+      "selectedForDetailedPresentation": false,
+      "width": 1092,
+      "height": 552
+    },
+    {
+      "id": "jetour-dashing-24",
+      "name": "Jetour Dashing",
+      "image": "cars/tbank/jetour-dashing-24.webp",
+      "sourcePage": "https://www.tbank.ru/auto/catalog/model/jetour-dashing-24/",
+      "purchasePriceRub": 2380000,
+      "selectedForDetailedPresentation": false,
+      "width": 591,
+      "height": 252
+    },
+    {
+      "id": "jaecoo-j7-189",
+      "name": "Jaecoo J7 I Рестайлинг",
+      "image": "cars/tbank/jaecoo-j7-189.webp",
+      "sourcePage": "https://www.tbank.ru/auto/catalog/model/jaecoo-j7-189/",
+      "purchasePriceRub": 2390000,
+      "selectedForDetailedPresentation": false,
+      "width": 1092,
+      "height": 552
+    },
+    {
+      "id": "jetta-vs5-187",
+      "name": "Jetta VS5 I Рестайлинг 2",
+      "image": "cars/tbank/jetta-vs5-187.webp",
+      "sourcePage": "https://www.tbank.ru/auto/catalog/model/jetta-vs5-187/",
+      "purchasePriceRub": 2449000,
+      "selectedForDetailedPresentation": false,
+      "width": 1092,
+      "height": 552
+    },
+    {
+      "id": "tenet-t7-165",
+      "name": "TENET T7",
+      "image": "cars/tbank/tenet-t7-165.webp",
+      "sourcePage": "https://www.tbank.ru/auto/catalog/model/tenet-t7-165/",
+      "purchasePriceRub": 2450000,
+      "selectedForDetailedPresentation": false,
+      "width": 1092,
+      "height": 552
+    },
+    {
+      "id": "jeland-j7-294",
+      "name": "Jeland J7",
+      "image": "cars/tbank/jeland-j7-294.webp",
+      "sourcePage": "https://www.tbank.ru/auto/catalog/model/jeland-j7-294/",
+      "purchasePriceRub": 2480000,
+      "selectedForDetailedPresentation": false,
+      "width": 1092,
+      "height": 552
+    },
+    {
+      "id": "jetour-x70-plus-35",
+      "name": "Jetour X70 Plus",
+      "image": "cars/tbank/jetour-x70-plus-35.webp",
+      "sourcePage": "https://www.tbank.ru/auto/catalog/model/jetour-x70-plus-35/",
+      "purchasePriceRub": 2690000,
+      "selectedForDetailedPresentation": false,
+      "width": 1092,
+      "height": 552
+    },
+    {
+      "id": "haval-h3-256",
+      "name": "Haval H3 I Рестайлинг",
+      "image": "cars/tbank/haval-h3-256.webp",
+      "sourcePage": "https://www.tbank.ru/auto/catalog/model/haval-h3-256/",
+      "purchasePriceRub": 2749000,
+      "selectedForDetailedPresentation": false,
+      "width": 1092,
+      "height": 552
+    },
+    {
+      "id": "changan-uni-s-50",
+      "name": "Changan UNI-S I",
+      "image": "cars/tbank/changan-uni-s-50.webp",
+      "sourcePage": "https://www.tbank.ru/auto/catalog/model/changan-uni-s-50/",
+      "purchasePriceRub": 2810000,
+      "selectedForDetailedPresentation": false,
+      "width": 1092,
+      "height": 552
+    },
+    {
+      "id": "geely-okavango-100",
+      "name": "Geely Okavango I Рестайлинг",
+      "image": "cars/tbank/geely-okavango-100.webp",
+      "sourcePage": "https://www.tbank.ru/auto/catalog/model/geely-okavango-100/",
+      "purchasePriceRub": 3570000,
+      "selectedForDetailedPresentation": false,
+      "width": 1092,
+      "height": 552
+    }
+  ]
+}

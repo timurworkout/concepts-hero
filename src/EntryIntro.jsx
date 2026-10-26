@@ -220,7 +220,7 @@ export default function EntryIntro({ full, onDone }) {
       <div className="entry-intro-grid" aria-hidden="true">
         {full && cars.slice(0, 30).map((car) => (
           <div key={car.id} className="entry-intro-tile">
-            <img src={`${import.meta.env.BASE_URL}cars/sm/${car.id}.webp`} alt="" decoding="async"
+            <img src={`${import.meta.env.BASE_URL}${car.image}`} alt="" decoding="async"
               onError={(event) => { event.currentTarget.hidden = true }} />
           </div>
         ))}

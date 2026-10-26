@@ -1,0 +1,54 @@
+{
+  "sourcePage": "https://www.tbank.ru/auto/catalog/model/bmw-x3-200/",
+  "photos": [
+    {
+      "file": "01-exterior.webp",
+      "kind": "exterior",
+      "width": 1372,
+      "height": 960,
+      "sourceImage": "https://nfs-ls-tauto-static-prod.t-static.ru/images/61_Bmw/200_x3_iv_g45_g48_/3_front/1601560cc8e24b1eb75a94047c974938.webp"
+    },
+    {
+      "file": "02-exterior.webp",
+      "kind": "exterior",
+      "width": 1372,
+      "height": 960,
+      "sourceImage": "https://nfs-ls-tauto-static-prod.t-static.ru/images/61_Bmw/200_x3_iv_g45_g48_/3_front/afce4e95565f45c585b09ed4f8b94f6b.webp"
+    },
+    {
+      "file": "03-exterior.webp",
+      "kind": "exterior",
+      "width": 1372,
+      "height": 960,
+      "sourceImage": "https://nfs-ls-tauto-static-prod.t-static.ru/images/61_Bmw/200_x3_iv_g45_g48_/3_front/ff49bd6710ab4969b2d67fb138c82ded.webp"
+    },
+    {
+      "file": "04-exterior.webp",
+      "kind": "exterior",
+      "width": 1372,
+      "height": 960,
+      "sourceImage": "https://nfs-ls-tauto-static-prod.t-static.ru/images/61_Bmw/200_x3_iv_g45_g48_/3_front/e32ff1922dc94e459400f32d5646d80d.webp"
+    },
+    {
+      "file": "05-interior.webp",
+      "kind": "interior",
+      "width": 1372,
+      "height": 960,
+      "sourceImage": "https://nfs-ls-tauto-static-prod.t-static.ru/images/61_Bmw/200_x3_iv_g45_g48_/7_interior/92ba230af7cc462a8d4ee5aab65ac0ad.webp"
+    },
+    {
+      "file": "06-interior.webp",
+      "kind": "interior",
+      "width": 1372,
+      "height": 960,
+      "sourceImage": "https://nfs-ls-tauto-static-prod.t-static.ru/images/61_Bmw/200_x3_iv_g45_g48_/7_interior/23c3012a19fd45eab766a37521e1e82d.webp"
+    },
+    {
+      "file": "07-interior.webp",
+      "kind": "interior",
+      "width": 1372,
+      "height": 960,
+      "sourceImage": "https://nfs-ls-tauto-static-prod.t-static.ru/images/61_Bmw/200_x3_iv_g45_g48_/7_interior/42925bb450f74a22bf1f89c69bf92317.webp"
+    }
+  ]
+}

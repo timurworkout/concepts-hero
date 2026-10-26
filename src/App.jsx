@@ -1,9 +1,10 @@
 import { Fragment, useCallback, useEffect, useRef, useState } from 'react'
 import { createPortal } from 'react-dom'
+import { selectCars, rankCars, carSummary, hasNumber, isAutomatic, savedCarIds, savedBookings } from './fleet.js'
 import EntryIntro, { hasSeenEntryIntro } from './EntryIntro.jsx'
 import { locations, locationGroups, cars, nb, rub, carDetails, rentTerms, cities, inCity, cityPrice, extras, plans, prefOptions, companions, promises, faq, addressHints } from './data.js'
 
-const carPhoto = (c, size = 'sm') => ({ backgroundImage: `url(${import.meta.env.BASE_URL}cars/${size}/${c.id}.webp)` })
+const carPhoto = (c, size = 'sm') => ({ backgroundImage: c ? `url(${import.meta.env.BASE_URL}${size === 'lg' ? c.heroImage : c.image})` : undefined })
 
 const emptyQuery = {
   cityId: '', // город спрашиваем первым шагом формы
@@ -44,7 +45,7 @@ export default function App() {
   const [pickedCarId, setPickedCarId] = useState(null)
   const [cameFrom, setCameFrom] = useState('e1') // откуда открыли Э3
   const [user, setUser] = useState(() => load('user', null))
-  const [favs, setFavs] = useState(() => load('favs', []))
+  const [favs, setFavs] = useState(() => savedCarIds(load('favs', [])))
   const [sheet, setSheet] = useState(null) // 'favs' | 'login' | 'login-book' | { picker: группа }
   const [booking, setBooking] = useState(null) // бронь, которую показывает финал
   const [, bump] = useState(0) // брони читаются из хранилища — перерисовка после изменения
@@ -63,7 +64,7 @@ export default function App() {
 
   const login = (u) => {
     const acc = load('accounts', {})[u.phone]
-    setFavs((f) => union(acc?.favs ?? [], f))
+    setFavs((f) => savedCarIds(union(savedCarIds(acc?.favs), f)))
     setUser(u)
     save('user', u)
     setSheet(null)
@@ -78,7 +79,7 @@ export default function App() {
   const home = () => { setQuery(emptyQuery); setScreen('e1') }
 
   // Брони живут в аккаунте: бронировать и смотреть их можно только после входа
-  const bookings = user ? load('accounts', {})[user.phone]?.bookings ?? [] : []
+  const bookings = savedBookings(user ? load('accounts', {})[user.phone]?.bookings : [])
   const saveBookings = (phone, update) => {
     const accounts = load('accounts', {})
     const acc = accounts[phone] ?? { favs, bookings: [] }
@@ -356,7 +357,7 @@ function FavSheet({ query, fav, user, onLogin, onOpen, onClose }) {
               onKeyDown={(e) => onActivateKey(e, () => onOpen(c.id))}>
               <div className="fav-photo photo-car" style={carPhoto(c)}><FavToggle id={c.id} fav={fav} /></div>
               <div className="card-title">{c.model}</div>
-              <div className="muted">{c.drive} привод · {c.gearbox} · {c.seats} мест</div>
+              <div className="muted">{[c.drive && `${c.drive} привод`, c.gearbox, c.seats && `${c.seats} мест`].filter(Boolean).join(' · ')}</div>
               <div className="price">{queryReady(query) ? `${rub(rentPrice(c, query))} за ${unitsText(query)}` : `${rub(c.pricePerDay)} / сутки`}</div>
             </div>
           ))}
@@ -563,23 +564,10 @@ function togglePlanIds(ids, id) {
   return [...next.filter((x) => isLocal(x) && (!byId(x).goal || byId(x).goal === goal)), goal]
 }
 
-// Подбор: фильтр по основной цели и тегам «Авто», уточнения сужают, только если остаются машины; из подходящих — самая выгодная
+// Обязательные параметры → главная машина сценария → основная четвёрка → остальной парк.
 function pickCar(q, prefs = q.prefs) {
-  const chosen = plans.filter((p) => q.planIds.includes(p.id))
-  const goal = chosen.find((p) => !p.local) ?? null
-  const places = chosen.filter((p) => p.local)
-  const companion = companions.find((c) => c.id === q.companion) ?? null
-  const active = prefOptions.filter((o) => prefs.includes(o.id))
-  const pool = cars.filter((c) => availability(c, q.locationId) === 'ok')
-  let fit = pool.filter((c) => (!goal || goal.test(c)) && active.every((o) => o.test(c)))
-  const skipped = []
-  for (const s of [...places, companion].filter(Boolean)) {
-    const narrow = fit.filter(s.test)
-    if (narrow.length) fit = narrow
-    else skipped.push(s)
-  }
-  fit.sort((a, b) => a.pricePerDay - b.pricePerDay)
-  return { car: fit[0], fit, goal, places, companion, active, skipped, count: fit.length, total: pool.length }
+  return selectCars({ ...q, prefs }, plans, prefOptions, companions,
+    (c) => availability(c, q.locationId) === 'ok' && inCity(c, q.cityId))
 }
 
 // Что изменилось при смене машины: + лучше, − хуже
@@ -587,9 +575,9 @@ function carDiff(prev, cur, q) {
   const out = []
   const dp = tripTotal(cur, q) - tripTotal(prev, q)
   if (dp) out.push({ good: dp < 0, text: `${dp > 0 ? '+' : '−'}${rub(Math.abs(dp))} за поездку` })
-  if (prev.drive !== cur.drive) out.push({ good: cur.drive === 'полный', text: `${cur.drive} привод` })
-  if (prev.gearbox !== cur.gearbox) out.push({ good: cur.gearbox === 'автомат', text: cur.gearbox })
-  const num = (a, b, label, unit) => { const d = b - a; if (d) out.push({ good: d > 0, text: `${label} ${d > 0 ? '+' : '−'}${Math.abs(d)}${unit}` }) }
+  if (prev.drive && cur.drive && prev.drive !== cur.drive) out.push({ good: cur.drive === 'полный', text: `${cur.drive} привод` })
+  if (prev.gearbox && cur.gearbox && prev.gearbox !== cur.gearbox) out.push({ good: isAutomatic(cur), text: cur.gearbox })
+  const num = (a, b, label, unit) => { if (!hasNumber(a) || !hasNumber(b)) return; const d = b - a; if (d) out.push({ good: d > 0, text: `${label} ${d > 0 ? '+' : '−'}${Math.abs(d)}${unit}` }) }
   num(prev.seats, cur.seats, 'мест', '')
   num(prev.trunk, cur.trunk, 'багажник', ' л')
   num(prev.clearance, cur.clearance, 'клиренс', ' мм')
@@ -1453,15 +1441,15 @@ function Picking({ query, onDone }) {
   // Механика из рефа Дениса (shoe-finder): лишние рассыпаются, подходящие съезжаются, победитель выходит вперёд
   const res = pickCar(query)
   const { goal, places, companion, skipped, car, fit, count } = res
-  const pool = cars.filter((c) => availability(c, query.locationId) === 'ok')
+  const pool = cars.filter((c) => availability(c, query.locationId) === 'ok' && inCity(c, query.cityId))
   const top = car ? [car, ...fit.filter((c) => c.id !== car.id)].slice(0, 9) : []
   const topIds = top.map((c) => c.id)
-  const why = goal ? `${goal.label} → ${goal.hint}` : 'Цель не выбрана → берём самую выгодную'
+  const why = goal ? `${goal.label} → ${goal.hint}` : 'Подбираем машину для твоей поездки'
   const who = [...places, companion].filter((s) => s && !skipped.includes(s)).map((s) => s.label).join(', ')
   const caps = [
     `${pool.length} машин ${query.cityId ? cities[query.cityId].in : ''}`,
     nb(why.toLowerCase()),
-    nb(`${who ? who.toLowerCase() + ' → ' : ''}сортируем по цене`),
+    nb(`${who ? who.toLowerCase() + ' → ' : ''}сопоставляем с поездкой`),
     'Твоя машина',
   ]
   const [stage, setStage] = useState(0)
@@ -1549,8 +1537,9 @@ function E2({ query, setQuery, fav, onBack, onPick, openPicker }) {
   const [datesOpen, setDatesOpen] = useState(false)
   const [moreOpen, setMoreOpen] = useState(false)
   const res = pickCar(query)
-  const { goal, places, companion, active, skipped, fit } = res
+  const { goal, places, companion, active, fit } = res
   const car = fit.find((c) => c.id === pickedId) ?? res.car
+  const skipped = places.filter((p) => !car || !p.test(car))
   const location = findPlace(query)
   const [paramsOpen, setParamsOpen] = useState(false)
 
@@ -1564,28 +1553,24 @@ function E2({ query, setQuery, fav, onBack, onPick, openPicker }) {
 
   const reasons = []
   if (goal) reasons.push(<><b>{goal.label}</b> <Arrow /> {goal.hint.toLowerCase()}</>)
-  else reasons.push(<>Цель не выбрана — берём самую выгодную машину</>)
+  else reasons.push(<>Цель не выбрана — предлагаем одну из основных машин для путешествий</>)
   places.filter((p) => !skipped.includes(p)).forEach((p) => reasons.push(<><b>{p.label}</b> <Arrow /> {p.hint.toLowerCase()}</>))
   if (companion && !skipped.includes(companion)) reasons.push(<><b>{companion.label}</b> <Arrow /> {companion.hint}</>)
   skipped.forEach((s) => reasons.push(<>Под «{s.label.toLowerCase()}» отдельно машин не нашлось — учли остальное</>))
   active.forEach((o) => reasons.push(<>Авто: <b>{o.label}</b></>))
-  if (car) reasons.push(<>Подходят {res.count} из {res.total} машин — взяли самую выгодную</>)
+  if (car) reasons.push(<>Подходят {res.count} из {res.total} машин — учли маршрут и твои параметры</>)
 
-  // Две альтернативы: похожая по цене и с улучшением
+  // Тот же порядок, что и в подборе: сначала подходящие машины основной четвёрки.
   const rest = car ? fit.filter((c) => c.id !== car.id) : []
-  const better = rest.find((c) => c.pricePerDay > car.pricePerDay && goods(car, c, query).length >= 2)
-  const similar = rest.find((c) => c !== better)
-  const tiles = [
-    similar && { car: similar, note: goods(car, similar, query)[0] ? `похожая, ${goods(car, similar, query)[0]}` : 'похожая' },
-    better && { car: better, note: goods(car, better, query).slice(0, 2).join(', ') },
-  ].filter(Boolean)
+  const tiles = rest.slice(0, 2).map((c) => ({ car: c,
+    note: goods(car, c, query).slice(0, 2).join(', ') || 'тоже подходит под параметры' }))
 
   // «Ещё 7»: та же цель и теги, включая разобранные — они внизу
   const shown = [car, ...tiles.map((t) => t.car)].filter(Boolean).map((c) => c.id)
-  const same = cars
-    .filter((c) => !shown.includes(c.id) && (!goal || goal.test(c)) && active.every((o) => o.test(c)))
+  const same = rankCars(cars.filter((c) => !shown.includes(c.id) && inCity(c, query.cityId)
+    && (!goal || goal.test(c)) && active.every((o) => o.test(c)) && (!companion || companion.test(c))),
+    goal, [...places, companion].filter(Boolean))
     .map((c) => ({ car: c, av: availability(c, query.locationId) }))
-    .sort((a, b) => a.car.pricePerDay - b.car.pricePerDay)
   const gone = same.filter((x) => x.av !== 'ok').slice(0, 2) // разобранные показываем всегда, но не больше двух
   const more = [...same.filter((x) => x.av === 'ok').slice(0, 7 - gone.length), ...gone]
 
@@ -1637,9 +1622,9 @@ function E2({ query, setQuery, fav, onBack, onPick, openPicker }) {
                 <FavToggle id={car.id} fav={fav} />
               </div>
               <div className="pick-body">
-                <div className="muted">{car.gearbox[0].toUpperCase() + car.gearbox.slice(1)} · {car.kind}{car.stock > 0 ? ` · ${stockText(car.stock).toLowerCase()}` : ''}</div>
+                <div className="muted">{[car.gearbox && car.gearbox[0].toUpperCase() + car.gearbox.slice(1), car.kind].filter(Boolean).join(' · ')}{car.stock > 0 ? ` · ${stockText(car.stock).toLowerCase()}` : ''}</div>
                 <h1 className="pick-title swap-in" key={car.id}>{car.model}</h1>
-                <div className="pick-specs"><CountNum value={car.seats} /> мест · багажник <CountNum value={car.trunk} /> л · {car.drive} · клиренс <CountNum value={car.clearance} /> мм · {car.engine}</div>
+                <div className="pick-specs">{carSummary(car)}</div>
                 <button type="button" className="link pick-more" onClick={() => onPick(car.id)}>Информация об автомобиле</button>
               </div>
             </div>
@@ -1723,6 +1708,32 @@ function E2({ query, setQuery, fav, onBack, onPick, openPicker }) {
 
 /* ---------- Э3 Машина, допы, калькулятор ---------- */
 
+const carPresentation = {
+  mountains: nb('За поворотом — следующий вид. У Tank 300 полный привод и клиренс 224 мм: выбрали его для маршрута в горы.'),
+  sea: nb('Сегодня — один пляж, завтра — другой. RAV4 с полным приводом и вариатором подойдёт для поездки вдоль побережья.'),
+  dacha: nb('Свернуть к дому за лесом. Niva Legend Sport — полный привод, механика и клиренс 220 мм для выезда за город.'),
+  highway: nb('Пусть дорога станет частью отпуска. BMW X3 с автоматом и полным приводом — наш выбор для поездки по трассе.'),
+}
+
+function CarGallery({ car }) {
+  const photos = car.gallery.length ? car.gallery : [car.image]
+  const [active, setActive] = useState(0)
+  const change = (index) => setActive((index + photos.length) % photos.length)
+  return (
+    <div className="car-gallery" onKeyDown={(e) => {
+      if (e.key === 'ArrowRight' || e.key === 'ArrowLeft') {
+        e.preventDefault(); change(active + (e.key === 'ArrowRight' ? 1 : -1))
+      }
+    }}>
+      <img className="e3-photo" src={`${import.meta.env.BASE_URL}${photos[active]}`} alt={`${car.model} — фото ${active + 1}`} />
+      {photos.length > 1 && <div className="car-gallery-thumbs" role="group" aria-label="Фотографии автомобиля">
+        {photos.map((src, i) => <button key={src} type="button" aria-label={`Фото ${i + 1}`} aria-pressed={i === active}
+          onClick={() => setActive(i)}><img src={`${import.meta.env.BASE_URL}${src}`} alt="" loading="lazy" /></button>)}
+      </div>}
+    </div>
+  )
+}
+
 function E3({ query, setQuery, carId, cameFrom, fav, onBack, onPickOther, openPicker, onBook }) {
   const car = cars.find((c) => c.id === carId)
   const d = carDetails[car.id]
@@ -1758,7 +1769,7 @@ function E3({ query, setQuery, carId, cameFrom, fav, onBack, onPickOther, openPi
     ['Двигатель', car.engine], ['Коробка', car.gearbox], ['Топливо', car.fuelType], ['Расход', d.fuel],
     ['Запас хода', d.range], ['Клиренс', d.clearance], ['Багаж', d.bags], ['Привод', car.drive], ['Мест', car.seats],
     ...(offSeason ? [['Резина', d.winter ? 'уже зимняя, шипы' : 'летняя']] : []),
-  ]
+  ].filter(([, value]) => value != null && value !== '')
 
   return (
     <main className="e3">
@@ -1775,17 +1786,18 @@ function E3({ query, setQuery, carId, cameFrom, fav, onBack, onPickOther, openPi
               {car.stock === 0 && <span className="badge badge-muted">Разобрали</span>}
             </div>
           </div>
-          <div className="e3-photo photo-car" style={carPhoto(car, 'lg')} />
+          <CarGallery car={car} />
 
           <section className="e3-section">
             <h2>Для поездки</h2>
+            {car.demoScenario && <p>{carPresentation[car.demoScenario]}</p>}
             <dl className="specs">{specs.map(([k, v]) => <div key={k}><dt>{k}</dt><dd>{v}</dd></div>)}</dl>
           </section>
 
-          <section className="e3-section">
+          {(city?.routes ?? d.routes).length > 0 && <section className="e3-section">
             <h2>Подходит для маршрутов</h2>
-            <div className="routes">{(city.routes ?? d.routes).map((r) => <span key={r} className="route">{r}</span>)}</div>
-          </section>
+            <div className="routes">{(city?.routes ?? d.routes).map((r) => <span key={r} className="route">{r}</span>)}</div>
+          </section>}
 
           <section className="e3-section">
             <h2>Как заберёшь машину</h2>

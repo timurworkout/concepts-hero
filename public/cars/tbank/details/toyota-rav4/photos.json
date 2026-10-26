@@ -1,0 +1,54 @@
+{
+  "sourcePage": "https://www.tbank.ru/auto/catalog/model/toyota-rav4-195/",
+  "photos": [
+    {
+      "file": "01-exterior.webp",
+      "kind": "exterior",
+      "width": 1372,
+      "height": 960,
+      "sourceImage": "https://nfs-ls-tauto-static-prod.t-static.ru/images/59_Toyota/195_rav4_v/3_front/1c77d410fcd24063b29d445b2cda7833.webp"
+    },
+    {
+      "file": "02-exterior.webp",
+      "kind": "exterior",
+      "width": 1372,
+      "height": 960,
+      "sourceImage": "https://nfs-ls-tauto-static-prod.t-static.ru/images/59_Toyota/195_rav4_v/3_front/96f35b922e394fe083e3789557e616b9.webp"
+    },
+    {
+      "file": "03-exterior.webp",
+      "kind": "exterior",
+      "width": 1372,
+      "height": 960,
+      "sourceImage": "https://nfs-ls-tauto-static-prod.t-static.ru/images/59_Toyota/195_rav4_v/3_front/2a778bce127b46c7a97a01e166a09ea6.webp"
+    },
+    {
+      "file": "04-exterior.webp",
+      "kind": "exterior",
+      "width": 1372,
+      "height": 960,
+      "sourceImage": "https://nfs-ls-tauto-static-prod.t-static.ru/images/59_Toyota/195_rav4_v/3_front/2056007765934343be5550dd1cfa29aa.webp"
+    },
+    {
+      "file": "05-interior.webp",
+      "kind": "interior",
+      "width": 1372,
+      "height": 960,
+      "sourceImage": "https://nfs-ls-tauto-static-prod.t-static.ru/images/59_Toyota/195_rav4_v/7_interior/75890314f2dc4c5f9af36e62fcf014de.webp"
+    },
+    {
+      "file": "06-interior.webp",
+      "kind": "interior",
+      "width": 1372,
+      "height": 960,
+      "sourceImage": "https://nfs-ls-tauto-static-prod.t-static.ru/images/59_Toyota/195_rav4_v/7_interior/1e31f6b16954460fa73ef2cf4193abc9.webp"
+    },
+    {
+      "file": "07-interior.webp",
+      "kind": "interior",
+      "width": 1372,
+      "height": 960,
+      "sourceImage": "https://nfs-ls-tauto-static-prod.t-static.ru/images/59_Toyota/195_rav4_v/7_interior/f76e7205fc1c49bf8bca4ce70e02e853.webp"
+    }
+  ]
+}

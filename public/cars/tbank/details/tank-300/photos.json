@@ -1,0 +1,47 @@
+{
+  "sourcePage": "https://www.tbank.ru/auto/catalog/model/tank-300-69/",
+  "photos": [
+    {
+      "file": "02-exterior.webp",
+      "kind": "exterior",
+      "width": 1372,
+      "height": 960,
+      "sourceImage": "https://nfs-ls-tauto-static-prod.t-static.ru/images/13_Tank/69_300/3_front/3_front_1_1.webp"
+    },
+    {
+      "file": "03-exterior.webp",
+      "kind": "exterior",
+      "width": 1372,
+      "height": 960,
+      "sourceImage": "https://nfs-ls-tauto-static-prod.t-static.ru/images/13_Tank/69_300/3_front/3_front_1_2.webp"
+    },
+    {
+      "file": "04-exterior.webp",
+      "kind": "exterior",
+      "width": 1372,
+      "height": 960,
+      "sourceImage": "https://nfs-ls-tauto-static-prod.t-static.ru/images/13_Tank/69_300/3_front/3_front_1_3.webp"
+    },
+    {
+      "file": "05-exterior.webp",
+      "kind": "exterior",
+      "width": 1372,
+      "height": 960,
+      "sourceImage": "https://nfs-ls-tauto-static-prod.t-static.ru/images/13_Tank/69_300/3_front/3_front_1_4.webp"
+    },
+    {
+      "file": "06-exterior.webp",
+      "kind": "exterior",
+      "width": 1372,
+      "height": 960,
+      "sourceImage": "https://nfs-ls-tauto-static-prod.t-static.ru/images/13_Tank/69_300/3_front/3_front_1_5.webp"
+    },
+    {
+      "file": "07-interior.webp",
+      "kind": "interior",
+      "width": 1372,
+      "height": 960,
+      "sourceImage": "https://nfs-ls-tauto-static-prod.t-static.ru/images/13_Tank/69_300/7_interior/7_interior_1.webp"
+    }
+  ]
+}

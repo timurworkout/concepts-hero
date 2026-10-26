@@ -37,7 +37,7 @@
       .intro-backdrop { position: absolute; inset: 0; background: var(--night); }
       .intro-grid { position: absolute; inset: 0; overflow: hidden; }
       .intro-tile { position: absolute; left: 0; top: 0; border-radius: 8px; overflow: hidden; opacity: 0; background: #303235; filter: blur(.7px); }
-      .intro-tile img { display: block; width: 100%; height: 100%; object-fit: cover; }
+      .intro-tile img { display: block; width: 100%; height: 100%; object-fit: contain; }
       .intro-veil { position: absolute; inset: 0; background: radial-gradient(ellipse at center, rgb(18 19 20 / .84) 0%, rgb(18 19 20 / .2) 48%, rgb(18 19 20 / .55) 100%); pointer-events: none; }
       .intro-logo { position: absolute; top: 0; left: 0; color: white; opacity: 0; transform-origin: 0 0; pointer-events: none; }
       .intro-skip { position: absolute; top: 28px; right: max(28px, var(--gutter)); border: 1px solid rgb(255 255 255 / .24); border-radius: 999px; padding: 10px 16px; background: var(--night); color: #fff; font-size: 13px; }
@@ -148,7 +148,7 @@
         const image = new Image()
         image.alt = ''
         image.decoding = 'async'
-        image.src = `${import.meta.env.BASE_URL}cars/sm/${car.id}.webp`
+        image.src = `${import.meta.env.BASE_URL}${car.image}`
         image.addEventListener('error', () => { image.hidden = true }, { once: true })
         tile.append(image)
         grid.append(tile)

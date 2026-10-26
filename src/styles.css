@@ -58,7 +58,12 @@ h1 { font-size: 28px; font-weight: 700; line-height: 1.4; margin: 0 0 24px; }
 h2 { font-size: 22px; font-weight: 500; letter-spacing: -0.44px; margin: 0 0 24px; }
 .muted { color: var(--muted); font-size: 14px; }
 .body-sm { font-size: 14px; line-height: 1.43; color: var(--body); }
-.photo-car { background: var(--photo-empty) center / cover no-repeat; color: var(--body); }
+.photo-car { background: var(--photo-empty) center / contain no-repeat; color: var(--body); }
+.car-gallery > img { display: block; object-fit: contain; background: var(--photo-empty); }
+.car-gallery-thumbs { display: flex; gap: 8px; margin-top: 12px; overflow-x: auto; padding: 3px; }
+.car-gallery-thumbs button { flex: 0 0 86px; padding: 0; border: 2px solid transparent; border-radius: 8px; overflow: hidden; background: var(--photo-empty); cursor: pointer; }
+.car-gallery-thumbs button[aria-pressed="true"] { border-color: var(--ink); }
+.car-gallery-thumbs img { display: block; width: 100%; aspect-ratio: 1372 / 960; object-fit: contain; }
 .link { border: 0; background: none; padding: 0; text-decoration: underline; font-size: 14px; color: inherit; }
 .icon-btn { display: grid; place-items: center; width: 40px; height: 40px; flex: none; border: 0; border-radius: var(--r-full); background: var(--surface-strong); font-size: 20px; line-height: 1; }
 
@@ -131,7 +136,7 @@ h2 { font-size: 22px; font-weight: 500; letter-spacing: -0.44px; margin: 0 0 24p
 .entry-intro-backdrop { position: absolute; inset: 0; background: var(--night); }
 .entry-intro-grid { position: absolute; inset: 0; overflow: hidden; }
 .entry-intro-tile { position: absolute; left: 0; top: 0; border-radius: var(--r-sm); overflow: hidden; opacity: 0; background: #303235; filter: blur(.7px); }
-.entry-intro-tile img { display: block; width: 100%; height: 100%; object-fit: cover; }
+.entry-intro-tile img { display: block; width: 100%; height: 100%; object-fit: contain; }
 .entry-intro-veil { position: absolute; inset: 0; background: radial-gradient(ellipse at center, rgb(18 19 20 / .84) 0%, rgb(18 19 20 / .2) 48%, rgb(18 19 20 / .55) 100%); pointer-events: none; }
 .entry-intro-logo { position: absolute; top: 50%; left: 50%; color: #fff; opacity: 0; transform-origin: center; pointer-events: none; }
 .entry-intro-skip { position: absolute; top: 28px; right: max(28px, var(--gutter)); border: 1px solid rgb(255 255 255 / .24); border-radius: var(--r-full); padding: 10px 16px; background: var(--night); color: #fff; font-size: 13px; }
