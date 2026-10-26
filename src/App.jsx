@@ -1,5 +1,6 @@
-import { Fragment, useEffect, useRef, useState } from 'react'
+import { Fragment, useCallback, useEffect, useRef, useState } from 'react'
 import { createPortal } from 'react-dom'
+import EntryIntro, { hasSeenEntryIntro } from './EntryIntro.jsx'
 import { locations, locationGroups, cars, nb, rub, carDetails, rentTerms, cities, inCity, cityPrice, extras, plans, prefOptions, companions, promises, faq, addressHints } from './data.js'
 
 const carPhoto = (c, size = 'sm') => ({ backgroundImage: `url(${import.meta.env.BASE_URL}cars/${size}/${c.id}.webp)` })
@@ -35,6 +36,8 @@ function findPlace(q) {
 const union = (a, b) => [...new Set([...a, ...b])]
 
 export default function App() {
+  const [entryIntro, setEntryIntro] = useState(() => hasSeenEntryIntro() ? 'reveal' : 'scene')
+  const finishEntryIntro = useCallback(() => setEntryIntro(null), [])
   const [query, setQuery] = useState(emptyQuery)
   const [screen, setScreen] = useState('e1') // 'e1' | 'e2' | 'e3' | 'final' | 'bookings'
   const [picking, setPicking] = useState(false) // заставка подбора поверх Э2
@@ -119,6 +122,7 @@ export default function App() {
         onLogin={() => askLogin(null)} onLogout={logout}
         bookingsCount={bookings.filter((b) => !b.cancelled && bookingStatus(b) !== 'done').length} onBookings={openBookings} />
       {page}
+      {entryIntro && <EntryIntro full={entryIntro === 'scene'} onDone={finishEntryIntro} />}
       {picking && screen === 'e2' && <Picking query={query} onDone={() => setPicking(false)} />}
       {sheet === 'favs' && <FavSheet query={query} fav={fav} user={user} onLogin={() => askLogin(() => setSheet('favs'))}
         onOpen={(id) => openCar(id, screen === 'e2' ? 'e2' : 'e1')} onClose={() => setSheet(null)} />}
@@ -1268,7 +1272,11 @@ function Landing({ query, setQuery, onSubmit }) {
     <main className="landing">
       <section className="hero">
         <div className="hero-inner">
-          <h1 className="hero-title">{'Скажи, куда едешь. Машину подберём сами\u00a0— без\u00a050\u00a0вкладок и\u00a0сравнений'}</h1>
+          <h1 className="hero-title">
+            <span className="hero-title-line">{'Скажи, куда едешь. '}</span>
+            <span className="hero-title-line">{'Машину подберём сами\u00a0— '}</span>
+            <span className="hero-title-line">{'без\u00a050\u00a0вкладок и\u00a0сравнений'}</span>
+          </h1>
           <Wizard ref={formRef} query={query} setQuery={setQuery} step={step} setStep={setStep} placeType={placeType} setPlaceType={setPlaceType} onSubmit={submit} />
         </div>
       </section>
