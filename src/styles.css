@@ -955,3 +955,58 @@ label.wz-seg, .wz-seg-btn { display: flex; flex-direction: column; align-items: 
   .pickgrid-tile { transition-property: opacity; }
   .swap-in { animation: fadeIn var(--dur-medium); }
 }
+
+/* Подбор: машина и её детали перед переходом к допам */
+.e2 .pick-card { background: transparent; overflow: visible; }
+.e2 .pick-heading { display: grid; gap: 10px; margin-bottom: 22px; }
+.e2 .pick-title { margin: 0; font-size: clamp(36px, 4vw, 58px); line-height: 1.08; }
+.pick-reason { max-width: 620px; color: var(--body); line-height: 1.5; }
+.e2 .pick-photo { aspect-ratio: 16 / 9; clip-path: polygon(0 0, calc(100% - var(--cut)) 0, 100% var(--cut), 100% 100%, 0 100%); }
+.pick-photo-open { position: absolute; inset: 0; width: 100%; height: 100%; padding: 0; }
+.pick-gallery .car-gallery-thumbs { margin-top: 10px; }
+.pick-gallery .car-gallery-thumbs button { border-radius: 0; }
+.pick-details { margin-top: 38px; }
+.pick-details h2 { margin: 0 0 18px; }
+.pick-details-list { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); margin: 0; border-top: 1px solid var(--line); }
+.pick-details-list > div { padding: 14px 12px 14px 0; border-bottom: 1px solid var(--line); }
+.pick-details-list dt { color: var(--muted); font-size: 13px; }
+.pick-details-list dd { margin: 5px 0 0; font-weight: 600; }
+.sheet-photo { position: fixed; inset: 0; display: grid; align-content: center; justify-items: center; gap: 16px; padding: 56px 24px 24px; background: var(--night); color: #fff; }
+.sheet-photo img { max-width: min(1100px, 100%); max-height: 75vh; object-fit: contain; }
+.photo-close { position: absolute; top: 16px; right: 24px; color: #fff; font-size: 36px; line-height: 1; }
+.photo-controls { display: flex; align-items: center; gap: 24px; }
+.photo-controls button { color: #fff; padding: 10px; }
+@media (max-width: 743px) {
+  .e2 .pick-heading { margin-bottom: 18px; }
+  .e2 .pick-title { font-size: 36px; }
+  .pick-details { margin-top: 28px; }
+  .pick-details-list { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .e2 .book-card { padding-bottom: max(16px, env(safe-area-inset-bottom)); }
+  .e2 .book-card .btn-primary { padding: 0 18px; }
+}
+
+
+@media (max-width: 743px) {
+  .e2-layout { grid-template-columns: minmax(0, 1fr); }
+  .e2 .pick-card, .pick-gallery { min-width: 0; }
+}
+
+/* Плавающая панель выбора машины на мобильном */
+@media (max-width: 743px) {
+  .e2 .book-card {
+    left: 16px;
+    right: 16px;
+    bottom: max(16px, env(safe-area-inset-bottom));
+    grid-template-columns: minmax(0, 1fr) auto;
+    gap: 12px;
+    padding: 10px 10px 10px 16px;
+    border-radius: 0;
+    clip-path: polygon(var(--cut-sm) 0, 100% 0, 100% calc(100% - var(--cut-sm)), calc(100% - var(--cut-sm)) 100%, 0 100%, 0 var(--cut-sm));
+    background: var(--plate);
+    box-shadow: none;
+    filter: drop-shadow(0 8px 14px rgb(21 24 28 / .22));
+  }
+  .e2 .book-card .book-note { display: none; }
+  .e2 .book-card .price-big { font-size: 20px; }
+  .e2 .book-card .btn-primary { min-height: 50px; padding: 0 18px; white-space: nowrap; }
+}

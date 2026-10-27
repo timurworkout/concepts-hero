@@ -1,6 +1,6 @@
 import { Fragment, useCallback, useEffect, useRef, useState } from 'react'
 import { createPortal } from 'react-dom'
-import { selectCars, rankCars, carSummary, hasNumber, isAutomatic, savedCarIds, savedBookings } from './fleet.js'
+import { selectCars, rankCars, hasNumber, isAutomatic, savedCarIds, savedBookings } from './fleet.js'
 import EntryIntro, { hasSeenEntryIntro } from './EntryIntro.jsx'
 import { locations, locationGroups, cars, nb, rub, carDetails, rentTerms, cities, inCity, cityPrice, extras, plans, prefOptions, companions, promises, faq, addressHints } from './data.js'
 
@@ -1589,6 +1589,98 @@ const stockText = (n) => (n === 1 ? 'Осталась 1' : `Осталось ${n
 const goods = (prev, cur, q) => carDiff(prev, cur, q).filter((d) => d.good && !d.text.includes('₽')).map((d) => d.text)
 const priceDelta = (base, c, q) => { const d = tripTotal(c, q) - tripTotal(base, q); return d ? `${d > 0 ? '+' : '−'}${rub(Math.abs(d))}` : 'та же цена' }
 
+function PickGallery({ car, prev, fav }) {
+  const photos = car.gallery.length ? car.gallery : [car.heroImage || car.image]
+  const [active, setActive] = useState(0)
+  const [expanded, setExpanded] = useState(false)
+  const change = (index) => setActive((index + photos.length) % photos.length)
+  return (
+    <div className="pick-gallery">
+      <div className="pick-photo photo-car" style={{ backgroundImage: `url(${import.meta.env.BASE_URL}${photos[active]})` }}>
+        {prev && prev.id !== car.id && <div key={`prev-${car.id}`} className="pick-photo-prev photo-car" style={carPhoto(prev, 'lg')} />}
+        <button type="button" className="pick-photo-open" onClick={() => setExpanded(true)} aria-label={`Увеличить фото ${car.model}`} />
+        <FavToggle id={car.id} fav={fav} />
+      </div>
+      {photos.length > 1 && <div className="car-gallery-thumbs" role="group" aria-label={`Фотографии ${car.model}`}>
+        {photos.map((src, i) => <button key={src} type="button" aria-label={`Фото ${i + 1}`} aria-pressed={i === active} onClick={() => setActive(i)}>
+          <img src={`${import.meta.env.BASE_URL}${src}`} alt="" loading="lazy" />
+        </button>)}
+      </div>}
+      {expanded && <Sheet className="sheet-photo" onClose={() => setExpanded(false)}>
+        <button type="button" className="photo-close" onClick={() => setExpanded(false)} aria-label="Закрыть">×</button>
+        <img src={`${import.meta.env.BASE_URL}${photos[active]}`} alt={`${car.model} — фото ${active + 1}`} />
+        {photos.length > 1 && <div className="photo-controls"><button type="button" onClick={() => change(active - 1)} aria-label="Предыдущее фото"><Arrow dir="left" /></button><span>{active + 1} / {photos.length}</span><button type="button" onClick={() => change(active + 1)} aria-label="Следующее фото"><Arrow /></button></div>}
+      </Sheet>}
+    </div>
+  )
+}
+
+function PickSpecs({ car, query }) {
+  const d = carDetails[car.id]
+  const month = new Date(query.dateFrom || Date.now()).getMonth() + 1
+  const rows = [
+    ['Привод', car.drive], ['Клиренс', d.clearance], ['Коробка', car.gearbox], ['Мест', car.seats],
+    ['Багажник', d.bags], ['Двигатель', car.engine], ['Расход', d.fuel], ['Запас хода', d.range], ['Топливо', car.fuelType],
+    ...([3, 4, 10, 11].includes(month) ? [['Резина', d.winter ? 'уже зимняя, шипы' : 'летняя']] : []),
+  ].filter(([, value]) => value != null && value !== '')
+  return <section className="pick-details"><h2>Всё для дороги</h2><dl className="pick-details-list">{rows.map(([label, value]) => <div key={label}><dt>{label}</dt><dd>{value}</dd></div>)}</dl></section>
+}
+
+function CarAssessment({ car, goal, onComplete, onDismiss }) {
+  const [phase, setPhase] = useState(0)
+  const [exiting, setExiting] = useState(false)
+  const completed = useRef(false)
+  const skipRef = useRef(null)
+  const completeRef = useRef(onComplete)
+  completeRef.current = onComplete
+  useEffect(() => {
+    const root = document.getElementById('root'), wasInert = root?.inert
+    const overflow = document.body.style.overflow
+    if (root) root.inert = true
+    document.body.style.overflow = 'hidden'
+    skipRef.current?.focus({ preventScroll: true })
+    let finishTimer
+    const finish = () => {
+      if (completed.current) return
+      completed.current = true
+      completeRef.current()
+      setExiting(true)
+      finishTimer = setTimeout(onDismiss, 400)
+    }
+    const onKey = (event) => { if (event.key === 'Escape') finish() }
+    const timers = [setTimeout(() => setPhase(1), 900), setTimeout(() => setPhase(2), 1800), setTimeout(finish, 2800)]
+    window.addEventListener('keydown', onKey)
+    skipRef.current?.addEventListener('click', finish)
+    return () => {
+      timers.forEach(clearTimeout); clearTimeout(finishTimer)
+      window.removeEventListener('keydown', onKey)
+      skipRef.current?.removeEventListener('click', finish)
+      if (root) root.inert = wasInert
+      document.body.style.overflow = overflow
+    }
+  }, [])
+  const mountain = goal?.id === 'mountains'
+  const captions = mountain ? [
+    ['Смотрим, подойдёт ли для гор', car.model],
+    ['Проверяем полный привод', car.drive ? `${car.drive[0].toUpperCase() + car.drive.slice(1)} привод` : 'Данные о приводе не указаны'],
+    ['Сверяем клиренс', hasNumber(car.clearance) ? `${car.clearance} мм · для гор нужно от 180 мм` : 'Данные о клиренсе не указаны'],
+  ] : [
+    ['Смотрим, подойдёт ли для поездки', car.model],
+    [goal ? `Учитываем: ${goal.label.toLowerCase()}` : 'Сверяем характеристики', goal?.hint || carSummary(car)],
+    ['Сверяем параметры', carSummary(car)],
+  ]
+  return createPortal(
+    <div className={`swap-assessment ${exiting ? 'is-exiting' : ''}`} role="dialog" aria-modal="true" aria-label="Проверяем машину">
+      <button type="button" ref={skipRef} className="swap-skip">Пропустить <small>Esc</small></button>
+      <div className="swap-assessment-content">
+        <div className="swap-caption" key={phase} aria-live="polite"><strong>{captions[phase][0]}</strong><span>{captions[phase][1]}</span></div>
+        <div className="swap-vehicle" style={carPhoto(car, 'lg')} />
+        <div className="swap-steps" aria-hidden="true"><i className={phase >= 0 ? 'active' : ''} /><i className={phase >= 1 ? 'active' : ''} /><i className={phase >= 2 ? 'active' : ''} /></div>
+      </div>
+    </div>, document.body,
+  )
+}
+
 function E2({ query, setQuery, fav, onBack, onPick, openPicker }) {
   const [prev, setPrev] = useState(null) // машина до последнего переключения
   const [pickedId, setPickedId] = useState(null) // выбрал из альтернатив вручную
@@ -1673,18 +1765,13 @@ function E2({ query, setQuery, fav, onBack, onPick, openPicker }) {
 
           {car ? (
             <div className="pick-card">
-              <div className="pick-photo photo-car" style={carPhoto(car, 'lg')}>
-                {/* прошлая машина гаснет поверх новой — фото перетекает */}
-                {prev && prev.id !== car.id && <div key={`prev-${car.id}`} className="pick-photo-prev photo-car" style={carPhoto(prev, 'lg')} />}
-                <span className="badge">{paramsText(query) ? 'Под твои параметры' : 'Подобрали для тебя'}</span>
-                <FavToggle id={car.id} fav={fav} />
-              </div>
-              <div className="pick-body">
-                <div className="muted">{[car.gearbox && car.gearbox[0].toUpperCase() + car.gearbox.slice(1), car.kind].filter(Boolean).join(' · ')}{car.stock > 0 ? ` · ${stockText(car.stock).toLowerCase()}` : ''}</div>
+              <div className="pick-heading">
+                <div className="muted">{paramsText(query) ? 'Под твои параметры' : 'Подобрали для тебя'} · {car.kind}</div>
                 <h1 className="pick-title swap-in" key={car.id}>{car.model}</h1>
-                <div className="pick-specs">{carSummary(car)}</div>
-                <button type="button" className="link pick-more" onClick={() => onPick(car.id)}>Информация об автомобиле</button>
+                <div className="pick-reason">{goal ? <><b>{goal.label}</b> — {goal.hint.toLowerCase()}</> : <>Подобрали машину для твоей поездки</>}</div>
               </div>
+              <PickGallery key={car.id} car={car} prev={prev} fav={fav} />
+              <PickSpecs car={car} query={query} />
             </div>
           ) : (
             <div className="empty">
@@ -1726,7 +1813,7 @@ function E2({ query, setQuery, fav, onBack, onPick, openPicker }) {
                 <div className="price-big">{rub(tripTotal(car, query))}</div>
                 <div className="muted">за {unitsText(query)}{query.extraIds.length ? ', с допами' : ''}{isNow(query) && location ? ` · подадим через ${location.etaMin + car.etaAdd} мин` : ''}</div>
               </div>
-              <button className="btn-primary" onClick={() => onPick(car.id)}>Оформить</button>
+              <button className="btn-primary" onClick={() => onPick(car.id)}>Подобрать допы</button>
               <div className="book-note muted">✓ Бесплатная отмена за 48 ч</div>
             </div>
           )}
