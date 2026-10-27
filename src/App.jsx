@@ -1884,32 +1884,6 @@ export function E2({ query, setQuery, fav, onBack, onPick, openPicker }) {
 
 /* ---------- Э3 Машина, допы, калькулятор ---------- */
 
-const carPresentation = {
-  mountains: nb('За поворотом — следующий вид. У Tank 300 полный привод и клиренс 224 мм: выбрали его для маршрута в горы.'),
-  sea: nb('Сегодня — один пляж, завтра — другой. RAV4 с полным приводом и вариатором подойдёт для поездки вдоль побережья.'),
-  dacha: nb('Свернуть к дому за лесом. Niva Legend Sport — полный привод, механика и клиренс 220 мм для выезда за город.'),
-  highway: nb('Пусть дорога станет частью отпуска. BMW X3 с автоматом и полным приводом — наш выбор для поездки по трассе.'),
-}
-
-function CarGallery({ car }) {
-  const photos = car.gallery.length ? car.gallery : [car.image]
-  const [active, setActive] = useState(0)
-  const change = (index) => setActive((index + photos.length) % photos.length)
-  return (
-    <div className="car-gallery" onKeyDown={(e) => {
-      if (e.key === 'ArrowRight' || e.key === 'ArrowLeft') {
-        e.preventDefault(); change(active + (e.key === 'ArrowRight' ? 1 : -1))
-      }
-    }}>
-      <img className="e3-photo" src={`${import.meta.env.BASE_URL}${photos[active]}`} alt={`${car.model} — фото ${active + 1}`} />
-      {photos.length > 1 && <div className="car-gallery-thumbs" role="group" aria-label="Фотографии автомобиля">
-        {photos.map((src, i) => <button key={src} type="button" aria-label={`Фото ${i + 1}`} aria-pressed={i === active}
-          onClick={() => setActive(i)}><img src={`${import.meta.env.BASE_URL}${src}`} alt="" loading="lazy" /></button>)}
-      </div>}
-    </div>
-  )
-}
-
 export function E3({ query, setQuery, carId, cameFrom, fav, onBack, onPickOther, openPicker, onBook }) {
   const car = cars.find((c) => c.id === carId)
   const d = carDetails[car.id]
@@ -1917,8 +1891,15 @@ export function E3({ query, setQuery, carId, cameFrom, fav, onBack, onPickOther,
   const city = cities[location?.city ?? query.cityId]
   const widgetRef = useRef(null)
   const [edit, setEdit] = useState(null) // 'when' | 'return' | 'goal'
+  const [moreExtras, setMoreExtras] = useState(false)
+  const [showBill, setShowBill] = useState(false)
   // Цель поездки: если машину открыли с главной, её ещё нет — предлагаем только цели под эту машину
   const goal = plans.find((p) => !p.local && query.planIds.includes(p.id))
+  const tripPlans = plans.filter((p) => query.planIds.includes(p.id))
+  const localGoal = tripPlans.find((p) => p.local)
+  const suggestedIds = [...new Set(tripPlans.flatMap((p) => p.extraIds ?? []))]
+  const suggested = extras.filter((x) => suggestedIds.includes(x.id))
+  const otherExtras = extras.filter((x) => !suggestedIds.includes(x.id))
   const carGoals = cityPlans(location?.city ?? query.cityId).filter((p) => !p.local && p.test(car))
   const pickGoal = (p) => {
     setQuery((q) => ({ ...q, planIds: [p.id], extraIds: union(q.extraIds, p.extraIds ?? []) }))
@@ -1937,118 +1918,77 @@ export function E3({ query, setQuery, carId, cameFrom, fav, onBack, onPickOther,
   const perLabel = (x) => (x.price === 0 ? 'бесплатно' : `${rub(x.price)}${x.per === 'day' ? ' / сутки' : ' за\u00a0аренду'}`)
   const book = () => onBook()
 
-  // Резину показываем только в межсезонье
-  const month = new Date(query.dateFrom || Date.now()).getMonth() + 1
-  const offSeason = [3, 4, 10, 11].includes(month)
-
-  const specs = [
-    ['Двигатель', car.engine], ['Коробка', car.gearbox], ['Топливо', car.fuelType], ['Расход', d.fuel],
-    ['Запас хода', d.range], ['Клиренс', d.clearance], ['Багаж', d.bags], ['Привод', car.drive], ['Мест', car.seats],
-    ...(offSeason ? [['Резина', d.winter ? 'уже зимняя, шипы' : 'летняя']] : []),
-  ].filter(([, value]) => value != null && value !== '')
+  const extraControl = (x, card = false) => (
+    <label key={x.id} className={`extra ${card ? 'kit-extra' : ''} ${query.extraIds.includes(x.id) ? 'on' : ''}`}>
+      <span className="extra-text"><span className="extra-name">{x.name}</span>
+        {x.note && <span className="kit-note">{x.note}</span>}
+        <span className="extra-price">{perLabel(x)}</span>
+      </span>
+      <input type="checkbox" role="switch" className="switch" checked={query.extraIds.includes(x.id)} onChange={() => toggle(x.id)} />
+    </label>
+  )
+  const contextTiles = (
+    <div className="book-tiles">
+      <button type="button" className="book-tile book-tile-car" onClick={onPickOther}>
+        <img src={`${import.meta.env.BASE_URL}${car.heroImage || car.image}`} alt="" />
+        <span className="cell-text"><span className="cell-label">Твоя машина</span>{car.model}</span>
+        <span className="cell-arrow"><Arrow chevron /></span>
+      </button>
+      <button type="button" className={`book-tile ${goal && !goal.test(car) ? 'book-tile-warn' : ''}`} onClick={() => setEdit('goal')}>
+        <PlaceIcon type="Цель" />
+        <span className="cell-text"><span className="cell-label">Цель поездки</span>{localGoal?.label || goal?.label || <span className="muted">Выбери цель</span>}</span>
+        <span className="cell-arrow"><Arrow chevron /></span>
+      </button>
+      {goal && !goal.test(car) && <div className="goal-warn">Для «{goal.label}» {car.model} не лучший выбор. Нужно: {goal.hint[0].toLowerCase() + goal.hint.slice(1)}.{' '}<button type="button" className="link" onClick={onPickOther}>Подобрать под цель</button></div>}
+      {[
+        ['Где', location ? location.name : 'Выбери место', location?.type ?? 'Адрес', () => openPicker('all')],
+        ['Когда', whenText(query), 'Даты', () => setEdit('when')],
+        ['Вернуть', returnText(query), 'Возврат', () => setEdit('return')],
+      ].map(([label, value, icon, onClick]) => <button key={label} type="button" className="book-tile" onClick={onClick}>
+        <PlaceIcon type={icon} /><span className="cell-text"><span className="cell-label">{label}</span>{value}</span><span className="cell-arrow"><Arrow chevron /></span>
+      </button>)}
+    </div>
+  )
+  const bill = <dl className="bill">
+    <dt>Аренда, {unitsText(query)}</dt><dd>{rub(rentPrice(car, query))}</dd>
+    {chosen.map((x) => <Fragment key={x.id}><dt>{x.name}</dt><dd>{rub(extraCost(x, query))}</dd></Fragment>)}
+    <dt>Подача и возврат</dt><dd className="bill-inc">включено</dd>
+    <dt className="muted">Залог, вернём после аренды</dt><dd className="muted">{rub(d.deposit)}</dd>
+  </dl>
 
   return (
     <main className="e3">
       <button className="link-back" onClick={onBack}><Arrow dir="left" />{cameFrom === 'e2' ? 'Сменить машину — допы сохранятся' : 'На главную'}</button>
 
       <div className="e3-layout">
+        <div className="e3-mobile-context">{contextTiles}</div>
         <div className="e3-main">
-          <div className="e3-head">
-            <div className="muted">{car.kind}</div>
-            <div className="e3-title"><h1>{car.model}</h1><FavToggle id={car.id} fav={fav} className="fav-inline" /></div>
-            <div className="tags">
-              {car.tags.map((t) => <span key={t} className="tag">{t}</span>)}
-              {car.stock > 0 && <span className="badge badge-hot">{car.stock === 1 ? 'Осталась 1' : `Осталось ${car.stock}`}</span>}
-              {car.stock === 0 && <span className="badge badge-muted">Разобрали</span>}
-            </div>
+          <div className="extras-intro">
+            <h1>{goal ? `Всё для поездки ${goal.label.toLowerCase()}` : 'Всё для поездки'}</h1>
+            <p>{suggested.length ? 'Собрали под твои планы. Можно поменять каждую деталь.' : 'Выбери допы, которые пригодятся в дороге.'}</p>
           </div>
-          <CarGallery car={car} />
-
-          <section className="e3-section">
-            <h2>Для поездки</h2>
-            {car.demoScenario && <p>{carPresentation[car.demoScenario]}</p>}
-            <dl className="specs">{specs.map(([k, v]) => <div key={k}><dt>{k}</dt><dd>{v}</dd></div>)}</dl>
-          </section>
-
-          {(city?.routes ?? d.routes).length > 0 && <section className="e3-section">
-            <h2>Подходит для маршрутов</h2>
-            <div className="routes">{(city?.routes ?? d.routes).map((r) => <span key={r} className="route">{r}</span>)}</div>
+          {suggested.length > 0 && <section className="kit-panel">
+            <div className="kit-heading"><div><h2>Собрали для тебя</h2><p>{localGoal?.label || goal?.label}{ready ? ` · на ${unitsText(query)}` : ''}</p></div>
+              <span className="kit-count">{suggested.filter((x) => query.extraIds.includes(x.id)).length} из {suggested.length} выбрано</span>
+            </div>
+            <div className="kit-grid">{suggested.map((x) => extraControl(x, true))}</div>
           </section>}
-
-          <section className="e3-section">
-            <h2>Как заберёшь машину</h2>
-            <ol className="steps">
-              <li><b>{location ? location.name : 'Выбери, где забрать'}</b>
-                <span>{location ? location.meet : 'аэропорт, вокзал, отель, парковка или к дому'}
-                  {location && isNow(query) ? ` — подадим через ${location.etaMin + car.etaAdd} мин` : ''}</span></li>
-              <li><b>Встречает сотрудник — 10 минут</b>
-                <span>Вместе обходим машину и фотографируем её — акт с фото приходит в телефон, так чужие царапины не станут твоими. Показываем, как работают допы, и отдаём ключи</span></li>
-              <li><b>Сразу в путь</b><span>Бак полный, допы уже в машине, маршрут — в навигаторе</span></li>
-            </ol>
+          <section className="e3-section e3-more-extras">
+            <div className="extras-section-head"><div><h2>{suggested.length ? 'Дополнить поездку' : 'Допы для поездки'}</h2><p className="muted">Допы к машине и поездке</p></div>
+              {suggested.length > 0 && <button type="button" className="link" aria-expanded={moreExtras} onClick={() => setMoreExtras(!moreExtras)}>{moreExtras ? 'Свернуть' : 'Посмотреть все'} {moreExtras ? '−' : '+'}</button>}
+            </div>
+            {(moreExtras || !suggested.length) && <div className="extras">{otherExtras.map((x) => extraControl(x))}</div>}
           </section>
-
-          <section className="e3-section">
-            <h2>Как вернуть</h2>
-            <dl className="terms">
-              <dt>Куда</dt><dd>{city.dropoff}</dd>
-              <dt>Топливо</dt><dd>{rentTerms.fuel}</dd>
-              <dt>Залог</dt><dd>{rub(d.deposit)} — снимаем блокировку с карты в день возврата, после осмотра по тем же фото</dd>
-            </dl>
+          <section className="e3-section e3-terms">
+            <h2>Как всё устроено</h2>
+            <details><summary>Как заберёшь машину</summary><p>{location ? `${location.name}: ${location.meet}` : 'Выбери место получения'}. Встречает сотрудник — 10 минут. Вместе осматриваем машину, показываем допы и отдаём ключи.</p></details>
+            <details><summary>Как вернуть и получить залог</summary><p>{city?.dropoff}. {rentTerms.fuel}. Залог {rub(d.deposit)} — снимаем блокировку с карты после осмотра.</p></details>
+            <details><summary>Условия поездки</summary><p>{query.extraIds.includes('unlimited') ? 'Пробег без ограничений' : rentTerms.mileage}. Водитель: {rentTerms.driver}. {city?.regions}. {rentTerms.insurance}</p></details>
           </section>
-
-          <section className="e3-section">
-            <h2>Условия</h2>
-            <dl className="terms">
-              <dt>Пробег</dt><dd>{query.extraIds.includes('unlimited') ? 'Без ограничений — безлимит в твоём расчёте' : `${rentTerms.mileage}. Или возьми безлимит в допах ниже`}</dd>
-              <dt>Водитель</dt><dd>{rentTerms.driver}</dd>
-              <dt>Куда можно</dt><dd>{city.regions}</dd>
-              <dt>Страховка</dt><dd>{rentTerms.insurance}</dd>
-            </dl>
-          </section>
-
-          {[['car', 'Допы к машине'], ['trip', 'В машину для поездки']].map(([g, title]) => (
-            <section key={g} className="e3-section">
-              <h2>{title}</h2>
-              <div className="extras">
-                {extras.filter((x) => x.group === g).map((x) => (
-                  <label key={x.id} className={`extra ${query.extraIds.includes(x.id) ? 'on' : ''}`}>
-                    <span className="extra-text">
-                      <span className="extra-name">{x.name}</span>
-                      <span className="extra-price">{perLabel(x)}{x.note && ` · ${x.note}`}</span>
-                    </span>
-                    <input type="checkbox" role="switch" className="switch" checked={query.extraIds.includes(x.id)} onChange={() => toggle(x.id)} />
-                  </label>
-                ))}
-              </div>
-            </section>
-          ))}
         </div>
 
         <aside className="e3-aside" ref={widgetRef}>
-          <div className="book-tiles">
-            <button type="button" className={`book-tile ${goal && !goal.test(car) ? 'book-tile-warn' : ''}`} onClick={() => setEdit('goal')}>
-              <PlaceIcon type="Цель" />
-              <span className="cell-text"><span className="cell-label">Цель поездки</span>{goal ? goal.label : <span className="muted">Подберём под неё машину</span>}</span>
-              <span className="cell-arrow"><Arrow chevron /></span>
-            </button>
-            {goal && !goal.test(car) && (
-              <div className="goal-warn">
-                Для «{goal.label}» {car.model} не лучший выбор. Нужно: {goal.hint[0].toLowerCase() + goal.hint.slice(1)}.{' '}
-                <button type="button" className="link" onClick={onPickOther}>Подобрать под цель</button>
-              </div>
-            )}
-            {[
-              ['Где', location ? location.name : 'Выбери место', location?.type ?? 'Адрес', () => openPicker('all')],
-              ['Когда', whenText(query), 'Даты', () => setEdit('when')],
-              ['Вернуть', returnText(query), 'Возврат', () => setEdit('return')],
-            ].map(([label, value, icon, onClick]) => (
-              <button key={label} type="button" className="book-tile" onClick={onClick}>
-                <PlaceIcon type={icon} />
-                <span className="cell-text"><span className="cell-label">{label}</span>{value}</span>
-                <span className="cell-arrow"><Arrow chevron /></span>
-              </button>
-            ))}
-          </div>
+          <div className="e3-desktop-context">{contextTiles}</div>
 
           {status === 'place' && (
             <div className="avail no">
@@ -2067,15 +2007,10 @@ export function E3({ query, setQuery, carId, cameFrom, fav, onBack, onPickOther,
             <>
               <div className="price-big">{rub(total)}</div>
               <div className="muted">за {unitsText(query)}{chosen.length ? ', с допами' : ''}</div>
-              <dl className="bill">
-                <dt>Аренда, {unitsText(query)}</dt><dd>{rub(rentPrice(car, query))}</dd>
-                {chosen.map((x) => <Fragment key={x.id}><dt>{x.name}</dt><dd>{rub(extraCost(x, query))}</dd></Fragment>)}
-                <dt>Подача и возврат</dt><dd className="bill-inc">включено</dd>
-                <dt className="muted">Залог, вернём после аренды</dt><dd className="muted">{rub(d.deposit)}</dd>
-              </dl>
+              {bill}
             </>
           )}
-          <button className="btn-primary btn-accent btn-book" disabled={status === 'sold' || status === 'place'}
+          <button className="btn-primary btn-book" disabled={status === 'sold' || status === 'place'}
             onClick={book}>Забронировать</button>
           {status === 'ok' && <div className="book-note muted">✓ Бесплатная отмена за 48 ч</div>}
           </div>}
@@ -2106,12 +2041,16 @@ export function E3({ query, setQuery, carId, cameFrom, fav, onBack, onPickOther,
       </div>
 
       <div className="e3-bar">
-        <div>
-          <div className="price">{status === 'ok' ? rub(total) : `${rub(car.pricePerDay)} / сутки`}</div>
-          <div className="muted">{status === 'ok' ? `за ${unitsText(query)}, с допами` : status ? 'недоступна' : 'укажи, где и когда'}</div>
-        </div>
+        <button type="button" className="e3-bar-price" onClick={status === 'ok' ? () => setShowBill(true) : scrollToWidget}>
+          <span className="price">{status === 'ok' ? rub(total) : `${rub(car.pricePerDay)} / сутки`}</span>
+          <span className="muted">{status === 'ok' ? `за ${unitsText(query)} · расчёт` : status ? 'недоступна' : 'укажи, где и когда'}</span>
+        </button>
         <button className="btn-primary" onClick={status === 'ok' ? book : scrollToWidget}>{status === 'ok' ? 'Забронировать' : 'Где и когда'}</button>
       </div>
+      {showBill && <Sheet className="sheet-center e3-bill-sheet" onClose={() => setShowBill(false)}>
+        <div className="sheet-head"><h2>Расчёт поездки</h2><button type="button" onClick={() => setShowBill(false)} aria-label="Закрыть">×</button></div>
+        <div className="price-big">{rub(total)}</div>{bill}
+      </Sheet>}
     </main>
   )
 }
