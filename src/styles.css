@@ -1104,3 +1104,6 @@ label.wz-seg, .wz-seg-btn { display: flex; flex-direction: column; align-items: 
   .e3-mobile-context .book-tile:not(.book-tile-car):not(:nth-child(2)) .cell-arrow { display: none; }
   .e3-mobile-context .book-tile:not(.book-tile-car):not(:nth-child(2)) .cell-text { overflow-wrap: anywhere; }
 }
+
+/* Кадры подбора и перехода заполняются без боковых полей. */
+.e2 .pick-photo, .pick-photo-prev, .pickgrid-tile { background-size: cover; }

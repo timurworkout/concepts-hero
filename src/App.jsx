@@ -1619,7 +1619,7 @@ function PickGallery({ car, prev, fav }) {
   const change = (index) => setActive((index + photos.length) % photos.length)
   return (
     <div className="pick-gallery">
-      <div className="pick-photo photo-car" style={{ backgroundImage: `url(${import.meta.env.BASE_URL}${photos[active]})` }}>
+      <div className="pick-photo photo-car" style={{ backgroundImage: `url(${import.meta.env.BASE_URL}${photos[active]})`, aspectRatio: car.gallery.length ? '1372 / 960' : '1092 / 552' }}>
         {prev && prev.id !== car.id && <div key={`prev-${car.id}`} className="pick-photo-prev photo-car" style={carPhoto(prev, 'lg')} />}
         <button type="button" className="pick-photo-open" onClick={() => setExpanded(true)} aria-label={`Увеличить фото ${car.model}`} />
         <FavToggle id={car.id} fav={fav} />
