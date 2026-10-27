@@ -41,7 +41,7 @@
 - **Незакоммиченное из других заходов:** `package.json` + `package-lock.json` (motion, storybook), `index.html`, `README.md`, `project/intent.md`, `project/references.md`, неотслеживаемые `.impeccable/`, `.storybook/`, `AGENTS.md`, `PRODUCT.md`, `public/fonts/`, `public/explorations/on-move-stencil.html`, `project/previews/onmove-layouts/`, `src/Tokens.stories.jsx`, `src/Wizard.stories.jsx`. Разобрать и разложить по отдельным коммитам.
 - **Экраны Login / Final / Bookings** не проверены на новой светлой палитре — там могли остаться тёмные плашки и pill-скругления от прошлого стиля, как было у липкой полосы поиска.
 - **Просвет под визардом на 1440.** Табло убрано, пустоту держат `padding-bottom: 20px` у `.hero-inner` и `padding-top: clamp(64px, 8vw, 118px)` у «Направлений» (~135px). По сетке ровно, но если глаз цепляется — поджать до ~80px.
-- **Возврат к Storybook** (п. 4) — сторисы `Tokens` и `Wizard` уже лежат в `src/`, но не подключены к рабочему процессу.
+- ~~**Возврат к Storybook** (п. 4)~~ — сделано: `npm run storybook` на 6006, три раздела «Табло» (Токены, Визард, Блоки), 12 сторисов. Не доделано намеренно: нет аддонов (a11y, docs), нет сторисов экранов подбора/брони и состояний карточки машины.
 
 ## На подумать
 
