@@ -1760,7 +1760,8 @@ export function E2({ query, setQuery, fav, onBack, onPick, openPicker }) {
   const [prev, setPrev] = useState(null) // машина до последнего переключения
   const [pickedId, setPickedId] = useState(null) // выбрал из альтернатив вручную
   const [datesOpen, setDatesOpen] = useState(false)
-  const [moreOpen, setMoreOpen] = useState(false)
+  const [placeOpen, setPlaceOpen] = useState(false)
+  const [continueToExtras, setContinueToExtras] = useState(false)
   const [assessmentId, setAssessmentId] = useState(null)
   const res = pickCar(query)
   const { goal, places, companion, active, fit } = res
@@ -1774,51 +1775,58 @@ export function E2({ query, setQuery, fav, onBack, onPick, openPicker }) {
     setPickedId(null)
     setQuery((q) => ({ ...q, ...patch }))
   }
-  const chooseNow = (id) => { setPrev(car); setPickedId(id); setMoreOpen(false); window.scrollTo({ top: 0, behavior: reducedMotion() ? 'auto' : 'smooth' }) }
+  const chooseNow = (id) => { setPrev(car); setPickedId(id); window.scrollTo({ top: 0, behavior: reducedMotion() ? 'auto' : 'smooth' }) }
   const choose = (id) => {
-    setMoreOpen(false)
     if (reducedMotion()) chooseNow(id)
     else setAssessmentId(id)
   }
   const togglePref = (id) => change({ prefs: query.prefs.includes(id) ? query.prefs.filter((x) => x !== id) : [...query.prefs, id] })
 
-  const reasons = []
-  if (goal) reasons.push(<><b>{goal.label}</b> <Arrow /> {goal.hint.toLowerCase()}</>)
-  else reasons.push(<>Цель не выбрана — предлагаем одну из основных машин для путешествий</>)
-  places.filter((p) => !skipped.includes(p)).forEach((p) => reasons.push(<><b>{p.label}</b> <Arrow /> {p.hint.toLowerCase()}</>))
-  if (companion && !skipped.includes(companion)) reasons.push(<><b>{companion.label}</b> <Arrow /> {companion.hint}</>)
-  skipped.forEach((s) => reasons.push(<>Под «{s.label.toLowerCase()}» отдельно машин не нашлось — учли остальное</>))
-  active.forEach((o) => reasons.push(<>Авто: <b>{o.label}</b></>))
-  if (car) reasons.push(<>Подходят {res.count} из {res.total} машин — учли маршрут и твои параметры</>)
+  // Рекомендации сохраняют выбранную цель, спутников и локальные планы.
+  const alternatives = car ? fit.filter((c) => c.id !== car.id && places.every((p) => p.test(c))) : []
+  const recommendations = []
+  for (const candidate of alternatives) {
+    const improvements = goods(car, candidate, query)
+    const cheaper = tripTotal(candidate, query) < tripTotal(car, query)
+    const label = improvements[0] || (cheaper ? 'Дешевле' : null)
+    if (label && !recommendations.some((item) => item.label === label)) {
+      recommendations.push({ car: candidate, label })
+      if (recommendations.length === 3) break
+    }
+  }
+  const describeCar = car ? [
+    car.drive === 'полный' ? 'Полный привод' : null,
+    hasNumber(car.clearance) ? `клиренс ${car.clearance} мм` : null,
+    hasNumber(car.seats) ? `мест: ${car.seats}` : null,
+    hasNumber(car.trunk) ? `багажник ${car.trunk} л` : null,
+  ].filter(Boolean).join(' · ') : ''
+  const routeNotes = places.filter((p) => !skipped.includes(p)).map((p) => p.hint)
 
-  // Тот же порядок, что и в подборе: сначала подходящие машины основной четвёрки.
-  const rest = car ? fit.filter((c) => c.id !== car.id) : []
-  const tiles = rest.slice(0, 2).map((c) => ({ car: c,
-    note: goods(car, c, query).slice(0, 2).join(', ') || 'тоже подходит под параметры' }))
-
-  // «Ещё 7»: та же цель и теги, включая разобранные — они внизу
-  const shown = [car, ...tiles.map((t) => t.car)].filter(Boolean).map((c) => c.id)
-  const same = rankCars(cars.filter((c) => !shown.includes(c.id) && inCity(c, query.cityId)
-    && (!goal || goal.test(c)) && active.every((o) => o.test(c)) && (!companion || companion.test(c))),
-    goal, [...places, companion].filter(Boolean))
-    .map((c) => ({ car: c, av: availability(c, query.locationId) }))
-  const gone = same.filter((x) => x.av !== 'ok').slice(0, 2) // разобранные показываем всегда, но не больше двух
-  const more = [...same.filter((x) => x.av === 'ok').slice(0, 7 - gone.length), ...gone]
-
-  const diff = prev && car && prev.id !== car.id ? carDiff(prev, car, query) : null
   const fixes = !car ? active.filter((o) => pickCar(query, query.prefs.filter((x) => x !== o.id)).car) : []
 
-  const cells = (cls) => (
-    <div className={`cells ${cls}`}>
-      <button type="button" className="cell" onClick={() => openPicker('all')}>
-        <PlaceIcon type={location?.type ?? 'Адрес'} />
-        <span className="cell-text"><span className="cell-label">Где забрать</span>{location ? location.name : 'Выбери место'}{query.returnMode !== 'same' && <span className="muted"> · вернуть: {returnText(query).toLowerCase()}</span>}</span>
-        <span className="cell-arrow"><Arrow chevron /></span>
+  const datesMissing = query.mode === 'days' && (!query.dateFrom || !query.dateTo || query.dateTo < query.dateFrom)
+  const continueWith = (nextQuery) => {
+    if (!nextQuery.locationId) { setPlaceOpen(true); return }
+    if (nextQuery.mode === 'days' && (!nextQuery.dateFrom || !nextQuery.dateTo || nextQuery.dateTo < nextQuery.dateFrom)) { setDatesOpen(true); return }
+    setContinueToExtras(false)
+    const nextCar = pickCar(nextQuery).fit.find((candidate) => candidate.id === pickedId) ?? pickCar(nextQuery).car
+    if (nextCar) onPick(nextCar.id)
+  }
+  const startExtras = () => { setContinueToExtras(true); continueWith(query) }
+  const arrivalIcon = (selected) => <svg className="arrival-icon" viewBox="0 0 20 20" aria-hidden="true"><path d={selected ? 'M5 15 15 5M5 5h10v10' : 'M10 3v14M3 10h14'} /></svg>
+  const cells = () => (
+    <div className="cells cells-card">
+      <button type="button" className="cell" onClick={() => setParamsOpen(true)}>
+        <span className="cell-text"><span className="cell-label">Параметры поездки</span><span className={paramsText(query) ? '' : 'muted'}>{paramsText(query) || 'Можно уточнить'}</span></span>
+        {arrivalIcon(Boolean(paramsText(query)))}
+      </button>
+      <button type="button" className="cell" onClick={() => setPlaceOpen(true)}>
+        <span className="cell-text"><span className="cell-label">Где забрать</span><span className={location ? '' : 'muted'}>{location ? location.name : 'Выбери место'}{query.returnMode !== 'same' && ` · вернуть: ${returnText(query).toLowerCase()}`}</span></span>
+        {arrivalIcon(Boolean(location))}
       </button>
       <button type="button" className="cell" onClick={() => setDatesOpen(true)}>
-        <PlaceIcon type="Даты" />
-        <span className="cell-text"><span className="cell-label">Когда</span>{whenText(query)}</span>
-        <span className="cell-arrow"><Arrow chevron /></span>
+        <span className="cell-text"><span className="cell-label">Когда</span><span className={datesMissing ? 'muted' : ''}>{whenText(query)}</span></span>
+        {arrivalIcon(!datesMissing)}
       </button>
     </div>
   )
@@ -1829,28 +1837,20 @@ export function E2({ query, setQuery, fav, onBack, onPick, openPicker }) {
 
       <div className="e2-layout">
         <div className="e2-main">
-          {cells('cells-inline')}
-
-          <div className="params-line">
-            <span><span className="muted">Учли: </span>{paramsText(query) || 'параметры не заданы'}</span>
-            <button type="button" className="link" onClick={() => setParamsOpen(true)}>Изменить</button>
-          </div>
-
-          {car && diff && (
-            <div className="diff" key={`diff-${car.id}`}>
-              <span className="diff-title">Вместо {prev.model}:</span>
-              {diff.map((d) => <span key={d.text} className={`diff-item ${d.good ? 'good' : 'bad'}`}>{d.good ? '▲' : '▼'} <CountText text={d.text} /></span>)}
-              {query.prefs.length > 0 && <button className="link" onClick={() => change({ prefs: [] })}>Сбросить «Авто»</button>}
-            </div>
-          )}
-
           {car ? (
             <div className="pick-card">
               <div className="pick-heading">
                 <div className="muted">{paramsText(query) ? 'Под твои параметры' : 'Подобрали для тебя'} · {car.kind}</div>
                 <h1 className="pick-title swap-in" key={car.id}>{car.model}</h1>
-                <div className="pick-reason">{goal ? <><b>{goal.label}</b> — {goal.hint.toLowerCase()}</> : <>Подобрали машину для твоей поездки</>}</div>
+                <div className="pick-reason">{describeCar || 'Подобрали машину для твоей поездки'}{routeNotes.map((note) => <div className="pick-route-note" key={note}>{note}</div>)}{skipped.map((item) => <div className="pick-route-note" key={item.id}>Не удалось учесть: {item.label.toLowerCase()}</div>)}</div>
               </div>
+              <section className="pick-suggestions">
+                <h2>{recommendations.length ? 'Что для тебя важнее?' : alternatives.length ? 'Других преимуществ не нашли' : 'Это лучшая машина под твою задачу'}</h2>
+                <p className="muted">{recommendations.length ? 'Поездку учтём и покажем, что изменится' : 'Можно изменить параметры и посмотреть другие варианты'}</p>
+                <div className="pick-suggestion-tags">
+                  {recommendations.length ? recommendations.map((item) => <button type="button" className="pick-suggestion" key={item.car.id} onClick={() => choose(item.car.id)}><span>{item.label}</span><span className="muted">{priceDelta(car, item.car, query)}</span>{arrivalIcon(true)}</button>) : <><button type="button" className="pick-suggestion" onClick={() => setParamsOpen(true)}>Поискать дешевле {arrivalIcon(true)}</button><button type="button" className="pick-suggestion" onClick={() => setParamsOpen(true)}>Другие параметры {arrivalIcon(true)}</button></>}
+                </div>
+              </section>
               <PickGallery key={car.id} car={car} prev={prev} fav={fav} />
               <PickSpecs car={car} query={query} />
             </div>
@@ -1867,69 +1867,32 @@ export function E2({ query, setQuery, fav, onBack, onPick, openPicker }) {
             </div>
           )}
 
-          {car && tiles.length > 0 && (
-            <div className="alts">
-              <div className="why-title">Или глянь</div>
-              <div className="alt-grid">
-                {tiles.map((t) => (
-                  <button key={t.car.id} type="button" className="alt" onClick={() => choose(t.car.id)}>
-                    <span className="alt-photo photo-car" style={carPhoto(t.car)} />
-                    <b>{t.car.model}</b>
-                    <span className="muted">{t.note}</span>
-                    <span className="alt-foot">{priceDelta(car, t.car, query)}
-                      {t.car.stock > 0 && <span className="badge badge-hot">{stockText(t.car.stock)}</span>}</span>
-                  </button>
-                ))}
-              </div>
-              {more.length > 0 && <button type="button" className="btn-secondary alts-more" onClick={() => setMoreOpen(true)}>Показать ещё {more.length}</button>}
-            </div>
-          )}
         </div>
 
         <aside className="e2-aside">
           {car && (
             <div className="book-card">
-              {cells('cells-card')}
+              {cells()}
               <div className="book-sum">
                 <div className="price-big">{rub(tripTotal(car, query))}</div>
                 <div className="muted">за {unitsText(query)}{query.extraIds.length ? ', с допами' : ''}{isNow(query) && location ? ` · подадим через ${location.etaMin + car.etaAdd} мин` : ''}</div>
               </div>
-              <button className="btn-primary" onClick={() => onPick(car.id)}>Подобрать допы</button>
+              <button className="btn-primary" onClick={startExtras}>Подобрать допы</button>
               <div className="book-note muted">✓ Бесплатная отмена за 48 ч</div>
             </div>
           )}
-          <div className="why">
-            <div className="why-title">Что учли</div>
-            <ul className="why-list">{reasons.map((r, i) => <li key={i}>{r}</li>)}</ul>
-          </div>
+
         </aside>
       </div>
 
       {assessmentId && <CarAssessment key={assessmentId} car={cars.find((item) => item.id === assessmentId)} goal={goal}
         onComplete={() => chooseNow(assessmentId)} onDismiss={() => setAssessmentId(null)} />}
       {paramsOpen && <ParamsPicker query={query} onApply={(patch) => { change(patch); setParamsOpen(false) }} onClose={() => setParamsOpen(false)} />}
-      {datesOpen && <DatePicker query={query} onClose={() => setDatesOpen(false)}
-        onApply={(patch) => { change({ ...patch, mode: 'days' }); setDatesOpen(false) }} />}
-      {moreOpen && (
-        <Sheet className="sheet-full sheet-modal" onClose={() => setMoreOpen(false)}>
-          <div className="picker-head">
-            <button className="icon-btn" aria-label="Закрыть" onClick={() => setMoreOpen(false)}><Arrow dir="left" /></button>
-            <h2>{goal ? `Ещё под «${goal.label.toLowerCase()}»` : 'Ещё машины'}</h2>
-          </div>
-          <div className="more-list">
-            {more.map(({ car: c, av }) => (
-              <button key={c.id} type="button" className={`more-row ${av !== 'ok' ? 'off' : ''}`} disabled={av !== 'ok'} onClick={() => choose(c.id)}>
-                <span className="more-photo photo-car" style={carPhoto(c)} />
-                <span className="more-text"><b>{c.model}</b>
-                  <span className="muted">{av === 'sold' ? 'На эти даты все уехали' : av === 'place' ? 'Нет в этой точке' : goods(car, c, query).slice(0, 2).join(', ') || c.kind}</span></span>
-                <span className="more-side">{av === 'ok' ? priceDelta(car, c, query) : '—'}
-                  {av === 'ok' && c.stock > 0 && <span className="badge badge-hot">{stockText(c.stock)}</span>}
-                  {av === 'sold' && <span className="badge badge-muted">Разобрали</span>}</span>
-              </button>
-            ))}
-          </div>
-        </Sheet>
-      )}
+      {placeOpen && <PlacePicker query={query} group="all" onClose={() => { setPlaceOpen(false); setContinueToExtras(false) }}
+        onPick={(place, address = '') => { const next = { ...query, locationId: place.id, cityId: place.city, address }; setQuery(next); setPlaceOpen(false); if (continueToExtras) continueWith(next) }} />}
+      {datesOpen && <DatePicker query={query} onClose={() => { setDatesOpen(false); setContinueToExtras(false) }}
+        onApply={(patch) => { const next = { ...query, ...patch, mode: 'days' }; setQuery(next); setDatesOpen(false); if (continueToExtras) continueWith(next) }} />}
+
     </main>
   )
 }

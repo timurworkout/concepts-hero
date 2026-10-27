@@ -1144,3 +1144,27 @@ label.wz-seg, .wz-seg-btn { display: flex; flex-direction: column; align-items: 
   .sheet-dates .month { margin-top: 12px; }
   .sheet-dates .month-name { margin-bottom: 8px; }
 }
+
+/* Экран подбора: одна машина и управление параметрами поездки */
+.e2 .pick-suggestions { border-top: 1px solid var(--ink); padding-top: 20px; margin: 24px 0; }
+.e2 .pick-suggestions h2 { margin: 0 0 6px; font-size: 20px; }
+.e2 .pick-suggestions p { margin: 0 0 14px; }
+.pick-suggestion-tags { display: flex; flex-wrap: wrap; gap: 8px; }
+.pick-suggestion { display: inline-flex; align-items: center; gap: 8px; border: 1px solid var(--ink); border-radius: var(--r-full); padding: 10px 14px; background: var(--plate); text-align: left; }
+.pick-suggestion:hover { background: var(--ink); color: var(--plate); }
+.pick-suggestion:hover .muted { color: var(--plate); }
+.arrival-icon { width: 18px; height: 18px; flex: none; fill: none; stroke: currentColor; stroke-width: 1.2; }
+.pick-route-note { margin-top: 5px; color: var(--muted); font-size: 14px; }
+.e2 .book-card { background: var(--plate); }
+.e2 .cells-card { display: grid; }
+.e2 .cells-card .cell { border-bottom: 1px solid var(--hairline); padding: 12px 0; }
+.e2 .cells-card .cell + .cell { border-top: 0; }
+.e2 .cells-card + .book-sum { border-top: 0; padding-top: 0; }
+@media (max-width: 743px) {
+  .e2 .e2-layout { display: grid; }
+  .e2 .e2-main, .e2 .e2-aside { display: grid; }
+  .e2 .e2-aside { position: static; }
+  .e2 .book-card { position: static; display: grid; grid-template-columns: 1fr; padding: 20px; clip-path: none; filter: none; }
+  .e2 .book-card .book-note { display: block; order: initial; }
+  .e2 .book-card .btn-primary { width: 100%; border-radius: 0; }
+}
