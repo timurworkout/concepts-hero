@@ -1449,6 +1449,7 @@ const placePhoto = {
   'spb-vyborg': ['Sergey A. Demidov', 'CC BY 4.0', 'File:20240522_Vyborg_Castle_182.jpg'],
 }
 const newPlacePhotos = {
+  'msk-ring': ['Aleksandr Artiushenko', 'Unsplash', 'https://unsplash.com/photos/a-snowy-landscape-with-a-church-in-the-distance-XGMZxXfY5hQ', 'https://images.unsplash.com/photo-1715252752412-6e39089fe66e?auto=format&fit=crop&w=1400&q=80'],
   'sochi-ski': ['Ilnur Kalimullin', 'Unsplash', 'https://unsplash.com/photos/white-snow-covered-mountain-under-white-cloudy-sky-during-daytime-VMrNha7YKGc', 'https://images.unsplash.com/photo-1627109921568-52b5be2a14ab?auto=format&fit=crop&w=1400&q=80'],
   'mmk-khibiny': ['Slava Auchynnikau', 'Unsplash', 'https://unsplash.com/photos/the-sun-is-setting-over-a-snowy-landscape-gy6V59JqqSU', 'https://images.unsplash.com/photo-1711631139867-199196f6d7e8?auto=format&fit=crop&w=1400&q=80'],
   'spb-ladoga': ['Michail Dementiev', 'Unsplash', 'https://unsplash.com/photos/an-aerial-view-of-islands-G_0vKsIdxyU', 'https://images.unsplash.com/photo-1662804118977-481122aa1d10?auto=format&fit=crop&w=1400&q=80'],
