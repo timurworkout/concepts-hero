@@ -1168,3 +1168,11 @@ label.wz-seg, .wz-seg-btn { display: flex; flex-direction: column; align-items: 
   .e2 .book-card .book-note { display: block; order: initial; }
   .e2 .book-card .btn-primary { width: 100%; border-radius: 0; }
 }
+
+/* Arrival: переход к направлению или месту получения */
+.dir-caption > .arrow-icon, .delivery-list .arrow-icon {
+  transform: rotate(-45deg);
+  stroke-width: 1.2;
+  stroke-linecap: square;
+  stroke-linejoin: miter;
+}
