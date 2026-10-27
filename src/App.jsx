@@ -1,4 +1,4 @@
-import { Fragment, useCallback, useEffect, useRef, useState } from 'react'
+import { Fragment, useCallback, useEffect, useLayoutEffect, useRef, useState } from 'react'
 import { createPortal } from 'react-dom'
 import { selectCars, rankCars, hasNumber, isAutomatic, savedCarIds, savedBookings } from './fleet.js'
 import EntryIntro, { hasSeenEntryIntro } from './EntryIntro.jsx'
@@ -52,8 +52,41 @@ export default function App() {
   const [, bump] = useState(0) // брони читаются из хранилища — перерисовка после изменения
   const afterLogin = useRef(null)
   const bookingInProgress = useRef(false)
+  const transitionSource = useRef(null)
 
   useEffect(() => { window.scrollTo(0, 0) }, [screen, pickedCarId])
+
+  useLayoutEffect(() => {
+    const from = transitionSource.current
+    if (!from) return
+    transitionSource.current = null
+    const target = screen === 'e3'
+      ? [...document.querySelectorAll('.e3 .book-tile-car img')].find((el) => el.getClientRects().length > 0)
+      : screen === 'e2' ? document.querySelector('.e2 .pick-photo') : null
+    if (!target) return
+    const to = target.getBoundingClientRect()
+    const chosen = cars.find((car) => car.id === from.carId)
+    const differentCar = screen === 'e2' && chosen && ![chosen.heroImage, chosen.image, ...chosen.gallery].filter(Boolean).some((path) => target.style.backgroundImage.includes(path))
+    if (reducedMotion() || differentCar || !from.rect.width || !to.width) {
+      const fade = target.animate([{ opacity: 0 }, { opacity: 1 }], { duration: 200 })
+      return () => fade.cancel()
+    }
+    const clone = document.createElement('div')
+    clone.className = 'extras-flying'
+    Object.assign(clone.style, { left: `${from.rect.left}px`, top: `${from.rect.top}px`, width: `${from.rect.width}px`, height: `${from.rect.height}px`, backgroundImage: from.image })
+    document.body.appendChild(clone)
+    const previousVisibility = target.style.visibility
+    target.style.visibility = 'hidden'
+    const move = clone.animate([
+      { transform: 'translate(0,0) scale(1,1)' },
+      { transform: `translate(${to.left - from.rect.left}px,${to.top - from.rect.top}px) scale(${to.width / from.rect.width},${to.height / from.rect.height})` },
+    ], { duration: screen === 'e3' ? 700 : 500, easing: 'cubic-bezier(.22,1,.36,1)', fill: 'forwards' })
+    const content = screen === 'e3' ? document.querySelector('.e3 .e3-main') : null
+    const reveal = content?.animate([{ opacity: 0, transform: 'translateY(10px)' }, { opacity: 1, transform: 'translateY(0)' }], { duration: 450, delay: 180, easing: 'ease-out' })
+    const cleanup = () => { target.style.visibility = previousVisibility; clone.remove() }
+    move.finished.then(cleanup, cleanup)
+    return () => { reveal?.cancel(); move.cancel(); cleanup() }
+  }, [screen])
 
   // Избранное — в браузере, после входа — ещё и в аккаунте
   useEffect(() => {
@@ -77,7 +110,22 @@ export default function App() {
   const askLogin = (then, reason = 'login') => { afterLogin.current = then; setSheet(reason) }
   const toggleFav = (id) => setFavs((f) => (f.includes(id) ? f.filter((x) => x !== id) : [id, ...f]))
 
-  const openCar = (id, from) => { bookingInProgress.current = false; setPickedCarId(id); setCameFrom(from); setScreen('e3'); setSheet(null) }
+  const captureTransition = (next, carId) => {
+    transitionSource.current = null
+    window.scrollTo({ top: 0, behavior: 'instant' })
+    const source = next === 'e3' ? document.querySelector('.e2 .pick-photo')
+      : [...document.querySelectorAll('.e3 .book-tile-car img')].find((el) => el.getClientRects().length > 0)
+    if (!source) return
+    const rect = source.getBoundingClientRect()
+    const image = source.tagName === 'IMG' ? `url("${source.currentSrc || source.src}")` : getComputedStyle(source).backgroundImage
+    transitionSource.current = { rect, image, carId }
+  }
+  const openCar = (id, from) => {
+    if (from === 'e2' && screen === 'e2') captureTransition('e3', id)
+    else transitionSource.current = null
+    bookingInProgress.current = false; setPickedCarId(id); setCameFrom(from); setScreen('e3'); setSheet(null)
+  }
+  const returnToPicking = () => { captureTransition('e2', pickedCarId); setScreen('e2') }
   const home = () => { bookingInProgress.current = false; setBookingMotion(false); setQuery(emptyQuery); setScreen('e1') }
 
   // Брони живут в аккаунте: бронировать и смотреть их можно только после входа
@@ -111,7 +159,7 @@ export default function App() {
   )
   else if (screen === 'e3') page = (
     <E3 key={pickedCarId} query={query} setQuery={setQuery} carId={pickedCarId} cameFrom={cameFrom} fav={fav}
-      onBack={() => setScreen(cameFrom)} onPickOther={() => setScreen('e2')} openPicker={(g) => setSheet({ picker: g })}
+      onBack={() => cameFrom === 'e2' ? returnToPicking() : setScreen(cameFrom)} onPickOther={returnToPicking} openPicker={(g) => setSheet({ picker: g })}
       onBook={() => (user ? book(user) : askLogin(book, 'login-book'))} />
   )
   else if (screen === 'e2') page = (
