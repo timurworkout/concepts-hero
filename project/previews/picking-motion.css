@@ -1,0 +1,24 @@
+/* Только превью: старый подбор приложения остаётся прежним. */
+.preview-picking { color:var(--ink) }
+.preview-picking .pickgrid-bg { background:var(--paper) }
+.preview-picking .pickgrid-head strong { font-family:var(--display); font-weight:700 }
+.preview-picking .pickgrid-head span { color:var(--ink); font-weight:600; font-size:clamp(16px, 1.5vw, 20px) }
+.preview-picking .pickgrid-head { top:7vh; gap:8px }
+.picking-caption { display:grid; gap:6px; animation:caption-in .55s ease-out both }
+.picking-caption small { font-size:clamp(13px, 1.1vw, 15px); color:var(--muted); line-height:1.4 }
+@keyframes caption-in { from { opacity:0; transform:translateY(6px) } to { opacity:1; transform:none } }
+.preview-picking .pickgrid-tile { background-color:var(--plate);clip-path:polygon(var(--cut-sm) 0,100% 0,100% calc(100% - var(--cut-sm)),calc(100% - var(--cut-sm)) 100%,0 100%,0 var(--cut-sm));transition:transform .95s cubic-bezier(.22,1,.36,1),opacity .8s ease-out,filter .8s ease-out }
+.preview-picking .pickgrid-tile.win { box-shadow:none }
+.preview-picking.fly .pickgrid-tile.win { transition:transform .85s cubic-bezier(.22,1,.36,1) }
+.preview-picking .pickgrid-skip { color:var(--ink);background:var(--plate);border:1px solid var(--line);border-radius:var(--r-full);padding:10px 16px;right:var(--gutter);top:28px;bottom:auto }
+.preview-picking .pickgrid-skip small { opacity:.55;margin-left:8px }
+.preview-tools { position:fixed;z-index:70;bottom:0;inset-inline:0;display:flex;align-items:center;flex-wrap:wrap;gap:12px 18px;padding:14px 24px;background:var(--plate);border-top:1px solid var(--line);font-size:13px }
+.preview-name { font-family:var(--display);font-weight:600 }
+.preview-tools button { background:var(--ink);color:var(--paper);border:1px solid var(--ink);border-radius:999px;padding:9px 15px;font:inherit }
+.preview-tools label { display:flex;align-items:center;gap:7px;cursor:pointer }
+.preview-tools input { accent-color:var(--ink) }
+.preview-status { margin-left:auto;color:var(--muted) }
+body { padding-bottom:100px }
+body:has(.preview-picking) .preview-tools { display:none }
+@media(prefers-reduced-motion:reduce){.picking-caption{animation:none}}
+@media(max-width:743px){.preview-picking .pickgrid-head{top:10vh;left:24px;right:24px}.preview-picking .pickgrid-head strong{font-size:34px}.picking-caption small{max-width:300px;margin:auto}.preview-tools{padding:10px 16px;gap:8px 12px;font-size:11px}.preview-name{width:100%}.preview-status{display:none}.preview-picking .pickgrid-skip{top:20px;right:20px}.preview-picking .pickgrid-skip small{display:none}}

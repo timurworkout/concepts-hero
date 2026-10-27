@@ -1,0 +1,9 @@
+<!doctype html>
+<html lang="ru"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><title>ON MOVE — просмотр визарда</title>
+<style>*{box-sizing:border-box}body{margin:0;background:#e6e3da;color:#15181c;font:14px system-ui}header{display:flex;align-items:center;gap:12px;flex-wrap:wrap;padding:12px 20px;background:#fbfaf6;border-bottom:1px solid #d2cfc4}header span{margin-right:auto}button{font:inherit;padding:8px 14px;border:1px solid #15181c;background:transparent;border-radius:30px;color:inherit;cursor:pointer}button[aria-pressed=true]{background:#15181c;color:#f2efe8}#viewport{position:relative;margin:12px auto}iframe{border:0;position:absolute;top:0;left:0;transform-origin:top left;background:#f2efe8}small{color:#5d635f}</style></head>
+<body><header><span>ON MOVE · переходы визарда <small>Превью, ожидает одобрения</small></span><button id="desktop" aria-pressed="true">1440 · десктоп</button><button id="mobile" aria-pressed="false">390 · мобильный</button></header><div id="viewport"><iframe title="Превью переходов визарда" src="./wizard-motion.html"></iframe></div>
+<script type="module">
+let width=1440;const frame=document.querySelector('iframe'),viewport=document.querySelector('#viewport');
+function fit(){const height=width===390?844:900;const scale=Math.min(1,(innerWidth-24)/width,(innerHeight-86)/height);frame.style.width=width+'px';frame.style.height=height+'px';frame.style.transform=`scale(${scale})`;viewport.style.width=width*scale+'px';viewport.style.height=height*scale+'px'}
+for(const [id,w] of [['desktop',1440],['mobile',390]])document.getElementById(id).onclick=()=>{width=w;document.querySelector('#desktop').setAttribute('aria-pressed',String(w===1440));document.querySelector('#mobile').setAttribute('aria-pressed',String(w===390));fit()};addEventListener('resize',fit);fit();
+</script></body></html>

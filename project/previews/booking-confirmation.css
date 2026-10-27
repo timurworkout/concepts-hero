@@ -1,0 +1,7 @@
+/* Только превью: используются реальные экран оформления и финал. */
+.confirmation-preview.is-reduced .final-kick,.confirmation-preview.is-reduced .final-title,.confirmation-preview.is-reduced .final-map,.confirmation-preview.is-reduced .final-meet,.confirmation-preview.is-reduced .final-sms,.confirmation-preview.is-reduced .final-end{animation:confirmation-fade .2s ease-out both}
+@keyframes confirmation-fade{from{opacity:0}to{opacity:1}}
+@media(prefers-reduced-motion:reduce){.confirmation-preview .final-kick,.confirmation-preview .final-title,.confirmation-preview .final-map,.confirmation-preview .final-meet,.confirmation-preview .final-sms,.confirmation-preview .final-end{animation:confirmation-fade .2s ease-out both}}
+.preview-tools{position:fixed;z-index:70;bottom:0;inset-inline:0;display:flex;align-items:center;flex-wrap:wrap;gap:12px 18px;padding:14px 24px;background:var(--plate);border-top:1px solid var(--line);font-size:13px}
+.preview-name{font-family:var(--display);font-weight:600}.preview-tools button{background:var(--ink);color:var(--paper);border:1px solid var(--ink);border-radius:999px;padding:9px 15px;font:inherit}.preview-tools label{display:flex;align-items:center;gap:7px}.preview-tools input{accent-color:var(--ink)}.preview-status{margin-left:auto;color:var(--muted)}body{padding-bottom:100px}body:has(.overlay) .preview-tools{display:none}
+@media(max-width:743px){.preview-tools{padding:10px 16px;gap:8px 12px;font-size:11px}.preview-name{width:100%}.preview-status{display:none}.e3-bar{bottom:95px}}
