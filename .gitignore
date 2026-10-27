@@ -3,3 +3,11 @@ course/
 .env
 node_modules/
 dist/
+*storybook.log
+
+# Impeccable: в репозитории только конфиги, остальное — локальное состояние и тяжёлые скриншоты ревью
+.impeccable/*
+!.impeccable/config.json
+!.impeccable/live/
+.impeccable/live/*
+!.impeccable/live/config.json
