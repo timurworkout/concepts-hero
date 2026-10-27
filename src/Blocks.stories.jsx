@@ -1,3 +1,4 @@
+import { ActionIcon, Arrow } from './App.jsx'
 import { promises, faq } from './data.js'
 
 /** Основные блоки лендинга: кикер, кнопки, вкладки городов, обещания, строки доставки, FAQ. */
@@ -15,6 +16,7 @@ export const Кнопки = () => (
     <h2 style={{ fontFamily: 'var(--display)', textTransform: 'uppercase', marginBottom: 20 }}>Кнопки</h2>
     <div style={{ display: 'flex', gap: 16, flexWrap: 'wrap', alignItems: 'center', marginBottom: 28 }}>
       <button type="button" className="btn-primary">Основная</button>
+      <button type="button" className="btn-primary btn-accent">Подобрать машину</button>
       <button type="button" className="btn-secondary">Вторичная</button>
       <button type="button" className="filter">Фильтр</button>
       <button type="button" className="filter active">Фильтр включён</button>
@@ -63,9 +65,7 @@ export const Доставка = () => (
           <li key={t}>
             <button type="button">
               <span>{t}</span>
-              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6" aria-hidden="true">
-                <path d="M5 12h14M13 6l6 6-6 6" />
-              </svg>
+              <Arrow />
             </button>
           </li>
         ))}
@@ -86,5 +86,26 @@ export const Вопросы = () => (
         ))}
       </div>
     </div>
+  </Shell>
+)
+
+export const АкцентныеКнопки = () => (
+  <Shell title="Акцентные кнопки">
+    <div style={{ display: 'flex', flexWrap: 'wrap', gap: 16, alignItems: 'center' }}>
+      <button type="button" className="btn-primary btn-accent">Подобрать машину</button>
+      <button type="button" className="btn-primary btn-accent btn-with-icon">Открыть <ActionIcon /></button>
+      <button type="button" className="btn-primary btn-accent btn-with-icon">Добавить <ActionIcon kind="add" /></button>
+      <button type="button" className="btn-primary btn-accent" disabled>Подобрать машину</button>
+    </div>
+  </Shell>
+)
+
+export const ИконкиДействий = () => (
+  <Shell title="Иконки действий · единая толщина 1,5 px">
+    <div style={{ display: 'flex', flexWrap: 'wrap', gap: 16 }}>
+      <button type="button" className="pick-suggestion"><span>Открыть направление</span><ActionIcon /></button>
+      <button type="button" className="pick-suggestion"><span>Добавить параметр</span><ActionIcon kind="add" /></button>
+    </div>
+    <p style={{ marginTop: 24 }}>Стрелка вверх-вправо — переход или новое окно. Плюс — добавление параметра или выбор опции.</p>
   </Shell>
 )

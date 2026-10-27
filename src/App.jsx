@@ -348,11 +348,15 @@ const onActivateKey = (e, go) => {
 }
 
 // Стрелки и шевроны — иконкой, а не символом шрифта
-function Arrow({ dir = 'right', chevron = false }) {
+export function Arrow({ dir = 'right', chevron = false }) {
   const d = chevron ? 'M9 5l7 7-7 7' : 'M4 12h16M14 6l6 6-6 6'
   return (
     <svg className={`arrow-icon ${dir === 'left' ? 'arrow-left' : ''}`} viewBox="0 0 24 24" aria-hidden="true"><path d={d} /></svg>
   )
+}
+
+export function ActionIcon({ kind = 'open' }) {
+  return <svg className="arrival-icon" viewBox="0 0 20 20" aria-hidden="true"><path d={kind === 'add' ? 'M10 3v14M3 10h14' : 'M5 15 15 5M5 5h10v10'} /></svg>
 }
 
 function Sheet({ className = '', onClose, children }) {
@@ -1813,7 +1817,7 @@ export function E2({ query, setQuery, fav, onBack, onPick, openPicker }) {
     if (nextCar) onPick(nextCar.id)
   }
   const startExtras = () => { setContinueToExtras(true); continueWith(query) }
-  const arrivalIcon = (selected) => <svg className="arrival-icon" viewBox="0 0 20 20" aria-hidden="true"><path d={selected ? 'M5 15 15 5M5 5h10v10' : 'M10 3v14M3 10h14'} /></svg>
+  const arrivalIcon = (selected) => <ActionIcon kind={selected ? 'open' : 'add'} />
   const cells = () => (
     <div className="cells cells-card">
       <button type="button" className="cell" onClick={() => setParamsOpen(true)}>

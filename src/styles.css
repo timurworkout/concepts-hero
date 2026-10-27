@@ -45,6 +45,7 @@
   --heart: var(--rec);
 
   /* ── Форма: углы у рамок, круг у контролов (intent.md §5.1) ── */
+  --icon-stroke: 1.5px;      /* стрелки действий и плюсы */
   --r-sm: 0px;
   --r-md: 0px;
   --r-lg: 0px;
@@ -228,7 +229,7 @@ h2 { font-family: var(--display); font-size: 21px; font-weight: 600; font-stretc
 .mode-toggle button { border: 0; background: transparent; padding: 8px 20px; border-radius: var(--r-full); font-size: 14px; font-weight: 500; color: var(--muted); }
 .search-row .mode-toggle button { color: #fff; padding: 10px 28px; font-size: 16px; }
 .mode-toggle button.active { background: var(--canvas); color: var(--ink); box-shadow: var(--shadow); }
-.search-row .mode-toggle button.active { background: var(--accent); color: #000; }
+.search-row .mode-toggle button.active { background: var(--accent); color: #fff; }
 .field { position: relative; display: grid; gap: 6px; }
 .field-label { font-size: 12px; font-weight: 600; color: var(--muted); }
 .field-pair { display: grid; grid-template-columns: 1fr 88px; gap: 8px; }
@@ -242,7 +243,7 @@ h2 { font-family: var(--display); font-size: 21px; font-weight: 600; font-stretc
 .btn-primary { height: 48px; border: 0; border-radius: var(--r-sm); background: var(--primary); color: #fff; font-size: 16px; font-weight: 500; padding: 0 24px; }
 .btn-primary:active { background: var(--primary-active); }
 .btn-primary:disabled { opacity: 0.4; cursor: default; }
-.btn-accent { height: auto; min-height: 64px; border-radius: var(--r-md); background: var(--accent); color: #000; font-weight: 700; padding: 0 32px; }
+.btn-accent { height: auto; min-height: 64px; border-radius: var(--r-md); background: var(--accent); color: #fff; font-weight: 700; padding: 0 32px; }
 .btn-accent:active { background: var(--accent-active); }
 .btn-secondary { height: 48px; border: 1px solid var(--ink); border-radius: var(--r-sm); background: var(--canvas); font-size: 16px; font-weight: 500; padding: 0 23px; }
 .btn-sm { height: 36px; padding: 0 15px; font-size: 14px; }
@@ -1153,7 +1154,7 @@ label.wz-seg, .wz-seg-btn { display: flex; flex-direction: column; align-items: 
 .pick-suggestion { display: inline-flex; align-items: center; gap: 8px; border: 1px solid var(--ink); border-radius: var(--r-full); padding: 10px 14px; background: var(--plate); text-align: left; }
 .pick-suggestion:hover { background: var(--ink); color: var(--plate); }
 .pick-suggestion:hover .muted { color: var(--plate); }
-.arrival-icon { width: 18px; height: 18px; flex: none; fill: none; stroke: currentColor; stroke-width: 1.2; }
+.arrival-icon { width: 18px; height: 18px; flex: none; fill: none; stroke: currentColor; stroke-width: var(--icon-stroke); vector-effect: non-scaling-stroke; }
 .pick-route-note { margin-top: 5px; color: var(--muted); font-size: 14px; }
 .e2 .book-card { background: var(--plate); }
 .e2 .cells-card { display: grid; }
@@ -1172,7 +1173,10 @@ label.wz-seg, .wz-seg-btn { display: flex; flex-direction: column; align-items: 
 /* Arrival: переход к направлению или месту получения */
 .dir-caption > .arrow-icon, .delivery-list .arrow-icon {
   transform: rotate(-45deg);
-  stroke-width: 1.2;
+  stroke-width: var(--icon-stroke); vector-effect: non-scaling-stroke;
   stroke-linecap: square;
   stroke-linejoin: miter;
 }
+
+.arrival-icon path, .dir-caption > .arrow-icon path, .delivery-list .arrow-icon path { vector-effect: non-scaling-stroke; }
+.btn-with-icon { display: inline-flex; align-items: center; justify-content: center; gap: 12px; }
