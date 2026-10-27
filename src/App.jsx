@@ -48,8 +48,10 @@ export default function App() {
   const [favs, setFavs] = useState(() => savedCarIds(load('favs', [])))
   const [sheet, setSheet] = useState(null) // 'favs' | 'login' | 'login-book' | { picker: группа }
   const [booking, setBooking] = useState(null) // бронь, которую показывает финал
+  const [bookingMotion, setBookingMotion] = useState(false)
   const [, bump] = useState(0) // брони читаются из хранилища — перерисовка после изменения
   const afterLogin = useRef(null)
+  const bookingInProgress = useRef(false)
 
   useEffect(() => { window.scrollTo(0, 0) }, [screen, pickedCarId])
 
@@ -75,8 +77,8 @@ export default function App() {
   const askLogin = (then, reason = 'login') => { afterLogin.current = then; setSheet(reason) }
   const toggleFav = (id) => setFavs((f) => (f.includes(id) ? f.filter((x) => x !== id) : [id, ...f]))
 
-  const openCar = (id, from) => { setPickedCarId(id); setCameFrom(from); setScreen('e3'); setSheet(null) }
-  const home = () => { setQuery(emptyQuery); setScreen('e1') }
+  const openCar = (id, from) => { bookingInProgress.current = false; setPickedCarId(id); setCameFrom(from); setScreen('e3'); setSheet(null) }
+  const home = () => { bookingInProgress.current = false; setBookingMotion(false); setQuery(emptyQuery); setScreen('e1') }
 
   // Брони живут в аккаунте: бронировать и смотреть их можно только после входа
   const bookings = savedBookings(user ? load('accounts', {})[user.phone]?.bookings : [])
@@ -88,9 +90,12 @@ export default function App() {
     bump((n) => n + 1)
   }
   const book = (u) => {
+    if (bookingInProgress.current) return
+    bookingInProgress.current = true
     const b = { id: String(Date.now()).slice(-4), carId: pickedCarId, query, total: tripTotal(cars.find((c) => c.id === pickedCarId), query), createdAt: Date.now(), cancelled: false }
     saveBookings(u.phone, (list) => [b, ...list])
     setBooking(b)
+    setBookingMotion(true)
     setScreen('final')
   }
   const cancelBooking = (id) => saveBookings(user.phone, (list) => list.map((b) => (b.id === id ? { ...b, cancelled: true } : b)))
@@ -98,10 +103,10 @@ export default function App() {
 
   const fav = { favs, toggleFav }
   let page
-  if (screen === 'final' && booking) page = <Final booking={booking} onHome={home} onBookings={openBookings} />
+  if (screen === 'final' && booking) page = <Final booking={booking} animate={bookingMotion} onHome={home} onBookings={openBookings} />
   else if (screen === 'bookings') page = (
     <Bookings bookings={bookings} onHome={home} onCancel={cancelBooking}
-      onShow={(b) => { setBooking(b); setScreen('final') }}
+      onShow={(b) => { setBookingMotion(false); setBooking(b); setScreen('final') }}
       onRepeat={(b) => { setQuery({ ...b.query, dateFrom: '', dateTo: '' }); setScreen('e2') }} />
   )
   else if (screen === 'e3') page = (
@@ -1087,6 +1092,7 @@ export function Wizard({ ref, query, setQuery, step, setStep, placeType, setPlac
   const pillRef = useRef(null)
   usePill(pillRef, query.mode)
   const inputRef = useRef(null)
+  const previousStep = useRef(null)
   const [panelLeft, setPanelLeft] = useState(0)
   const mobile = useMobile()
   const location = findPlace(query)
@@ -1096,6 +1102,31 @@ export function Wizard({ ref, query, setQuery, step, setStep, placeType, setPlac
   const segs = ['place', withReturn && 'return', 'when', 'params'].filter(Boolean)
   const next = (id) => segs[segs.indexOf(id) + 1]
   const go = (id) => { setStep(id); if (id === 'place') inputRef.current?.focus() }
+
+  // Одобренное превью: графитовый отклик и мягкая смена панелей без задержки шага.
+  useEffect(() => {
+    const previous = previousStep.current
+    previousStep.current = step
+    if (previous === step) return
+    const reduced = reducedMotion()
+    const animations = []
+    const segment = previous && barRef.current?.querySelector(`[data-seg="${previous}"]`)
+    if (segment && !reduced) animations.push(segment.animate(
+      [{ backgroundColor: 'var(--surface-strong)' }, { backgroundColor: 'transparent' }],
+      { duration: 260, easing: 'ease-out' },
+    ))
+    const panel = step && (mobile ? document.querySelector('.overlay .sheet') : rootRef.current?.querySelector('.wz-panel'))
+    let savedAnimation
+    if (panel) {
+      savedAnimation = panel.style.animation
+      panel.style.animation = 'none'
+      animations.push(panel.animate([{ opacity: 0 }, { opacity: 1 }], { duration: reduced ? 150 : 220, easing: 'ease-out' }))
+    }
+    return () => {
+      animations.forEach((animation) => animation.cancel())
+      if (panel) panel.style.animation = savedAnimation
+    }
+  }, [step, mobile])
 
   // Фильтр с плитки живёт, пока открыт шаг места
   useEffect(() => { if (step !== 'place') setPlaceType?.(null) }, [step, setPlaceType])
@@ -1495,91 +1526,83 @@ function WhereYouAre({ onPick }) {
 
 // Показывает логику подбора по шагам, как в «Что учли», и уходит на Э2 сама или по клику
 function Picking({ query, onDone }) {
-  // Сетка всех машин сужается до подобранной, и она перелетает на место главного фото Э2.
-  // Механика из рефа Дениса (shoe-finder): лишние рассыпаются, подходящие съезжаются, победитель выходит вперёд
-  const res = pickCar(query)
-  const { goal, places, companion, skipped, car, fit, count } = res
+  const { goal, car, fit, count } = pickCar(query)
   const pool = cars.filter((c) => availability(c, query.locationId) === 'ok' && inCity(c, query.cityId))
   const top = car ? [car, ...fit.filter((c) => c.id !== car.id)].slice(0, 9) : []
-  const topIds = top.map((c) => c.id)
-  const why = goal ? `${goal.label} → ${goal.hint}` : 'Подбираем машину для твоей поездки'
-  const who = [...places, companion].filter((s) => s && !skipped.includes(s)).map((s) => s.label).join(', ')
-  const caps = [
-    `${pool.length} машин ${query.cityId ? cities[query.cityId].in : ''}`,
-    nb(why.toLowerCase()),
-    nb(`${who ? who.toLowerCase() + ' → ' : ''}сопоставляем с поездкой`),
-    'Твоя машина',
+  const locationText = query.cityId && cities[query.cityId] ? `Смотрим, что есть ${cities[query.cityId].in}` : 'Смотрим доступные машины'
+  const features = car && [car.model, car.drive && `${car.drive} привод`, hasNumber(car.clearance) && `клиренс ${car.clearance} мм`].filter(Boolean).join(' · ')
+  const resultText = car ? features : 'Попробуй изменить параметры поездки'
+  const caps = goal?.id === 'mountains' ? [
+    ['Едешь в горы', locationText],
+    ['Для гор нужен полный привод', 'Проверяем, у каких машин он есть'],
+    ['Сверяем клиренс', `От 180 мм. С учётом твоих параметров подходят ${count} из ${pool.length}`],
+    [car ? 'Нашли. Вот она' : 'Подходящих машин не нашлось', resultText],
+  ] : [
+    ['Смотрим машины для поездки', locationText],
+    [goal?.label || 'Учитываем твои планы', goal?.hint || 'Смотрим подходящие характеристики'],
+    ['Сверяем характеристики', `С учётом параметров подходят ${count} из ${pool.length}`],
+    [car ? 'Нашли. Вот она' : 'Подходящих машин не нашлось', resultText],
   ]
   const [stage, setStage] = useState(0)
-  const num = useCountUp(stage === 0 ? pool.length : stage === 1 || stage === 2 ? count : 1, pool.length, 600)
-  const tiles = useRef({})
   const [fly, setFly] = useState(false)
+  const tiles = useRef({})
 
   useEffect(() => {
     const W = innerWidth, H = innerHeight, phone = W < 744
-    // Плитки в пропорции главного фото Э2 — тогда перелёт идёт одним масштабом, без искажений
+    const cols = phone ? 6 : 10, rows = Math.max(1, Math.ceil(pool.length / cols)), gap = phone ? 4 : 8
     const target = document.querySelector('.pick-photo')?.getBoundingClientRect()
     const ratio = target ? target.width / target.height : 1.5
-    const cols = phone ? 6 : 10, rows = Math.ceil(pool.length / cols), gap = phone ? 4 : 8
-    const gTop = H * 0.22, avail = H - gTop - H * 0.08
-    const tw = Math.min((W * 0.9 - gap * (cols - 1)) / cols, ((avail - gap * (rows - 1)) / rows) * ratio), th = tw / ratio
-    const ox = (W - (cols * tw + (cols - 1) * gap)) / 2
-    const place = (el, x, y, k = 1) => { if (el) el.style.transform = `translate(${x}px,${y}px) scale(${k})` }
+    const tw = Math.min((W * .9 - gap * (cols - 1)) / cols, ((H * .60 - gap * (rows - 1)) / rows) * ratio)
+    const th = tw / ratio, ox = (W - (cols * tw + (cols - 1) * gap)) / 2
+    const place = (el, x, y, scale = 1) => { if (el) el.style.transform = `translate(${x}px,${y}px) scale(${scale})` }
     pool.forEach((c, i) => {
       const el = tiles.current[c.id]
-      el.style.width = tw + 'px'; el.style.height = th + 'px'
-      place(el, ox + (i % cols) * (tw + gap), gTop + Math.floor(i / cols) * (th + gap))
+      el.style.width = `${tw}px`; el.style.height = `${th}px`
+      place(el, ox + (i % cols) * (tw + gap), H * (phone ? .34 : .31) + Math.floor(i / cols) * (th + gap))
     })
-    const finish = () => onDone()
-    const onKey = (e) => e.key === 'Escape' && finish()
+    const timers = []
+    const later = (fn, ms) => timers.push(setTimeout(fn, ms))
+    const onKey = (event) => { if (event.key === 'Escape') onDone() }
     window.addEventListener('keydown', onKey)
-    const slow = reducedMotion()
-    const timers = slow ? [setTimeout(() => setFly(true), 900), setTimeout(finish, 1400)] : [
-      // 1. Фильтр: неподходящие гаснут, каждая со своей случайной задержкой
-      setTimeout(() => {
+    if (reducedMotion()) later(onDone, 200)
+    else if (!car) { later(() => setStage(3), 700); later(onDone, 1800) }
+    else {
+      later(() => {
         setStage(1)
-        pool.forEach((c) => {
+        pool.filter((c) => !top.some((item) => item.id === c.id)).forEach((c, i) => {
           const el = tiles.current[c.id]
-          if (topIds.includes(c.id)) return
-          el.style.transitionDelay = Math.random() * 300 + 'ms'
+          el.style.transitionDelay = `${(i % 8) * 60}ms`
           el.classList.add('gone')
-          el.style.transform += ' scale(.8)'
         })
-      }, 500),
-      // 2. Подходящие съезжаются в плотную сетку 3×3
-      setTimeout(() => {
+      }, 1100)
+      later(() => {
         setStage(2)
-        const n = Math.min(3, top.length), k = Math.min(W * 0.8 / (n * tw), H * 0.6 / (3 * th)) / 1.04, g = 10
-        const cw = tw * k, ch = th * k, x0 = (W - (n * cw + (n - 1) * g)) / 2
-        top.forEach((c, i) => place(tiles.current[c.id], x0 + (i % n) * (cw + g), H * 0.24 + Math.floor(i / n) * (ch + g), k))
-      }, 1300),
-      // 3. Победитель выходит вперёд, остальные приглушаются
-      setTimeout(() => {
-        setStage(3)
-        top.forEach((c) => tiles.current[c.id]?.classList.add(c.id === car.id ? 'win' : 'dim'))
-      }, 1900),
-      // 4. Перелёт на место главного фото Э2, заставка растворяется
-      setTimeout(() => {
+        const n = Math.min(3, top.length), scale = Math.min(W * .8 / (n * tw), H * .6 / (3 * th)) / 1.04, g = 10
+        const cw = tw * scale, ch = th * scale, x = (W - (n * cw + (n - 1) * g)) / 2
+        top.forEach((c, i) => place(tiles.current[c.id], x + (i % n) * (cw + g), H * (phone ? .35 : .31) + Math.floor(i / n) * (ch + g), scale))
+      }, 2400)
+      later(() => { setStage(3); top.forEach((c) => tiles.current[c.id]?.classList.add(c.id === car.id ? 'win' : 'dim')) }, 3500)
+      later(() => {
         setFly(true)
-        const el = tiles.current[car?.id], r = document.querySelector('.pick-photo')?.getBoundingClientRect()
-        top.forEach((c) => c.id !== car.id && tiles.current[c.id]?.classList.add('gone'))
-        if (el && r) place(el, r.left, r.top, r.width / tw)
-      }, 2500),
-      setTimeout(finish, 3300),
-    ]
+        const el = tiles.current[car.id], rect = document.querySelector('.pick-photo')?.getBoundingClientRect()
+        top.filter((c) => c.id !== car.id).forEach((c) => tiles.current[c.id]?.classList.add('gone'))
+        if (el && rect) place(el, rect.left, rect.top, rect.width / tw)
+      }, 4400)
+      later(onDone, 5300)
+    }
     return () => { timers.forEach(clearTimeout); window.removeEventListener('keydown', onKey) }
   }, [])
 
   return createPortal(
     <div className={`pickgrid ${fly ? 'fly' : ''}`} role="status" aria-live="polite" onClick={onDone}>
       <div className="pickgrid-bg" />
-      <div className="pickgrid-head"><strong>{num}</strong><span>{caps[stage]}</span></div>
-      {pool.map((c) => (
-        <div key={c.id} ref={(el) => { tiles.current[c.id] = el }} className="pickgrid-tile photo-car" style={carPhoto(c, c.id === car?.id ? 'lg' : 'sm')} />
-      ))}
-      <button type="button" className="pickgrid-skip" onClick={(e) => { e.stopPropagation(); onDone() }}>Пропустить</button>
-    </div>,
-    document.body,
+      <div className="pickgrid-head">
+        <strong>{stage < 2 ? pool.length : stage === 3 ? Number(Boolean(car)) : count}</strong>
+        <div className="picking-caption" key={stage}><span>{caps[stage][0]}</span><small>{caps[stage][1]}</small></div>
+      </div>
+      {pool.map((c) => <div key={c.id} ref={(el) => { tiles.current[c.id] = el }} className="pickgrid-tile photo-car" style={carPhoto(c, c.id === car?.id ? 'lg' : 'sm')} />)}
+      <button type="button" className="pickgrid-skip" onClick={(e) => { e.stopPropagation(); onDone() }}>Пропустить <small>Esc</small></button>
+    </div>, document.body,
   )
 }
 
@@ -1681,11 +1704,12 @@ function CarAssessment({ car, goal, onComplete, onDismiss }) {
   )
 }
 
-function E2({ query, setQuery, fav, onBack, onPick, openPicker }) {
+export function E2({ query, setQuery, fav, onBack, onPick, openPicker }) {
   const [prev, setPrev] = useState(null) // машина до последнего переключения
   const [pickedId, setPickedId] = useState(null) // выбрал из альтернатив вручную
   const [datesOpen, setDatesOpen] = useState(false)
   const [moreOpen, setMoreOpen] = useState(false)
+  const [assessmentId, setAssessmentId] = useState(null)
   const res = pickCar(query)
   const { goal, places, companion, active, fit } = res
   const car = fit.find((c) => c.id === pickedId) ?? res.car
@@ -1698,7 +1722,12 @@ function E2({ query, setQuery, fav, onBack, onPick, openPicker }) {
     setPickedId(null)
     setQuery((q) => ({ ...q, ...patch }))
   }
-  const choose = (id) => { setPrev(car); setPickedId(id); setMoreOpen(false); window.scrollTo({ top: 0, behavior: 'smooth' }) }
+  const chooseNow = (id) => { setPrev(car); setPickedId(id); setMoreOpen(false); window.scrollTo({ top: 0, behavior: reducedMotion() ? 'auto' : 'smooth' }) }
+  const choose = (id) => {
+    setMoreOpen(false)
+    if (reducedMotion()) chooseNow(id)
+    else setAssessmentId(id)
+  }
   const togglePref = (id) => change({ prefs: query.prefs.includes(id) ? query.prefs.filter((x) => x !== id) : [...query.prefs, id] })
 
   const reasons = []
@@ -1824,6 +1853,8 @@ function E2({ query, setQuery, fav, onBack, onPick, openPicker }) {
         </aside>
       </div>
 
+      {assessmentId && <CarAssessment key={assessmentId} car={cars.find((item) => item.id === assessmentId)} goal={goal}
+        onComplete={() => chooseNow(assessmentId)} onDismiss={() => setAssessmentId(null)} />}
       {paramsOpen && <ParamsPicker query={query} onApply={(patch) => { change(patch); setParamsOpen(false) }} onClose={() => setParamsOpen(false)} />}
       {datesOpen && <DatePicker query={query} onClose={() => setDatesOpen(false)}
         onApply={(patch) => { change({ ...patch, mode: 'days' }); setDatesOpen(false) }} />}
@@ -1879,7 +1910,7 @@ function CarGallery({ car }) {
   )
 }
 
-function E3({ query, setQuery, carId, cameFrom, fav, onBack, onPickOther, openPicker, onBook }) {
+export function E3({ query, setQuery, carId, cameFrom, fav, onBack, onPickOther, openPicker, onBook }) {
   const car = cars.find((c) => c.id === carId)
   const d = carDetails[car.id]
   const location = findPlace(query)
@@ -2177,7 +2208,7 @@ function Login({ onLogin }) {
 
 /* ---------- Финал: машина ждёт, конец концепта ---------- */
 
-function Final({ booking, onHome, onBookings }) {
+export function Final({ booking, onHome, onBookings, animate = false }) {
   const { query } = booking
   const car = cars.find((c) => c.id === booking.carId)
   const location = findPlace(query)
@@ -2186,7 +2217,7 @@ function Final({ booking, onHome, onBookings }) {
   const sms = `Машина ждёт тебя: ${car.model}, ${location.name}, ${startText}.${inCar.length ? ` ${inCar.map((x) => x.name.replace(/\s+в\s+машине$/, '')).join(', ')} — уже внутри.` : ''} Открыть: rent.ru/b/${booking.id}`
 
   return (
-    <main className="final">
+    <main className={`final ${animate ? 'final-confirmation' : ''}`}>
       <div className="final-in">
         <div>
           <div className="final-kick">Забронировано</div>
