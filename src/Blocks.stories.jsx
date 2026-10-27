@@ -54,7 +54,7 @@ export const Обещания = () => (
 
 export const Доставка = () => (
   <Shell title="Доставка">
-    <div className="delivery-plate cut-both" style={{ maxWidth: 460 }}>
+    <div className="delivery-plate cut-both" style={{ position: 'relative', left: 'auto', bottom: 'auto', width: '100%', maxWidth: 460 }}>
       <p className="kicker">Доставка</p>
       <h2>Машина там,<br />где ты</h2>
       <p>Привезём к аэропорту, вокзалу или к дверям отеля.</p>

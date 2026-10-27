@@ -3,7 +3,7 @@
 Концепт для курса по созданию концептов с ИИ: лендинг аренды авто для путешествий по России. Идея и решения — в [project/concept-idea.md](project/concept-idea.md).
 
 - **Лендинг:** https://timurworkout.github.io/concepts-hero/
-- **Витрина «Табло»:** https://timurworkout.github.io/concepts-hero/storybook/ — токены, визард с живой механикой, блоки лендинга. Локально: `npm run storybook` (порт 6006).
+- **Витрина «Табло»:** https://timurworkout.github.io/concepts-hero/storybook/ — токены, все панели визарда, блоки лендинга и полный сценарий приложения; мобильные примеры — 390 px. Локально: `npm run storybook` (порт 6006).
 
 Оба адреса обновляются автоматически при пуше в `main`.
 

@@ -6,7 +6,7 @@ import { locations, locationGroups, cars, nb, rub, carDetails, rentTerms, cities
 
 const carPhoto = (c, size = 'sm') => ({ backgroundImage: c ? `url(${import.meta.env.BASE_URL}${size === 'lg' ? c.heroImage : c.image})` : undefined })
 
-const emptyQuery = {
+export const emptyQuery = {
   cityId: '', // город спрашиваем первым шагом формы
   locationId: '',
   mode: 'days', // 'hours' | 'days'

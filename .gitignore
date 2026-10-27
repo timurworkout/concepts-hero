@@ -11,3 +11,5 @@ dist/
 !.impeccable/live/
 .impeccable/live/*
 !.impeccable/live/config.json
+
+storybook-static/

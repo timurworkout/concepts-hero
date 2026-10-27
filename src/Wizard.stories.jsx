@@ -1,16 +1,9 @@
 import { useState } from 'react'
-import { Wizard } from './App.jsx'
+import { Wizard, emptyQuery } from './App.jsx'
 
 /** Визард с настоящей механикой автоперехода: состояние держит обёртка, как в App. */
-export default { title: 'Табло/Визард' }
+export default { id: 'on-move-wizard', title: 'Табло/Визард' }
 
-const emptyQuery = {
-  cityId: '', locationId: '', mode: 'days',
-  dateFrom: '', timeFrom: '12:00', dateTo: '', timeTo: '12:00',
-  start: 'now', hours: 4,
-  planIds: [], companion: '', prefs: [], extraIds: [],
-  address: '', returnMode: 'same', returnId: '',
-}
 
 function Harness({ initialStep = null, query: initial = emptyQuery }) {
   const [query, setQuery] = useState(initial)
@@ -30,6 +23,13 @@ function Harness({ initialStep = null, query: initial = emptyQuery }) {
 
 export const Закрытый = () => <Harness />
 export const ШагМеста = () => <Harness initialStep="place" />
-export const ШагДат = () => <Harness initialStep="when" query={{ ...emptyQuery, cityId: 'sochi' }} />
-export const Мобильный = () => <Harness initialStep="place" />
-Мобильный.parameters = { viewport: { defaultViewport: 'mobile1' } }
+export const ШагДат = () => <Harness initialStep="when" query={{ ...emptyQuery, cityId: 'sochi', locationId: 'aer' }} />
+export const Возврат = () => <Harness initialStep="return" query={{ ...emptyQuery, cityId: 'sochi', locationId: 'aer', returnMode: 'point' }} />
+export const Параметры = () => <Harness initialStep="params" query={{ ...emptyQuery, cityId: 'sochi', locationId: 'aer' }} />
+export const Почасовая = () => <Harness initialStep="when" query={{ ...emptyQuery, cityId: 'sochi', locationId: 'aer', mode: 'hours' }} />
+export const MobilePlace = () => <Harness initialStep="place" />
+MobilePlace.storyName = 'Место — содержимое мобильного примера'
+export const Мобильный = () => (
+  <iframe title="Визард на экране 390 px" src={`${window.location.pathname}?id=on-move-wizard--mobile-place&viewMode=story`}
+    style={{ display: 'block', width: 390, maxWidth: '100%', height: 844, border: 0, margin: '0 auto' }} />
+)
