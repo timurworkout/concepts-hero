@@ -16,7 +16,7 @@ function rememberEntryIntro() {
   try { sessionStorage.setItem(sessionKey, '1') } catch { /* работает и без хранилища */ }
 }
 
-// Утверждённая сцена из project/previews/intro-preview.html: 5 секунд, с паузой перед раскрытием.
+// Утверждённая сцена, разбор по шагам — project/animations.md: 5 секунд, с паузой перед раскрытием.
 export default function EntryIntro({ full, onDone }) {
   const overlayRef = useRef(null)
 

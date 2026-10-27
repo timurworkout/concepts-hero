@@ -1,0 +1,33 @@
+<!doctype html>
+<html lang="ru">
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>ON MOVE — Stencil studies</title>
+<style>
+*{box-sizing:border-box}body{margin:0;background:#eeeee8;color:#222720;font:14px/1.5 Arial,sans-serif}header,main,footer{max-width:1440px;margin:auto;padding:40px 5vw}header{display:flex;justify-content:space-between;align-items:end}h1{font-size:26px;font-weight:400;margin:0;letter-spacing:-1px}header p{margin:0;color:#787d73;font-size:12px}main{padding-top:12px}.study{margin-bottom:70px}.caption{display:flex;justify-content:space-between;gap:24px;margin:0 0 16px}.caption h2{font-weight:400;font-size:16px;margin:0}.caption p{max-width:440px;color:#73786e;margin:0;font-size:13px}.hero{aspect-ratio:2.6;position:relative;overflow:hidden;display:flex;align-items:center;justify-content:center;color:#fff;background:#283b3b}.hero::before{content:'';position:absolute;inset:0;background:linear-gradient(180deg,#061c2333,#061c2377),url('../hero/d.webp') center 54%/cover}.hero.b::before{background:linear-gradient(180deg,#17251a55,#17251aaa),url('../hero/d.webp') center 80%/cover;filter:saturate(.5)}.logo{width:77%;position:relative;display:block;overflow:visible}.eyebrow,.baseline{position:absolute;left:0;right:0;text-align:center;font-size:11px;letter-spacing:.2em}.eyebrow{top:12%}.baseline{bottom:10%}.baseline:before{content:'';display:block;width:56px;height:3px;background:currentColor;margin:0 auto 20px}.swatches{display:grid;grid-template-columns:1fr 1fr}.swatch{min-height:180px;display:flex;align-items:center;justify-content:center;background:#e0e2d9;color:#26332c}.swatch.dark{background:#1f2c29;color:#f0f1e9}.swatch .logo{width:62%}.details{display:flex;align-items:center;justify-content:space-between;padding:18px 0;border-bottom:1px solid #cdd0c5;color:#74796f;font-size:11px;letter-spacing:.08em}.mini{width:150px;color:#26332c}.controls{display:flex;gap:8px}button{background:none;border:1px solid #bdc4b7;padding:8px 13px;font:inherit;font-size:11px;color:#46513f;cursor:pointer}button:hover{background:#d8ddce}footer{padding-top:0;color:#73786e;font-size:12px}svg{fill:currentColor}body.flat .hero::before{background:#283b33}body.flat .b::before{background:#555f49}@media(max-width:650px){header{align-items:start;gap:20px}header p{max-width:120px}.caption{display:block}.caption p{margin-top:8px}.hero{aspect-ratio:1.8}.swatch{min-height:110px}.swatch .logo{width:80%}.eyebrow,.baseline{font-size:8px}.baseline:before{margin-bottom:10px;width:35px;height:2px}.details{flex-wrap:wrap;gap:15px}main{padding-top:0}}
+</style>
+<header><div><h1>ON MOVE</h1><p style="margin-top:6px;max-width:none">Два эскиза леттеринга · 01—02</p></div><button onclick="document.body.classList.toggle('flat')">Фото / чистый фон</button></header>
+<main id="studies"></main>
+<footer>Буквы нарисованы в SVG: геометрия, открытые контуры и диагональные срезы. Фото — из текущего проекта. Эскизы для выбора направления.</footer>
+<script>
+const round='M50 0a50 50 0 1 0 0 100a50 50 0 1 0 0-100Zm0 17a33 33 0 1 1 0 66a33 33 0 1 1 0-66Z';
+const glyphs={
+O:round,
+N:'M0 0 68 63V0H85V100L0 22Z',
+M:'M0 100V0L50 52 100 0V100H83V39L50 74 17 39V100Z',
+V:'M0 0H20L50 65 80 0H100L50 100Z',
+E:'M0 0H70V17H17ZM0 42H70V59H0ZM17 83H70V100H0Z'
+};
+function logo(which){
+const pos=[0,122,265,387,509,631],letters='ONMOVE';
+let content=[...letters].map((l,i)=>`<g transform="translate(${pos[i]} 0)"><path fill-rule="evenodd" d="${glyphs[l]}"/></g>`).join('');
+if(which===1){content=`<defs><mask id="cut1"><path fill="white" d="M-5 -5H710V105H-5Z"/><path fill="black" d="M-5 70H105V81H-5ZM295 -2H307V102H295Z"/></mask></defs><g mask="url(#cut1)">${content}</g>`}
+else{content=`<defs><mask id="cut2"><path fill="white" d="M-5 -5H710V105H-5Z"/><path fill="black" d="M-10 69 715 19V32L-10 82Z"/></mask></defs><g mask="url(#cut2)">${content}</g>`}
+return `<svg class="logo" xmlns="http://www.w3.org/2000/svg" viewBox="0 -2 701 104" role="img" aria-label="ON MOVE">${content}</svg>`
+}
+const data=[['01 / OPEN TERRAIN','Ближе к референсу: круглая O, открытая N, трёхполосная E. Разрывы в O и M делают набор легче.','GO BEYOND THE ROUTINE'],['02 / CROSSING LINE','Диагональный разрез проходит через всё слово. Более собранный знак с общей траекторией движения.','ALWAYS IN MOTION']];
+data.forEach(([title,desc,tag],i)=>{const n=i+1;document.querySelector('main').insertAdjacentHTML('beforeend',`<section class="study"><div class="caption"><h2>${title}</h2><p>${desc}</p></div><div class="hero ${i?'b':''}"><span class="eyebrow">${tag}</span>${logo(n)}<span class="baseline">ON MOVE · НА МУВЕ</span></div><div class="swatches"><div class="swatch">${logo(n)}</div><div class="swatch dark">${logo(n)}</div></div><div class="details"><div class="mini">${logo(n)}</div><span>МАСШТАБ / МОНОХРОМ / SVG</span><button onclick="download(${n})">Скачать SVG ↗</button></div></section>`)});
+// Give every inline mask a unique ID so all instances render independently.
+document.querySelectorAll('svg').forEach((s,i)=>{const m=s.querySelector('mask');const old=m.id;m.id=old+'-'+i;s.querySelector('[mask]').setAttribute('mask','url(#'+m.id+')')});
+function download(n){const source=logo(n).replace('class="logo"','width="1402" height="208" style="color:#23312b"');const url=URL.createObjectURL(new Blob([source],{type:'image/svg+xml'}));const a=document.createElement('a');a.href=url;a.download=`on-move-${n}.svg`;a.click();setTimeout(()=>URL.revokeObjectURL(url),1000)}
+</script>
+</html>
