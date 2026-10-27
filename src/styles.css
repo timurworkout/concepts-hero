@@ -828,7 +828,7 @@ label.wz-seg, .wz-seg-btn { display: flex; flex-direction: column; align-items: 
 /* Панель получает программный фокус — браузерная обводка здесь лишняя */
 .wz-panel:focus { outline: none; }
 .wz-panel:focus-visible { outline: 2px solid var(--rec); outline-offset: -4px; }
-.wz-panel-wide { left: 0; right: 0; width: auto; max-height: none; padding: 20px 32px; }
+.wz-panel-wide { left: 0; right: 0; width: auto; padding: 20px 32px; }
 .wz-cap { font-family: var(--display); font-size: 12px; letter-spacing: .08em; text-transform: uppercase; color: var(--muted); margin: 4px 8px 10px; }
 .wz-item { display: flex; align-items: center; gap: 14px; width: 100%; border: 0; background: none; text-align: left; padding: 10px 8px; border-radius: var(--r-md); }
 .wz-item:hover, .wz-item.on { background: var(--surface-soft); }
@@ -1108,3 +1108,39 @@ label.wz-seg, .wz-seg-btn { display: flex; flex-direction: column; align-items: 
 
 /* Кадры подбора и перехода заполняются без боковых полей. */
 .e2 .pick-photo, .pick-photo-prev, .pickgrid-tile { background-size: cover; }
+
+/* Выбранный «Прямой»: одно сообщение и высокий визард. */
+.hero-inner { padding: 30px var(--gutter) 20px; gap: 24px; }
+.hero-copy { display: flex; align-items: center; justify-content: space-between; gap: 60px; }
+.hero-title { max-width: none; font-size: 48px; line-height: 1.04; letter-spacing: -.03em; text-transform: none; }
+.hero-title-line + .hero-title-line { padding-left: 0; }
+.hero-title em { color: var(--rec-text); }
+.hero-sub { max-width: 37ch; font-size: 16px; line-height: 1.5; }
+/* Компактнее только раскрытые панели, размеры полосы не меняем. */
+@media (min-width: 744px) {
+  .wz-panel { padding: 16px; max-height: min(560px, calc(100dvh - var(--wz-top, 420px) - 24px)); }
+  .wz-panel-wide { padding: 16px 26px; }
+  .wz-panel .day { height: 30px; }
+  .wz-panel .month-grid { row-gap: 3px; }
+  .wz-panel .wd { padding-block: 6px; }
+  .wz-month-head button, .wz-month-head > span:empty { height: 26px; }
+  .wz-foot { margin-top: 12px; padding-top: 12px; gap: 12px; }
+  .wz-foot .time-btn { padding-block: 6px; }
+  .wz-foot .btn-primary { height: 40px; }
+  .wz-panel .chips { margin-bottom: 12px; }
+  .wz-panel .chips-label { margin-bottom: 6px; }
+  .wz-panel .chip { padding-block: 6px; }
+  .wz-item { padding-block: 7px; }
+  .wz-ico { width: 40px; height: 40px; }
+}
+@media (max-width: 743px) {
+  .hero { margin: 0; }
+  .hero-inner { padding: 24px 20px 20px; gap: 24px; }
+  .hero-copy { display: block; }
+  .hero-title { font-size: 34px; line-height: 1.08; }
+  .hero-sub { font-size: 15px; line-height: 1.5; margin-top: 14px; max-width: 38ch; }
+  .sheet-dates .dates-title { padding-top: 18px; padding-bottom: 12px; }
+  .sheet-dates .day { height: 40px; }
+  .sheet-dates .month { margin-top: 12px; }
+  .sheet-dates .month-name { margin-bottom: 8px; }
+}

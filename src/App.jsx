@@ -189,7 +189,7 @@ export default function App() {
 
 /* ---------- Шапка, избранное, вход ---------- */
 
-function Header({ dark, user, favs, onHome, onFavs, onLogin, onLogout, bookingsCount, onBookings }) {
+export function Header({ dark, user, favs, onHome, onFavs, onLogin, onLogout, bookingsCount, onBookings }) {
   const [menu, setMenu] = useState(false)
   const menuRef = useRef(null)
   // Сердце в шапке подпрыгивает, когда в избранном прибавилось
@@ -214,12 +214,6 @@ function Header({ dark, user, favs, onHome, onFavs, onLogin, onLogout, bookingsC
         <span className="logo-on">ON</span>MOVE
       </button>
       <nav className="header-nav">
-        {/* Якоря по секциям лендинга — видны только на широком экране */}
-        <span className="header-nav-links">
-          <a href="#directions">Куда поедем</a>
-          <a href="#delivery">Где забрать</a>
-          <a href="#faq">Вопросы</a>
-        </span>
         <button ref={favHeart} className="header-btn" onClick={onFavs} aria-label={`Избранное: ${favs.length}`}>
           <Heart on={favs.length > 0} />
           <span className="header-label">Избранное</span>
@@ -1350,14 +1344,12 @@ function Landing({ query, setQuery, onSubmit }) {
     <main className="landing">
       <section className="hero">
         <div className="hero-inner">
-          <h1 className="hero-title">
-            <span className="hero-title-line">{'Скажи,'}</span>
-            <span className="hero-title-line">{'куда '}<em>едешь</em></span>
-          </h1>
-          <p className="hero-sub">Одна машина под твою поездку. С объяснением, почему она.</p>
-          <div className="hero-kicker">
-            <b>Подбор, не каталог</b>
-            <span>{'Машину подберём сами\u00a0— без 50 вкладок и сравнений.'}</span>
+          <div className="hero-copy">
+            <h1 className="hero-title">
+              <span className="hero-title-line">Скажи, куда.</span>
+              <span className="hero-title-line"><em>Машину найдём.</em></span>
+            </h1>
+            <p className="hero-sub">Расскажи о поездке — подберём одну машину и объясним почему. Без вечера в каталогах.</p>
           </div>
           <Wizard ref={formRef} query={query} setQuery={setQuery} step={step} setStep={setStep} placeType={placeType} setPlaceType={setPlaceType} onSubmit={submit} />
         </div>
