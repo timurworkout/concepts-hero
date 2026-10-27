@@ -35,6 +35,14 @@
 Как у Миши: токены (цвета, радиусы, шрифты) и компоненты на отдельной странице.
 Когда: сразу после рестайлинга (п. 1), до анимаций — на этапе «дизайн-система и полиш». Раньше — переделывать после смены стиля; позже — анимации будут собираться на неустоявшихся компонентах.
 
+## Потом — хвосты после переноса «Табло»
+
+- **Impeccable не прогонялся по лендингу.** CLI в проекте не установлен, `.impeccable/live/config.json` охватывает только `index.html` и `project/previews/**/*.html`, ревью в `.impeccable/reviews/layouts/` — по превью, а не по приложению. Отсюда и вылезли расхождения по радиусам, срезам и браузерным стилям кнопок. Решить: ставить ли `impeccable@4.8.0` в devDependencies и расширять ли `live/config.json` на собранный билд (`buildPath: "code"`).
+- **Незакоммиченное из других заходов:** `package.json` + `package-lock.json` (motion, storybook), `index.html`, `README.md`, `project/intent.md`, `project/references.md`, неотслеживаемые `.impeccable/`, `.storybook/`, `AGENTS.md`, `PRODUCT.md`, `public/fonts/`, `public/explorations/on-move-stencil.html`, `project/previews/onmove-layouts/`, `src/Tokens.stories.jsx`, `src/Wizard.stories.jsx`. Разобрать и разложить по отдельным коммитам.
+- **Экраны Login / Final / Bookings** не проверены на новой светлой палитре — там могли остаться тёмные плашки и pill-скругления от прошлого стиля, как было у липкой полосы поиска.
+- **Просвет под визардом на 1440.** Табло убрано, пустоту держат `padding-bottom: 20px` у `.hero-inner` и `padding-top: clamp(64px, 8vw, 118px)` у «Направлений» (~135px). По сетке ровно, но если глаз цепляется — поджать до ~80px.
+- **Возврат к Storybook** (п. 4) — сторисы `Tokens` и `Wizard` уже лежат в `src/`, но не подключены к рабочему процессу.
+
 ## На подумать
 
 - Одна «звёздная» машина или 2–3.

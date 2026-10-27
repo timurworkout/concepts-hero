@@ -161,6 +161,12 @@ function Header({ dark, user, favs, onHome, onFavs, onLogin, onLogout, bookingsC
         <span className="logo-on">ON</span>MOVE
       </button>
       <nav className="header-nav">
+        {/* Якоря по секциям лендинга — видны только на широком экране */}
+        <span className="header-nav-links">
+          <a href="#directions">Куда поедем</a>
+          <a href="#delivery">Где забрать</a>
+          <a href="#faq">Вопросы</a>
+        </span>
         <button ref={favHeart} className="header-btn" onClick={onFavs} aria-label={`Избранное: ${favs.length}`}>
           <Heart on={favs.length > 0} />
           <span className="header-label">Избранное</span>
@@ -1074,7 +1080,7 @@ const wizardWhen = (query) => query.mode === 'hours'
   ? `${query.start === 'now' ? 'Сейчас' : `Сегодня, ${query.start}`} · ${query.hours} ч`
   : query.dateFrom ? `${fmtDay(query.dateFrom)}, ${query.timeFrom} — ${query.dateTo ? `${fmtDay(query.dateTo)}, ${query.timeTo}` : '…'}` : ''
 
-function Wizard({ ref, query, setQuery, step, setStep, placeType, setPlaceType, onSubmit }) {
+export function Wizard({ ref, query, setQuery, step, setStep, placeType, setPlaceType, onSubmit }) {
   const [text, setText] = useState('')
   const barRef = useRef(null)
   const rootRef = useRef(null)
@@ -1108,6 +1114,11 @@ function Wizard({ ref, query, setQuery, step, setStep, placeType, setPlaceType, 
   useEffect(() => {
     const seg = barRef.current?.querySelector(`[data-seg="${step}"]`)
     if (seg) setPanelLeft(Math.max(0, Math.min(seg.offsetLeft, barRef.current.offsetWidth - 440)))
+    // Высота панели считается от её верхней кромки, чтобы календарь не уходил за край экрана
+    if (step && barRef.current) {
+      const top = barRef.current.getBoundingClientRect().bottom + 10
+      rootRef.current?.style.setProperty('--wz-top', `${Math.round(top)}px`)
+    }
   }, [step, withReturn])
 
   const pickPlace = (l, address = '') => {
@@ -1261,10 +1272,14 @@ function Landing({ query, setQuery, onSubmit }) {
       <section className="hero">
         <div className="hero-inner">
           <h1 className="hero-title">
-            <span className="hero-title-line">{'Скажи, куда едешь. '}</span>
-            <span className="hero-title-line">{'Машину подберём сами\u00a0— '}</span>
-            <span className="hero-title-line">{'без\u00a050\u00a0вкладок и\u00a0сравнений'}</span>
+            <span className="hero-title-line">{'Скажи,'}</span>
+            <span className="hero-title-line">{'куда '}<em>едешь</em></span>
           </h1>
+          <p className="hero-sub">Одна машина под твою поездку. С объяснением, почему она.</p>
+          <div className="hero-kicker">
+            <b>Подбор, не каталог</b>
+            <span>{'Машину подберём сами\u00a0— без 50 вкладок и сравнений.'}</span>
+          </div>
           <Wizard ref={formRef} query={query} setQuery={setQuery} step={step} setStep={setStep} placeType={placeType} setPlaceType={setPlaceType} onSubmit={submit} />
         </div>
       </section>
@@ -1272,21 +1287,41 @@ function Landing({ query, setQuery, onSubmit }) {
       <Directions onPick={(cityId, p) => { setQuery((q) => changeCity(q, cityId)); pickPlan(p) }} />
       <WhereYouAre onPick={pickPlaceType} />
 
-      <section className="section">
-        <h2>Без сюрпризов</h2>
+      <section className="section" id="promises">
+        <p className="kicker">Без сюрпризов</p>
+        <h2>{nb('Сюрпризы пусть будут в поездке')}</h2>
         <div className="promises">
-          {promises.map((p, i) => (
-            <div key={p.title} className="promise"><span className="promise-n">0{i + 1}</span><b>{p.title}</b><p>{p.text}</p></div>
+          {promises.map((p) => (
+            <div key={p.title} className="promise">
+              <div className="promise-value">{p.value}</div>
+              <b>{p.title}</b>
+              <p>{p.text}</p>
+            </div>
           ))}
         </div>
       </section>
 
-      <section className="section faq">
-        <h2>Что обычно спрашивают</h2>
-        {faq.map((f) => (
-          <details key={f.q}><summary>{f.q}</summary><p>{f.a}</p></details>
-        ))}
+      <section className="section faq" id="faq">
+        <div className="faq-grid">
+          <div>
+            <p className="kicker">Вопросы</p>
+            <h2>{nb('Что обычно спрашивают')}</h2>
+          </div>
+          <div className="faq-list">
+            {faq.map((f) => (
+              <details key={f.q}><summary>{f.q}</summary><p>{f.a}</p></details>
+            ))}
+          </div>
+        </div>
       </section>
+
+      <footer className="footer">
+        <button className="logo" onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })} aria-label="ON MOVE — наверх">
+          <span className="logo-on">ON</span>MOVE
+        </button>
+        <p>{nb('Учебный концепт сервиса аренды машин. Условия показаны как часть концепта.')}</p>
+        <button className="back-top" onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}>Наверх<Arrow /></button>
+      </footer>
 
       <StickySearch shown={!formVisible} query={query} onOpen={openStep} />
     </main>
@@ -1344,38 +1379,47 @@ function Directions({ onPick }) {
   const places = cityPlans(cityId).filter((p) => p.local).slice(0, 4)
   const fromPrice = (p) => Math.min(...cars.filter((c) => inCity(c, cityId) && p.test(c)).map((c) => cityPrice(c, cityId)))
   const goalLabel = (p) => plans.find((g) => g.id === p.goal)?.label
-  const all = Object.keys(cities).flatMap((id) => cityPlans(id).filter((p) => p.local).slice(0, 4))
   const city = (id) => { setCityId(id); setActive(0) }
   return (
-    <section className="dir">
-      {all.map((p) => (
-        <div key={p.id} className={`dir-bg ${p.id === places[active]?.id ? 'on' : ''}`} style={{ backgroundImage: placeImage(p.id) }} aria-hidden="true" />
-      ))}
-      <div className="dir-top">
-        <h2>{nb(`Куда съездить ${cities[cityId].from}`)}</h2>
-        <div className="dir-tabs" role="tablist" {...drag}>
-          {Object.entries(cities).map(([id, c]) => (
-            <button key={id} type="button" role="tab" aria-selected={id === cityId} className={`dir-tab ${id === cityId ? 'on' : ''}`} onClick={() => city(id)}>{c.name}</button>
-          ))}
+    <section className="dir" id="directions">
+      <div className="section-top">
+        <div>
+          <p className="kicker">Направления</p>
+          <h2>{nb('Хороший план — просто уехать')}</h2>
         </div>
+        <p>{nb('От города до мест, ради которых ты приехал. Покажи, куда хочется, — найдём подходящую машину.')}</p>
       </div>
-      {placePhoto[places[active]?.id] && (() => {
-        const [author, license, file] = placePhoto[places[active].id]
-        return <a className="dir-credit" href={`https://commons.wikimedia.org/wiki/${file}`} target="_blank" rel="noreferrer">Фото: {author} · {license}</a>
-      })()}
+      <div className="dir-tabs" role="tablist" {...drag}>
+        {Object.entries(cities).map(([id, c]) => (
+          <button key={id} type="button" role="tab" aria-selected={id === cityId} className={`dir-tab ${id === cityId ? 'on' : ''}`} onClick={() => city(id)}>{c.name}</button>
+        ))}
+      </div>
       <div className="dir-places" key={cityId}>
-        {places.map((p, i) => {
+        {places.slice(0, 3).map((p, i) => {
           const price = fromPrice(p)
           return (
-            <button key={p.id} type="button" style={{ '--i': i }} className={`dir-place ${i === active ? 'on' : ''}`}
+            <button key={p.id} type="button" style={{ '--i': i }} className="dir-place cut-both"
               onMouseEnter={() => setActive(i)} onFocus={() => setActive(i)} onClick={() => onPick(cityId, p)}>
+              <div className="dir-place-photo" style={{ backgroundImage: placeImage(p.id) }} />
+              <div className="dir-caption">
+                <div>
               {goalLabel(p) && <small>{goalLabel(p)}</small>}
               <b>{p.label}</b>
               <span className="dir-hint">{p.hint}</span>
               {Number.isFinite(price) && <span className="dir-price">от {rub(price)} в{' '}сутки</span>}
+                </div>
+                <Arrow />
+              </div>
             </button>
           )
         })}
+      </div>
+      <div className="dir-tail">
+        <span>{nb(`Куда съездить ${cities[cityId].from}`)}</span>
+        {placePhoto[places[active]?.id] ? (() => {
+          const [author, license, file] = placePhoto[places[active].id]
+          return <a className="dir-credit" href={`https://commons.wikimedia.org/wiki/${file}`} target="_blank" rel="noreferrer">Фото: {author} · {license}</a>
+        })() : <span>Выбери место — подберём машину<Arrow /></span>}
       </div>
     </section>
   )
@@ -1410,24 +1454,38 @@ const whereCopy = {
   'Парковка': 'Наш центр проката — забери сам, когда удобно',
 }
 
+// Как зовём точку в списке доставки: глаголом, а не типом места
+const deliveryCopy = {
+  'Аэропорт': 'Встретим в аэропорту',
+  'Отель': 'Привезём к отелю',
+  'Адрес': 'Подъедем по твоему адресу',
+  'Вокзал': 'Ждём у вокзала',
+  'Парковка': 'Заберёшь сам в центре проката',
+}
+
+// Доставка: кадр побережья, поверх — плита со списком точек. Клик уводит в визард с нужным типом места
 function WhereYouAre({ onPick }) {
-  const order = ['Адрес', 'Аэропорт', 'Вокзал', 'Отель', 'Парковка']
+  const order = ['Аэропорт', 'Отель', 'Адрес', 'Вокзал', 'Парковка']
   return (
-    <section className="section where">
-      <h2>Машина там, где ты</h2>
-      <p className="muted">Выбери, где удобнее забрать, — покажем точки в твоём городе и точное место встречи</p>
-      <div className="where-grid">
-        {order.map((type) => {
-          const g = locationGroups.find((x) => x.type === type)
-          return (
-            <button key={type} className="where-tile" onClick={() => onPick(type)}>
-              <span className="where-icon"><PlaceIcon type={g.type} /></span>
-              <b>{g.label}</b>
-              <span className="muted">{whereCopy[type]}</span>
-              <span className="where-go">Выбрать точку<Arrow /></span>
-            </button>
-          )
-        })}
+    <section className="delivery" id="delivery">
+      <div className="delivery-stage">
+        <img src={`${import.meta.env.BASE_URL}places/kgd-coast.webp`} alt="Балтийское побережье — море, песок и низкое небо" loading="lazy" />
+        <span className="stage-caption">Балтийское побережье</span>
+        <div className="delivery-plate cut-both">
+          <p className="kicker">Доставка</p>
+          <h2>Машина там,<br />где ты</h2>
+          <p>{nb('Привезём к аэропорту, вокзалу или к дверям отеля. Чемодан далеко нести не придётся.')}</p>
+          <ul className="delivery-list">
+            {order.map((type) => (
+              <li key={type}>
+                <button type="button" onClick={() => onPick(type)} title={whereCopy[type]}>
+                  <span>{deliveryCopy[type]}</span>
+                  <Arrow />
+                </button>
+              </li>
+            ))}
+          </ul>
+        </div>
       </div>
     </section>
   )
