@@ -28,6 +28,8 @@ jobs:
           cache: npm
       - run: npm ci
       - run: npm run build
+      # Витрина «Табло» едет рядом с лендингом: /concepts-hero/storybook/
+      - run: npm run build-storybook:pages
       - uses: actions/configure-pages@v5
       - uses: actions/upload-pages-artifact@v3
         with:

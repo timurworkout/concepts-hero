@@ -2,6 +2,7 @@
 export default {
   stories: ['../src/**/*.stories.jsx'],
   framework: { name: '@storybook/react-vite', options: {} },
-  // В приложении base = '/concepts-hero/', Storybook живёт в корне — иначе шрифты не найдутся
-  viteFinal: (config) => ({ ...config, base: '/' }),
+  // Локально Storybook живёт в корне, на Pages — в /concepts-hero/storybook/.
+  // Без своего base шрифты и ассеты не находятся: у приложения base другой.
+  viteFinal: (config) => ({ ...config, base: process.env.SB_BASE || '/' }),
 }
