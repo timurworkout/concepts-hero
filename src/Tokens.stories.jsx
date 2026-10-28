@@ -41,8 +41,32 @@ export const Шрифт = () => (
     <p style={{ fontFamily: 'var(--text)', fontSize: 16, maxWidth: 520, color: 'var(--body)' }}>
       Onest — связный текст. Одна машина под твою поездку, с объяснением, почему она. Живой текст набираем только им.
     </p>
+    <p style={{ fontFamily: 'var(--text)', fontSize: 14, maxWidth: 520, color: 'var(--body)' }}>
+      Правило: акцидентный шрифт — только капсом или от --fs-lg и крупнее. Некапсовый текст мельче — Onest.
+    </p>
   </Shell>
 )
+
+// Шкала читается из styles.css: поменяли значение там — поменялось здесь
+const sizes = ['--fs-xs', '--fs-sm', '--fs-md', '--fs-lg', '--fs-xl', '--fs-2xl', '--fs-3xl', '--fs-block', '--fs-section', '--fs-hero']
+
+export const Размеры = () => {
+  const root = getComputedStyle(document.documentElement)
+  return (
+    <Shell>
+      <h2>Размеры</h2>
+      <div style={{ display: 'grid', gap: 1, background: 'var(--line)', border: '1px solid var(--line)' }}>
+        {sizes.map((name) => (
+          <div key={name} style={{ display: 'grid', gridTemplateColumns: '120px 220px 1fr', gap: 16, alignItems: 'baseline', background: 'var(--paper)', padding: '12px 16px' }}>
+            <code style={{ fontSize: 13 }}>{name}</code>
+            <code style={{ fontSize: 13, color: 'var(--muted)' }}>{root.getPropertyValue(name).trim()}</code>
+            <span style={{ fontSize: `var(${name})`, lineHeight: 1.1 }}>Куда едешь</span>
+          </div>
+        ))}
+      </div>
+    </Shell>
+  )
+}
 
 export const СрезУгла = () => (
   <Shell>
