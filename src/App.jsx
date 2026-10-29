@@ -322,7 +322,7 @@ function Heart({ on }) {
   )
 }
 
-function FavToggle({ id, fav, className = '' }) {
+export function FavToggle({ id, fav, className = '' }) {
   const on = fav.favs.includes(id)
   const toggle = (e) => {
     e.stopPropagation()
@@ -427,7 +427,7 @@ function FavSheet({ query, fav, user, onLogin, onOpen, onClose }) {
   )
 }
 
-function LoginSheet({ forBooking, onLogin, onClose }) {
+export function LoginSheet({ forBooking, onLogin, onClose }) {
   return (
     <Sheet className="sheet-center" onClose={onClose}>
       <div className="sheet-head">
@@ -465,7 +465,7 @@ function PlaceIcon({ type }) {
   )
 }
 
-function PlacePicker({ query, group, onPick, onClose }) {
+export function PlacePicker({ query, group, onPick, onClose }) {
   const [cityId, setCityId] = useState(query.cityId || Object.keys(cities)[0])
   const [text, setText] = useState('')
   const groupRefs = useRef({})
@@ -553,7 +553,7 @@ const unitsText = (q) => { const u = rentUnits(q); return `${u.n} ${u.unit}` }
 const rentPrice = (car, q) => (q.mode === 'hours' ? car.pricePerHour * q.hours : car.pricePerDay * rentDays(q))
 // Допы за сутки в почасовой аренде считаем как одни сутки
 const extraCost = (x, q) => (x.per === 'day' ? x.price * (q.mode === 'hours' ? 1 : rentDays(q)) : x.price)
-const tripTotal = (car, q) => rentPrice(car, q) + extras.filter((x) => q.extraIds.includes(x.id)).reduce((s, x) => s + extraCost(x, q), 0)
+export const tripTotal = (car, q) => rentPrice(car, q) + extras.filter((x) => q.extraIds.includes(x.id)).reduce((s, x) => s + extraCost(x, q), 0)
 
 const fmtDate = (d) => new Date(d).toLocaleDateString('ru-RU', { day: 'numeric', month: 'short' })
 
@@ -763,7 +763,7 @@ const paramsText = (q) => [
   ...prefOptions.filter((o) => q.prefs.includes(o.id)).map((o) => o.label),
 ].filter(Boolean).map((t, i) => (i ? t.toLowerCase() : t)).join(' · ')
 
-function ParamsPicker({ query, onApply, onClose }) {
+export function ParamsPicker({ query, onApply, onClose }) {
   const [planIds, setPlanIds] = useState(query.planIds)
   const [companion, setCompanion] = useState(query.companion)
   const [prefs, setPrefs] = useState(query.prefs)
@@ -790,7 +790,7 @@ function ParamsPicker({ query, onApply, onClose }) {
   )
 }
 
-function ReturnPicker({ query, onApply, onClose }) {
+export function ReturnPicker({ query, onApply, onClose }) {
   const [mode, setMode] = useState(query.returnMode)
   const [id, setId] = useState(query.returnId)
   const location = findPlace(query)
@@ -828,7 +828,7 @@ function ReturnPicker({ query, onApply, onClose }) {
   )
 }
 
-function HoursPicker({ query, location, onApply, onClose }) {
+export function HoursPicker({ query, location, onApply, onClose }) {
   const [start, setStart] = useState(query.start)
   const [hours, setHours] = useState(query.hours)
   const starts = [['now', `Сейчас${location ? ` · за ${location.etaMin || 5} мин` : ''}`], ...hourSlots().map((t) => [t, t])]
@@ -890,7 +890,7 @@ function TimeSelect({ label, value, onChange }) {
   )
 }
 
-function DatePicker({ query, onApply, onClose }) {
+export function DatePicker({ query, onApply, onClose }) {
   const [from, setFrom] = useState(query.dateFrom)
   const [to, setTo] = useState(query.dateTo)
   const [timeFrom, setTimeFrom] = useState(query.timeFrom)
@@ -2083,7 +2083,7 @@ const fmtPhone = (digits) => {
   const d = digits.padEnd(10, '_')
   return `+7 ${d.slice(0, 3)} ${d.slice(3, 6)}-${d.slice(6, 8)}-${d.slice(8, 10)}`
 }
-function Login({ onLogin }) {
+export function Login({ onLogin }) {
   const [way, setWay] = useState('sms') // 'sms' | 'bank'
   const pillRef = useRef(null)
   usePill(pillRef, way)
@@ -2230,7 +2230,7 @@ function bookingStatus(b) {
 }
 const statusLabel = { up: 'Предстоит', now: 'Идёт', done: 'Завершена', cancel: 'Отменена' }
 
-function Bookings({ bookings, onHome, onShow, onRepeat, onCancel }) {
+export function Bookings({ bookings, onHome, onShow, onRepeat, onCancel }) {
   const [confirm, setConfirm] = useState(null)
   const active = bookings.filter((b) => ['up', 'now'].includes(bookingStatus(b)))
   const past = bookings.filter((b) => ['done', 'cancel'].includes(bookingStatus(b)))

@@ -2,7 +2,7 @@ import { useState } from 'react'
 import { Wizard, emptyQuery } from './App.jsx'
 
 /** Визард с настоящей механикой автоперехода: состояние держит обёртка, как в App. */
-export default { id: 'on-move-wizard', title: 'Табло/Визард' }
+export default { id: 'on-move-wizard', title: 'Блоки/Визард' }
 
 
 function Harness({ initialStep = null, query: initial = emptyQuery }) {
