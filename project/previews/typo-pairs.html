@@ -1,0 +1,54 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Пары шрифтов</title>
+<link href="https://fonts.googleapis.com/css2?family=Golos+Text:wght@400;500;600;700&family=Source+Serif+4:ital,opsz,wght@0,8..60,400;0,8..60,600;1,8..60,400&family=Literata:ital,opsz,wght@0,7..72,400;0,7..72,600;1,7..72,400&family=Spectral:ital,wght@0,400;0,600;1,400&display=swap" rel="stylesheet">
+<style>
+  body { margin: 0; background: #f4f1ea; color: #1d1917; font-family: 'Golos Text', sans-serif; }
+  .pair { padding: 64px 6vw; border-bottom: 1px solid #1d191722; }
+  .tag { font-size: 12px; letter-spacing: .12em; text-transform: uppercase; opacity: .5; margin-bottom: 32px; }
+  h1 { font-size: clamp(44px, 7vw, 104px); line-height: .98; font-weight: 400; margin: 0 0 28px; letter-spacing: -.02em; max-width: 14ch; }
+  h1 em { font-style: italic; }
+  h2 { font-size: clamp(28px, 3.4vw, 48px); line-height: 1.05; font-weight: 400; margin: 48px 0 12px; letter-spacing: -.01em; }
+  .lead { font-size: 20px; line-height: 1.4; max-width: 34ch; margin: 0 0 24px; }
+  .row { display: flex; gap: 12px; align-items: center; flex-wrap: wrap; }
+  .caps { font-size: 13px; font-weight: 600; letter-spacing: .1em; text-transform: uppercase; }
+  .btn { background: #1d1917; color: #f4f1ea; padding: 14px 22px; border-radius: 4px; font-size: 16px; font-weight: 500; }
+  .muted { opacity: .55; font-size: 15px; }
+  .card { margin-top: 32px; display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 16px; max-width: 900px; }
+  .card div { background: #fff; padding: 20px; border-radius: 6px; }
+  .card b { display: block; font-size: 24px; font-weight: 400; margin: 6px 0; }
+  .ss b, .ss h1, .ss h2 { font-family: 'Source Serif 4', serif; }
+  .li b, .li h1, .li h2 { font-family: 'Literata', serif; }
+  .sp b, .sp h1, .sp h2 { font-family: 'Spectral', serif; }
+  .go h1, .go h2, .go b { font-weight: 600; letter-spacing: -.04em; }
+</style>
+</head>
+<body>
+<script>
+  const pairs = [
+    ['ss', 'A · Source Serif 4 + Golos Text'],
+    ['li', 'B · Literata + Golos Text'],
+    ['sp', 'C · Spectral + Golos Text'],
+    ['go', 'Контроль · Golos Text на всё'],
+  ];
+  const nb = s => s.replace(/ (в|с|на|и|к|а|по|до|от|за) /g, ' $1 ');
+  for (const [cls, name] of pairs) document.write(`
+  <section class="pair ${cls}">
+    <div class="tag">${name}</div>
+    <h1>${nb('Машина ждёт, а <em>время</em> остаётся на места')}</h1>
+    <p class="lead">${nb('Скажи, куда едешь, и мы подберём машину под маршрут. Заберёшь её прямо в аэропорту.')}</p>
+    <div class="row"><span class="btn">Подобрать машину</span><span class="caps">Казань · 12–15 ноября</span></div>
+    <h2>${nb('Направления на выходные')}</h2>
+    <p class="muted">${nb('Карелия, Алтай, Калининград и ещё 40 маршрутов')}</p>
+    <div class="card">
+      <div><span class="caps">Карелия</span><b>Рускеала</b><span class="muted">${nb('3 дня · от 4 200 ₽ в сутки')}</span></div>
+      <div><span class="caps">Алтай</span><b>Чуйский тракт</b><span class="muted">${nb('5 дней · от 5 900 ₽ в сутки')}</span></div>
+      <div><span class="caps">Калининград</span><b>Куршская коса</b><span class="muted">${nb('2 дня · от 3 800 ₽ в сутки')}</span></div>
+    </div>
+  </section>`);
+</script>
+</body>
+</html>

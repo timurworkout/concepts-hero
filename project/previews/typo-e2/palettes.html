@@ -1,0 +1,193 @@
+<title>ON MOVE палитры по блокам</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700&display=swap">
+<style>
+  /* Макет экрана подбора e2: колонка машины + карточка поездки справа */
+  :root { --bg: #eeece6; --card: #f8f7f3; --fg: #1d1917; --muted: #5d5853; --line: #1d191733; --ink: #1d1917; --on-ink: #f8f7f3;
+    --serif: 'Manrope', system-ui, sans-serif; --sans: 'Manrope', system-ui, sans-serif; }
+  body { background: var(--bg); color: var(--fg); font-family: var(--sans); margin: 0;
+    padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px)); padding-block: 0 48px; }
+  header.top { display: flex; justify-content: space-between; align-items: center; padding-block: 18px; font-size: 14px; }
+  .logo { font-weight: 700; letter-spacing: .02em; }
+  .page { max-width: 1200px; margin: 0 auto; }
+  .grid { display: grid; grid-template-columns: minmax(0, 1fr) 360px; gap: 40px; align-items: start; }
+  @media (max-width: 860px) { .grid { grid-template-columns: 1fr; } }
+  .crumb { font-size: 13px; color: var(--muted); display: grid; gap: 6px; }
+  h1 { font-family: var(--serif); font-weight: 400; font-size: clamp(44px, 7vw, 76px); line-height: 1; letter-spacing: -.02em; margin: 10px 0 12px; }
+  h1 em { font-style: italic; }
+  .specs { font-size: 15px; padding-bottom: 20px; border-bottom: 1px solid var(--fg); }
+  h2 { font-family: var(--serif); font-weight: 400; font-size: 24px; letter-spacing: -.01em; margin: 24px 0 4px; }
+  .hint { font-size: 13px; color: var(--muted); margin: 0 0 12px; }
+  .chips { display: flex; gap: 8px; flex-wrap: wrap; }
+  .chip { border: 1px solid var(--fg); border-radius: 999px; padding: 8px 14px; font-size: 14px; }
+  .chip small { color: var(--muted); margin-left: 4px; }
+  .photo { margin-top: 20px; aspect-ratio: 4 / 3; max-width: 100%; border-radius: 4px; background: url(tank.webp) center / cover; }
+  .card { background: var(--card); border-radius: 4px; box-shadow: 0 10px 30px #1d191722; padding: 6px 18px 16px; position: sticky; top: 80px; }
+  .row { display: flex; justify-content: space-between; gap: 12px; padding-block: 12px; border-bottom: 1px solid var(--line); font-size: 15px; }
+  .row span { display: block; font-size: 12px; color: var(--muted); }
+  .price { font-family: var(--serif); font-size: 34px; margin: 14px 0 0; }
+  .price-note { font-size: 13px; color: var(--muted); margin: 2px 0 14px; }
+  .btn { display: block; text-align: center; background: var(--ink); color: var(--on-ink); padding: 14px; border-radius: 4px; font-weight: 500; }
+  .free { text-align: center; font-size: 13px; color: var(--muted); margin-top: 10px; }
+  .golos h1, .golos h2, .golos .price { font-family: var(--sans); font-weight: 600; letter-spacing: -.035em; }
+  .logo-slot { display: inline-block; width: 120px; color: var(--fg); }
+  .logo-slot svg { display: block; width: 100%; height: auto; fill: currentColor; }
+  .lockup { max-width: 1200px; margin: 24px auto 8px; padding-block: 40px; background: var(--ink); color: var(--on-ink); display: grid; justify-items: center; gap: 20px; text-align: center; border-radius: 4px; }
+  .lockup .big { width: min(70%, 520px); color: var(--on-ink); }
+  .lockup p { margin: 0; font-size: clamp(22px, 3.4vw, 34px); font-weight: 600; letter-spacing: -.035em; line-height: 1.05; }
+  .switch { position: sticky; top: env(safe-area-inset-top, 0px); z-index: 5; background: var(--bg); display: flex; gap: 6px; flex-wrap: wrap; padding-block: 12px; border-bottom: 1px solid var(--line); }
+  .switch button { font: 500 14px var(--sans); padding: 8px 14px; border-radius: 999px; border: 1px solid var(--line); background: transparent; color: var(--fg); cursor: pointer; }
+  .switch button[aria-pressed="true"] { background: var(--ink); color: var(--on-ink); border-color: var(--ink); }
+  :root { --r-card: 16px; --r-ctl: 12px; --r-chip: 12px; }
+  .golos h1, .golos h2, .golos .price { font-weight: 700; letter-spacing: -.035em; }
+  .card, .photo { border-radius: var(--r-card) !important; }
+  .btn { border-radius: var(--r-ctl) !important; }
+  .chip { border-radius: var(--r-chip) !important; }
+  .photo { position: relative; }
+  .switch { position: sticky; top: env(safe-area-inset-top, 0px); z-index: 5; background: var(--bg); display: flex; gap: 6px; flex-wrap: wrap; padding-block: 12px; border-bottom: 1px solid var(--line); max-width: 1200px; margin: 0 auto; }
+  .switch button { font: 600 14px var(--sans); padding: 8px 14px; border-radius: 12px; border: 1px solid var(--line); background: transparent; color: var(--fg); cursor: pointer; }
+  .switch button[aria-pressed="true"] { background: var(--ink); color: var(--on-ink); border-color: var(--ink); }
+  /* Палитры из рефов: фон, поверхность, текст, «чернила» для кнопки, акцент для выбранного, REC */
+  :root, [data-p="olive-removed"] { --bg: #fdf8e8; --card: #ffffff; --fg: #2f2d0c; --muted: #66644a; --line: #2f2d0c2e; --ink: #36340b; --on-ink: #fdf8e8; --accent: #bac45f; --on-accent: #2f2d0c; --rec: #d9452b; }
+  [data-p="trail"] { --bg: #e0d9c9; --card: #eee9de; --fg: #272a22; --muted: #5f5b4f; --line: #272a2233; --ink: #474c3d; --on-ink: #eee9de; --accent: #b5a289; --on-accent: #272a22; --rec: #db5445; }
+  [data-p="north"] { --bg: #f9f6f6; --card: #ffffff; --fg: #001f26; --muted: #4a5d62; --line: #001f262e; --ink: #001f26; --on-ink: #f9f6f6; --accent: #fed444; --on-accent: #001f26; --rec: #e3402a; }
+  [data-p="alab"] { --bg: #edece2; --card: #f7f6f0; --fg: #1d1917; --muted: #5d5853; --line: #1d191730; --ink: #1d1917; --on-ink: #f7f6f0; --accent: #bfccd2; --on-accent: #1d1917; --rec: #e3402a; }
+  body { transition: background .25s, color .25s; }
+  .chip.on { background: var(--accent); color: var(--on-accent); border-color: var(--accent); }
+  .chip.on small { color: var(--on-accent); opacity: .7; }
+  .btn { display: flex; align-items: center; justify-content: center; gap: 10px; }
+  .rec { width: 8px; height: 8px; border-radius: 50%; background: var(--rec); }
+  .card { box-shadow: 0 10px 30px color-mix(in srgb, var(--fg) 14%, transparent); }
+  .tabs { max-width: 1200px; margin: 0 auto; display: flex; gap: 4px; padding-block: 10px; border-bottom: 1px solid var(--line); flex-wrap: wrap; }
+  .tabs button { font: 600 14px var(--sans); padding: 8px 12px; border: 0; background: none; color: var(--muted); cursor: pointer; border-radius: 12px; }
+  .tabs button[aria-pressed="true"] { color: var(--fg); background: var(--card); }
+  .intro { padding-block: 40px 64px; display: grid; gap: 22px; }
+  .mega { font-size: clamp(40px, 7vw, 88px); font-weight: 800 !important; letter-spacing: -.045em !important; line-height: .98; margin: 0; }
+  .lead { font-size: 18px; max-width: 46ch; margin: 0; color: var(--muted); }
+  .seg { display: inline-flex; background: var(--card); padding: 4px; border-radius: 12px; justify-self: start; font-weight: 600; font-size: 14px; }
+  .seg span { padding: 8px 14px; border-radius: 9px; }
+  .seg .on { background: var(--ink); color: var(--on-ink); }
+  .wizard { display: grid; grid-template-columns: repeat(3, minmax(0,1fr)) auto; background: var(--card); border-radius: 16px; padding: 8px; gap: 4px; box-shadow: 0 10px 30px color-mix(in srgb, var(--fg) 12%, transparent); }
+  .fld { padding: 10px 14px; border-radius: 12px; font-weight: 600; font-size: 16px; min-width: 0; }
+  .fld + .fld { border-left: 1px solid var(--line); border-radius: 0; }
+  .fld span { display: block; font-size: 12px; font-weight: 500; color: var(--muted); }
+  .btn.go { border-radius: 12px !important; padding-inline: 22px; }
+  @media (max-width: 760px) { .wizard { grid-template-columns: 1fr; } .fld + .fld { border-left: 0; border-top: 1px solid var(--line); } }
+  .calwrap { padding-block: 32px 64px; }
+  .cal { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 32px; max-width: 760px; }
+  .month b { display: block; font-size: 18px; margin-bottom: 10px; }
+  .grid7 { display: grid; grid-template-columns: repeat(7, 1fr); row-gap: 4px; text-align: center; font-variant-numeric: tabular-nums; }
+  .grid7 .wd { font-size: 12px; color: var(--muted); padding-bottom: 6px; }
+  .d { padding: 9px 0; font-weight: 600; font-size: 15px; }
+  .d.rng { background: color-mix(in srgb, var(--accent) 45%, transparent); }
+  .d.sel { background: var(--accent); color: var(--on-accent); border-radius: 12px; }
+  .d.s1 { border-radius: 12px 0 0 12px; } .d.s2 { border-radius: 0 12px 12px 0; }
+  .d.today { box-shadow: inset 0 0 0 1.5px var(--ink); border-radius: 12px; }
+  .d.off { color: var(--muted); opacity: .45; text-decoration: line-through; }
+  .legend { display: flex; flex-wrap: wrap; gap: 16px; margin-top: 20px; font-size: 13px; color: var(--muted); }
+  .lg { display: inline-block; width: 14px; height: 14px; border-radius: 4px; vertical-align: -2px; margin-right: 6px; }
+  .lg.sel { background: var(--accent); } .lg.rng { background: color-mix(in srgb, var(--accent) 45%, transparent); } .lg.today { box-shadow: inset 0 0 0 1.5px var(--ink); } .lg.off { background: var(--line); }
+  .dirs { padding-block: 32px 64px; display: grid; gap: 18px; }
+  .eyebrow { font-size: 12px; font-weight: 700; letter-spacing: .12em; text-transform: uppercase; color: var(--muted); margin: 0; }
+  .big { font-size: clamp(32px, 4.6vw, 56px) !important; font-weight: 800 !important; letter-spacing: -.04em !important; line-height: 1; margin: 0 !important; }
+  .cities { display: flex; gap: 8px; flex-wrap: wrap; }
+  .places { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 16px; }
+  .place { background: var(--card); border-radius: 16px; overflow: hidden; display: grid; gap: 4px; padding-bottom: 16px; }
+  .place .ph { aspect-ratio: 4/3; background: center / cover; margin-bottom: 10px; }
+  .place b, .place span, .place em { padding-inline: 16px; }
+  .place b { font-size: 20px; letter-spacing: -.02em; }
+  .place span { font-size: 14px; color: var(--muted); }
+  .place em { font-style: normal; font-size: 13px; font-weight: 600; justify-self: start; margin: 6px 16px 0; padding: 5px 10px; border-radius: 12px; background: var(--accent); color: var(--on-accent); }
+</style>
+<div class="switch" role="group" aria-label="Палитра">
+  <button data-p="trail" aria-pressed="true">2 · Тропа</button>
+  <button data-p="north">3 · Север</button>
+  <button data-p="alab">4 · Алебастр</button>
+</div>
+<div class="tabs" role="tablist" aria-label="Блок">
+  <button data-b="pick" aria-pressed="true">Подбор</button>
+  <button data-b="intro">Интро</button>
+  <button data-b="cal">Календарь</button>
+  <button data-b="dir">Направления</button>
+</div>
+<div class="page golos blk" data-blk="pick">
+  <header class="top"><span class="logo-slot"></span><span>Избранное · Профиль</span></header>
+  <div class="grid">
+    <section>
+      <div class="crumb"><span>← На главную</span><span>Подобрали для тебя · Внедорожник</span></div>
+      <h1>Tank 300</h1>
+      <div class="specs">Полный привод · клиренс 224&nbsp;мм · мест: 5 · багажник 400&nbsp;л</div>
+      <h2>Что для тебя важнее?</h2>
+      <p class="hint">Поездку учтём и&nbsp;покажем, что изменится</p>
+      <div class="chips">
+        <span class="chip on">вариатор<small>−1 880 ₽</small></span>
+        <span class="chip">багажник +170&nbsp;л<small>+320 ₽</small></span>
+        <span class="chip">Дешевле<small>−3 680 ₽</small></span>
+      </div>
+      <div class="photo" role="img" aria-label="Tank 300 в горах"></div>
+    </section>
+    <aside class="card">
+      <div class="row"><div><span>Параметры поездки</span>Можно уточнить</div>+</div>
+      <div class="row"><div><span>Где забрать</span>Аэропорт Шереметьево</div>↗</div>
+      <div class="row"><div><span>Когда</span>сейчас, на&nbsp;4&nbsp;ч</div>↗</div>
+      <p class="price">6 000 ₽</p>
+      <p class="price-note">за 4&nbsp;ч · подадим через 45&nbsp;мин</p>
+      <span class="btn"><i class="rec"></i>Подобрать допы</span>
+      <p class="free">✓ Бесплатная отмена за&nbsp;48&nbsp;ч</p>
+    </aside>
+  </div>
+</div>
+
+<div class="page golos blk" data-blk="intro" hidden>
+  <header class="top"><span class="logo-slot"></span><span>Избранное · Профиль</span></header>
+  <section class="intro">
+    <h1 class="mega">Скажи, куда едешь.<br>Машину подберём сами</h1>
+    <p class="lead">Без 50&nbsp;вкладок и&nbsp;сравнений. Расскажи о&nbsp;поездке — получишь одну машину и&nbsp;объяснение, почему она.</p>
+    <div class="seg"><span class="on">Посуточно</span><span>Почасово</span></div>
+    <div class="wizard">
+      <div class="fld"><span>Куда едешь</span>Сочи, аэропорт Адлер</div>
+      <div class="fld"><span>Когда</span>12–15 ноября</div>
+      <div class="fld"><span>Что в планах</span>Горы, вдвоём</div>
+      <span class="btn go"><i class="rec"></i>Подобрать машину</span>
+    </div>
+  </section>
+</div>
+<div class="page golos blk" data-blk="cal" hidden>
+  <section class="calwrap">
+    <h2>Когда</h2>
+    <p class="hint">Выбери даты поездки</p>
+    <div class="cal" id="cal"></div>
+    <div class="legend"><span><i class="lg sel"></i>начало и конец</span><span><i class="lg rng"></i>дни поездки</span><span><i class="lg today"></i>сегодня</span><span><i class="lg off"></i>нет машин</span></div>
+  </section>
+</div>
+<div class="page golos blk" data-blk="dir" hidden>
+  <section class="dirs">
+    <p class="eyebrow">Направления</p>
+    <h2 class="big">Хороший план — просто уехать</h2>
+    <div class="cities"><span class="chip on">Сочи</span><span class="chip">Петербург</span><span class="chip">Мурманск</span><span class="chip">Москва</span><span class="chip">Казань</span></div>
+    <div class="places">
+      <article class="place"><div class="ph" style="background-image:url(sochi-ritsa.webp)"></div><b>Озеро Рица</b><span>2,5&nbsp;ч от&nbsp;Адлера · серпантин</span><em>Нужен клиренс</em></article>
+      <article class="place"><div class="ph" style="background-image:url(spb-karelia.webp)"></div><b>Карелия</b><span>4&nbsp;ч от&nbsp;Петербурга · грунтовки</span><em>Полный привод</em></article>
+      <article class="place"><div class="ph" style="background-image:url(mmk-teriberka.webp)"></div><b>Териберка</b><span>2&nbsp;ч от&nbsp;Мурманска · ветер и&nbsp;снег</span><em>Зимняя резина</em></article>
+    </div>
+  </section>
+</div>
+<script>
+const glyphs={O:'M50 0a50 50 0 1 0 0 100a50 50 0 1 0 0-100Zm0 17a33 33 0 1 1 0 66a33 33 0 1 1 0-66Z',N:'M0 0 68 63V0H85V100L0 22Z',M:'M0 100V0L50 52 100 0V100H83V39L50 74 17 39V100Z',V:'M0 0H20L50 65 80 0H100L50 100Z',E:'M0 0H70V17H17ZM0 42H70V59H0ZM17 83H70V100H0Z'};
+let uid=0;
+function logo(v){const pos=[0,122,265,387,509,631];const id='cut'+(uid++);
+const g=[...'ONMOVE'].map((l,i)=>`<g transform="translate(${pos[i]} 0)"><path fill-rule="evenodd" d="${glyphs[l]}"/></g>`).join('');
+const cut='M-5 70H105V81H-5ZM295 -2H307V102H295Z';
+return `<svg viewBox="0 -2 701 104" role="img" aria-label="ON MOVE"><defs><mask id="${id}"><path fill="white" d="M-5 -5H710V105H-5Z"/><path fill="black" d="${cut}"/></mask></defs><g mask="url(#${id})">${g}</g></svg>`}
+const draw=v=>document.querySelectorAll('.logo-slot').forEach(s=>s.innerHTML=logo(v));
+
+const tb=document.querySelectorAll('.tabs button');
+tb.forEach(b=>b.addEventListener('click',()=>{tb.forEach(x=>x.setAttribute('aria-pressed',x===b));document.querySelectorAll('.blk').forEach(p=>p.hidden=p.dataset.blk!==b.dataset.b)}));
+function month(name,days,start,mark){let h=`<div class="month"><b>${name}</b><div class="grid7">`+['пн','вт','ср','чт','пт','сб','вс'].map(w=>`<span class="wd">${w}</span>`).join('')+'<span></span>'.repeat(start);
+for(let d=1;d<=days;d++)h+=`<span class="d ${mark(d)}">${d}</span>`;return h+'</div></div>'}
+document.getElementById('cal').innerHTML=month('Ноябрь 2026',30,6,d=>d<3?'off':d===3?'today':d===12?'sel s1':d===15?'sel s2':d>12&&d<15?'rng':d===21||d===22?'off':'')+month('Декабрь 2026',31,1,d=>d===31?'off':'');
+draw(1);
+const bs=document.querySelectorAll('.switch button');
+document.documentElement.dataset.p='trail';
+bs.forEach(b=>b.addEventListener('click',()=>{bs.forEach(x=>x.setAttribute('aria-pressed',x===b));document.documentElement.dataset.p=b.dataset.p}));
+</script>

@@ -1,0 +1,94 @@
+<title>ON MOVE стиль экрана</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Golos+Text:wght@400;500;600;700&family=Jost:wght@400;500;600;700&family=Manrope:wght@400;500;600;700&display=swap">
+<style>
+  /* Макет экрана подбора e2: колонка машины + карточка поездки справа */
+  :root { --bg: #eeece6; --card: #f8f7f3; --fg: #1d1917; --muted: #5d5853; --line: #1d191733; --ink: #1d1917; --on-ink: #f8f7f3;
+    --serif: 'Golos Text', system-ui, sans-serif; --sans: 'Golos Text', system-ui, sans-serif; }
+  body { background: var(--bg); color: var(--fg); font-family: var(--sans); margin: 0;
+    padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px)); padding-block: 0 48px; }
+  header.top { display: flex; justify-content: space-between; align-items: center; padding-block: 18px; font-size: 14px; }
+  .logo { font-weight: 700; letter-spacing: .02em; }
+  .page { max-width: 1200px; margin: 0 auto; }
+  .grid { display: grid; grid-template-columns: minmax(0, 1fr) 360px; gap: 40px; align-items: start; }
+  @media (max-width: 860px) { .grid { grid-template-columns: 1fr; } }
+  .crumb { font-size: 13px; color: var(--muted); display: grid; gap: 6px; }
+  h1 { font-family: var(--serif); font-weight: 400; font-size: clamp(44px, 7vw, 76px); line-height: 1; letter-spacing: -.02em; margin: 10px 0 12px; }
+  h1 em { font-style: italic; }
+  .specs { font-size: 15px; padding-bottom: 20px; border-bottom: 1px solid var(--fg); }
+  h2 { font-family: var(--serif); font-weight: 400; font-size: 24px; letter-spacing: -.01em; margin: 24px 0 4px; }
+  .hint { font-size: 13px; color: var(--muted); margin: 0 0 12px; }
+  .chips { display: flex; gap: 8px; flex-wrap: wrap; }
+  .chip { border: 1px solid var(--fg); border-radius: 999px; padding: 8px 14px; font-size: 14px; }
+  .chip small { color: var(--muted); margin-left: 4px; }
+  .photo { margin-top: 20px; aspect-ratio: 4 / 3; max-width: 100%; border-radius: 4px; background: url(tank.webp) center / cover; }
+  .card { background: var(--card); border-radius: 4px; box-shadow: 0 10px 30px #1d191722; padding: 6px 18px 16px; position: sticky; top: 80px; }
+  .row { display: flex; justify-content: space-between; gap: 12px; padding-block: 12px; border-bottom: 1px solid var(--line); font-size: 15px; }
+  .row span { display: block; font-size: 12px; color: var(--muted); }
+  .price { font-family: var(--serif); font-size: 34px; margin: 14px 0 0; }
+  .price-note { font-size: 13px; color: var(--muted); margin: 2px 0 14px; }
+  .btn { display: block; text-align: center; background: var(--ink); color: var(--on-ink); padding: 14px; border-radius: 4px; font-weight: 500; }
+  .free { text-align: center; font-size: 13px; color: var(--muted); margin-top: 10px; }
+  .golos h1, .golos h2, .golos .price { font-family: var(--sans); font-weight: 600; letter-spacing: -.035em; }
+  .logo-slot { display: inline-block; width: 120px; color: var(--fg); }
+  .logo-slot svg { display: block; width: 100%; height: auto; fill: currentColor; }
+  .lockup { max-width: 1200px; margin: 24px auto 8px; padding-block: 40px; background: var(--ink); color: var(--on-ink); display: grid; justify-items: center; gap: 20px; text-align: center; border-radius: 4px; }
+  .lockup .big { width: min(70%, 520px); color: var(--on-ink); }
+  .lockup p { margin: 0; font-size: clamp(22px, 3.4vw, 34px); font-weight: 600; letter-spacing: -.035em; line-height: 1.05; }
+  .switch { position: sticky; top: env(safe-area-inset-top, 0px); z-index: 5; background: var(--bg); display: flex; gap: 6px; flex-wrap: wrap; padding-block: 12px; border-bottom: 1px solid var(--line); }
+  .switch button { font: 500 14px var(--sans); padding: 8px 14px; border-radius: 999px; border: 1px solid var(--line); background: transparent; color: var(--fg); cursor: pointer; }
+  .switch button[aria-pressed="true"] { background: var(--ink); color: var(--on-ink); border-color: var(--ink); }
+  :root { --r-card: 0; --r-ctl: 0; --r-chip: 0; --hw: 600; --ht: -.035em; }
+  .golos h1, .golos h2, .golos .price { font-weight: var(--hw); letter-spacing: var(--ht); }
+  .card, .photo { border-radius: var(--r-card) !important; }
+  .btn { border-radius: var(--r-ctl) !important; }
+  .chip { border-radius: var(--r-chip) !important; }
+  .photo { position: relative; }
+</style>
+<div class="switch" role="group" aria-label="Вариант стиля">
+  <button data-v="Golos Text|0|0|0|600|-.035em" aria-pressed="true">1 · Golos, углы 0</button>
+  <button data-v="Golos Text|8px|6px|6px|600|-.035em">2 · Golos, 8 / 6</button>
+  <button data-v="Golos Text|16px|16px|16px|600|-.035em">3 · Golos, 16</button>
+  <button data-v="Jost|0|0|0|500|-.02em">4 · Futura (Jost), углы 0</button>
+  <button data-v="Manrope|16px|12px|12px|700|-.035em">5 · Manrope, 16 / 12</button>
+</div>
+<div class="page golos">
+  <header class="top"><span class="logo-slot"></span><span>Избранное · Профиль</span></header>
+  <div class="grid">
+    <section>
+      <div class="crumb"><span>← На главную</span><span>Подобрали для тебя · Внедорожник</span></div>
+      <h1>Tank 300</h1>
+      <div class="specs">Полный привод · клиренс 224&nbsp;мм · мест: 5 · багажник 400&nbsp;л</div>
+      <h2>Что для тебя важнее?</h2>
+      <p class="hint">Поездку учтём и&nbsp;покажем, что изменится</p>
+      <div class="chips">
+        <span class="chip">вариатор<small>−1 880 ₽</small></span>
+        <span class="chip">багажник +170&nbsp;л<small>+320 ₽</small></span>
+        <span class="chip">Дешевле<small>−3 680 ₽</small></span>
+      </div>
+      <div class="photo" role="img" aria-label="Tank 300 в горах"></div>
+    </section>
+    <aside class="card">
+      <div class="row"><div><span>Параметры поездки</span>Можно уточнить</div>+</div>
+      <div class="row"><div><span>Где забрать</span>Аэропорт Шереметьево</div>↗</div>
+      <div class="row"><div><span>Когда</span>сейчас, на&nbsp;4&nbsp;ч</div>↗</div>
+      <p class="price">6 000 ₽</p>
+      <p class="price-note">за 4&nbsp;ч · подадим через 45&nbsp;мин</p>
+      <span class="btn">Подобрать допы</span>
+      <p class="free">✓ Бесплатная отмена за&nbsp;48&nbsp;ч</p>
+    </aside>
+  </div>
+</div>
+<script>
+const glyphs={O:'M50 0a50 50 0 1 0 0 100a50 50 0 1 0 0-100Zm0 17a33 33 0 1 1 0 66a33 33 0 1 1 0-66Z',N:'M0 0 68 63V0H85V100L0 22Z',M:'M0 100V0L50 52 100 0V100H83V39L50 74 17 39V100Z',V:'M0 0H20L50 65 80 0H100L50 100Z',E:'M0 0H70V17H17ZM0 42H70V59H0ZM17 83H70V100H0Z'};
+let uid=0;
+function logo(v){const pos=[0,122,265,387,509,631];const id='cut'+(uid++);
+const g=[...'ONMOVE'].map((l,i)=>`<g transform="translate(${pos[i]} 0)"><path fill-rule="evenodd" d="${glyphs[l]}"/></g>`).join('');
+const cut='M-5 70H105V81H-5ZM295 -2H307V102H295Z';
+return `<svg viewBox="0 -2 701 104" role="img" aria-label="ON MOVE"><defs><mask id="${id}"><path fill="white" d="M-5 -5H710V105H-5Z"/><path fill="black" d="${cut}"/></mask></defs><g mask="url(#${id})">${g}</g></svg>`}
+const draw=v=>document.querySelectorAll('.logo-slot').forEach(s=>s.innerHTML=logo(v));
+draw(1);
+const bs=document.querySelectorAll('.switch button');
+bs.forEach(b=>b.addEventListener('click',()=>{bs.forEach(x=>x.setAttribute('aria-pressed',x===b));const [f,c,t,p,w,tr]=b.dataset.v.split('|');const r=document.documentElement.style;
+r.setProperty('--sans',`'${f}', system-ui, sans-serif`);r.setProperty('--serif',`'${f}', system-ui, sans-serif`);r.setProperty('--r-card',c);r.setProperty('--r-ctl',t);r.setProperty('--r-chip',p);r.setProperty('--hw',w);r.setProperty('--ht',tr)}));
+</script>

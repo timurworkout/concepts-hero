@@ -1,0 +1,128 @@
+<title>ON MOVE фокус</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&display=swap">
+<style>
+  /* Макет экрана подбора e2: колонка машины + карточка поездки справа */
+  :root { --bg: #eeece6; --card: #f8f7f3; --fg: #1d1917; --muted: #5d5853; --line: #1d191733; --ink: #1d1917; --on-ink: #f8f7f3;
+    --serif: 'Manrope', system-ui, sans-serif; --sans: 'Manrope', system-ui, sans-serif; }
+  body { background: var(--bg); color: var(--fg); font-family: var(--sans); margin: 0;
+    padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px)); padding-block: 0 48px; }
+  header.top { display: flex; justify-content: space-between; align-items: center; padding-block: 18px; font-size: 14px; }
+  .logo { font-weight: 700; letter-spacing: .02em; }
+  .page { max-width: 1200px; margin: 0 auto; }
+  .grid { display: grid; grid-template-columns: minmax(0, 1fr) 360px; gap: 40px; align-items: start; }
+  @media (max-width: 860px) { .grid { grid-template-columns: 1fr; } }
+  .crumb { font-size: 13px; color: var(--muted); display: grid; gap: 6px; }
+  h1 { font-family: var(--serif); font-weight: 400; font-size: clamp(44px, 7vw, 76px); line-height: 1; letter-spacing: -.02em; margin: 10px 0 12px; }
+  h1 em { font-style: italic; }
+  .specs { font-size: 15px; padding-bottom: 20px; border-bottom: 1px solid var(--fg); }
+  h2 { font-family: var(--serif); font-weight: 400; font-size: 24px; letter-spacing: -.01em; margin: 24px 0 4px; }
+  .hint { font-size: 13px; color: var(--muted); margin: 0 0 12px; }
+  .chips { display: flex; gap: 8px; flex-wrap: wrap; }
+  .chip { border: 1px solid var(--fg); border-radius: 999px; padding: 8px 14px; font-size: 14px; }
+  .chip small { color: var(--muted); margin-left: 4px; }
+  .photo { margin-top: 20px; aspect-ratio: 4 / 3; max-width: 100%; border-radius: 4px; background: url(tank.webp) center / cover; }
+  .card { background: var(--card); border-radius: 4px; box-shadow: 0 10px 30px #1d191722; padding: 6px 18px 16px; position: sticky; top: 80px; }
+  .row { display: flex; justify-content: space-between; gap: 12px; padding-block: 12px; border-bottom: 1px solid var(--line); font-size: 15px; }
+  .row span { display: block; font-size: 12px; color: var(--muted); }
+  .price { font-family: var(--serif); font-size: 34px; margin: 14px 0 0; }
+  .price-note { font-size: 13px; color: var(--muted); margin: 2px 0 14px; }
+  .btn { display: block; text-align: center; background: var(--ink); color: var(--on-ink); padding: 14px; border-radius: 4px; font-weight: 500; }
+  .free { text-align: center; font-size: 13px; color: var(--muted); margin-top: 10px; }
+  .golos h1, .golos h2, .golos .price { font-family: var(--sans); font-weight: 600; letter-spacing: -.035em; }
+  .logo-slot { display: inline-block; width: 120px; color: var(--fg); }
+  .logo-slot svg { display: block; width: 100%; height: auto; fill: currentColor; }
+  .lockup { max-width: 1200px; margin: 24px auto 8px; padding-block: 40px; background: var(--ink); color: var(--on-ink); display: grid; justify-items: center; gap: 20px; text-align: center; border-radius: 4px; }
+  .lockup .big { width: min(70%, 520px); color: var(--on-ink); }
+  .lockup p { margin: 0; font-size: clamp(22px, 3.4vw, 34px); font-weight: 600; letter-spacing: -.035em; line-height: 1.05; }
+  .switch { position: sticky; top: env(safe-area-inset-top, 0px); z-index: 5; background: var(--bg); display: flex; gap: 6px; flex-wrap: wrap; padding-block: 12px; border-bottom: 1px solid var(--line); }
+  .switch button { font: 500 14px var(--sans); padding: 8px 14px; border-radius: 999px; border: 1px solid var(--line); background: transparent; color: var(--fg); cursor: pointer; }
+  .switch button[aria-pressed="true"] { background: var(--ink); color: var(--on-ink); border-color: var(--ink); }
+  :root { --r-card: 16px; --r-ctl: 12px; --r-chip: 12px; }
+  .golos h1, .golos h2, .golos .price { font-weight: 700; letter-spacing: -.035em; }
+  .card, .photo { border-radius: var(--r-card) !important; }
+  .btn { border-radius: var(--r-ctl) !important; }
+  .chip { border-radius: var(--r-chip) !important; }
+  .photo { position: relative; }
+
+  /* Видоискатель: уголки фокуса по краям элемента */
+  :root { --rec: #e3402a; --vf-len: 9px; --vf-w: 1.5px; }
+  .vfc { --c: currentColor; background:
+    linear-gradient(var(--c),var(--c)) 0 0 / var(--vf-len) var(--vf-w), linear-gradient(var(--c),var(--c)) 0 0 / var(--vf-w) var(--vf-len),
+    linear-gradient(var(--c),var(--c)) 100% 0 / var(--vf-len) var(--vf-w), linear-gradient(var(--c),var(--c)) 100% 0 / var(--vf-w) var(--vf-len),
+    linear-gradient(var(--c),var(--c)) 0 100% / var(--vf-len) var(--vf-w), linear-gradient(var(--c),var(--c)) 0 100% / var(--vf-w) var(--vf-len),
+    linear-gradient(var(--c),var(--c)) 100% 100% / var(--vf-len) var(--vf-w), linear-gradient(var(--c),var(--c)) 100% 100% / var(--vf-w) var(--vf-len);
+    background-repeat: no-repeat; }
+  .logo { display: inline-flex; align-items: center; gap: 8px; font: 800 20px/1 var(--sans); letter-spacing: -.02em; }
+  .vf { position: relative; padding: 5px 7px; }
+  .vf::before { content: ""; position: absolute; inset: 0; --vf-len: 7px; --vf-w: 2px; }
+  .vf::before { --c: currentColor; background:
+    linear-gradient(var(--c),var(--c)) 0 0 / var(--vf-len) var(--vf-w) no-repeat, linear-gradient(var(--c),var(--c)) 0 0 / var(--vf-w) var(--vf-len) no-repeat,
+    linear-gradient(var(--c),var(--c)) 100% 0 / var(--vf-len) var(--vf-w) no-repeat, linear-gradient(var(--c),var(--c)) 100% 0 / var(--vf-w) var(--vf-len) no-repeat,
+    linear-gradient(var(--c),var(--c)) 0 100% / var(--vf-len) var(--vf-w) no-repeat, linear-gradient(var(--c),var(--c)) 0 100% / var(--vf-w) var(--vf-len) no-repeat,
+    linear-gradient(var(--c),var(--c)) 100% 100% / var(--vf-len) var(--vf-w) no-repeat, linear-gradient(var(--c),var(--c)) 100% 100% / var(--vf-w) var(--vf-len) no-repeat; }
+  .vf::after { content: ""; position: absolute; top: 3px; right: -5px; width: 5px; height: 5px; border-radius: 50%; background: var(--rec); }
+  .f { position: relative; cursor: pointer; }
+  .f::after { content: ""; position: absolute; inset: -7px; pointer-events: none; opacity: 0; transform: scale(1.12);
+    transition: opacity .18s, transform .22s cubic-bezier(.2,.8,.2,1); }
+  .f::after, .f-photo::before { --c: var(--fg); background:
+    linear-gradient(var(--c),var(--c)) 0 0 / var(--vf-len) var(--vf-w) no-repeat, linear-gradient(var(--c),var(--c)) 0 0 / var(--vf-w) var(--vf-len) no-repeat,
+    linear-gradient(var(--c),var(--c)) 100% 0 / var(--vf-len) var(--vf-w) no-repeat, linear-gradient(var(--c),var(--c)) 100% 0 / var(--vf-w) var(--vf-len) no-repeat,
+    linear-gradient(var(--c),var(--c)) 0 100% / var(--vf-len) var(--vf-w) no-repeat, linear-gradient(var(--c),var(--c)) 0 100% / var(--vf-w) var(--vf-len) no-repeat,
+    linear-gradient(var(--c),var(--c)) 100% 100% / var(--vf-len) var(--vf-w) no-repeat, linear-gradient(var(--c),var(--c)) 100% 100% / var(--vf-w) var(--vf-len) no-repeat; }
+  .f:hover::after, .f:focus-visible::after { opacity: 1; transform: scale(1); }
+  .days { display: flex; gap: 10px; flex-wrap: wrap; }
+  .day { width: 52px; padding: 10px 0; text-align: center; font-weight: 600; font-size: 18px; border-radius: 12px; background: var(--card); display: grid; }
+  .day small { font-size: 12px; font-weight: 500; color: var(--muted); }
+  /* Фото: при наведении кадр «берётся в фокус» — уголки сходятся, прицел, служебная строка REC */
+  .f-photo { overflow: hidden; cursor: pointer; }
+  .f-photo::before { content: ""; position: absolute; inset: 22px; --c: #fff; --vf-len: 22px; --vf-w: 2px; opacity: 0; transform: scale(1.06); transition: opacity .2s, transform .3s cubic-bezier(.2,.8,.2,1); }
+  .aim { position: absolute; left: 50%; top: 50%; width: 28px; height: 28px; translate: -50% -50%; opacity: 0; transition: opacity .2s .1s;
+    background: linear-gradient(#fff,#fff) center / 2px 100% no-repeat, linear-gradient(#fff,#fff) center / 100% 2px no-repeat; }
+  .hud { position: absolute; left: 38px; top: 34px; color: #fff; font: 600 12px var(--sans); letter-spacing: .08em; display: flex; gap: 10px; opacity: 0; transition: opacity .2s .1s; }
+  .hud::first-letter { color: var(--rec); }
+  .hud b { font-weight: 500; font-variant-numeric: tabular-nums; }
+  .f-photo:hover::before { opacity: 1; transform: scale(1); }
+  .f-photo:hover .aim, .f-photo:hover .hud { opacity: 1; }
+  /* Главная кнопка: точка «запись идёт» загорается при наведении */
+  .btn.rec { display: flex; justify-content: center; align-items: center; gap: 10px; cursor: pointer; }
+  .btn.rec::before { content: ""; width: 8px; height: 8px; border-radius: 50%; background: var(--rec); opacity: .35; transition: opacity .2s; }
+  .btn.rec:hover::before { opacity: 1; animation: blink 1s steps(1) infinite; }
+  @keyframes blink { 50% { opacity: .25; } }
+  .note { max-width: 1200px; margin: 0 auto; padding-block: 12px 4px; font-size: 13px; color: var(--muted); }
+  @media (prefers-reduced-motion: reduce) { .f::after, .f-photo::before { transition: none; } .btn.rec:hover::before { animation: none; } }
+</style>
+<p class="note">Наведи курсор на чипы, даты, фото машины и кнопку «Подобрать допы».</p>
+<div class="page golos">
+  <header class="top"><span class="logo"><span class="vf">ON</span>MOVE</span><span>Избранное · Профиль</span></header>
+  <div class="grid">
+    <section>
+      <div class="crumb"><span>← На главную</span><span>Подобрали для тебя · Внедорожник</span></div>
+      <h1>Tank 300</h1>
+      <div class="specs">Полный привод · клиренс 224&nbsp;мм · мест: 5 · багажник 400&nbsp;л</div>
+      <h2>Что для тебя важнее?</h2>
+      <p class="hint">Поездку учтём и&nbsp;покажем, что изменится</p>
+      <div class="chips">
+        <span class="chip f">вариатор<small>−1 880 ₽</small></span>
+        <span class="chip f">багажник +170&nbsp;л<small>+320 ₽</small></span>
+        <span class="chip f">Дешевле<small>−3 680 ₽</small></span>
+      </div>
+      <h2>Когда</h2>
+      <p class="hint">Наведи на дату</p>
+      <div class="days">
+        <span class="day f">12<small>чт</small></span><span class="day f">13<small>пт</small></span><span class="day f">14<small>сб</small></span><span class="day f">15<small>вс</small></span><span class="day f">16<small>пн</small></span>
+      </div>
+      <div class="photo f-photo" role="img" aria-label="Tank 300 в горах"><span class="aim"></span><span class="hud">● REC<b>00:04:00</b></span></div>
+    </section>
+    <aside class="card">
+      <div class="row"><div><span>Параметры поездки</span>Можно уточнить</div>+</div>
+      <div class="row"><div><span>Где забрать</span>Аэропорт Шереметьево</div>↗</div>
+      <div class="row"><div><span>Когда</span>сейчас, на&nbsp;4&nbsp;ч</div>↗</div>
+      <p class="price">6 000 ₽</p>
+      <p class="price-note">за 4&nbsp;ч · подадим через 45&nbsp;мин</p>
+      <span class="btn rec">Подобрать допы</span>
+      <p class="free">✓ Бесплатная отмена за&nbsp;48&nbsp;ч</p>
+    </aside>
+  </div>
+</div>
+
