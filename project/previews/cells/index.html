@@ -1,0 +1,191 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Ячейки поездки</title>
+<link rel="stylesheet" href="/concepts-hero/fonts/fonts.css">
+<style>
+  /* Токены Севера из src/styles.css */
+  :root {
+    --paper: #f9f6f6; --plate: #ffffff; --ink: #001f26; --muted: #4a5d62; --line: #d3dadb;
+    --green: #a4e891; --surface-strong: #e9eeee;
+    --r-card: 16px; --r-ctl: 12px; --icon-stroke: 1.5px;
+    --fs-xs: 12px; --fs-sm: 14px; --fs-md: 16px; --fs-lg: 20px; --fs-xl: 28px;
+    --lh-snug: 1.25; --lh-body: 1.5; --ls-caps: .08em;
+    --shadow: 0 18px 40px -16px rgb(0 31 38 / .25);
+    --display: Manrope, system-ui, sans-serif;
+  }
+  * { box-sizing: border-box; }
+  body { margin: 0; background: var(--paper); color: var(--ink); font: 400 var(--fs-md)/var(--lh-body) var(--display); }
+  main { max-width: 1200px; margin: 0 auto; padding: 48px 24px 96px; }
+  h1 { margin: 0; font-size: var(--fs-xl); font-weight: 700; letter-spacing: -0.01em; }
+  h2 { margin: 64px 0 8px; font-size: var(--fs-lg); font-weight: 700; }
+  p { margin: 8px 0 0; max-width: 70ch; color: var(--muted); }
+  .rules { margin: 24px 0 0; padding: 0; list-style: none; display: grid; gap: 12px; max-width: 80ch; }
+  .rules li { padding-top: 12px; border-top: 1px solid var(--line); }
+  .rules b { color: var(--ink); }
+  .legend { display: flex; gap: 24px; margin-top: 16px; color: var(--muted); font-size: var(--fs-sm); }
+  .legend span { display: inline-flex; align-items: center; gap: 8px; }
+
+  /* ── Единая ячейка поездки ── */
+  .cell { display: flex; align-items: center; gap: 12px; width: 100%; min-width: 0; padding: 12px 16px;
+    background: var(--plate); border: 1px solid var(--line); border-radius: var(--r-card);
+    font: inherit; color: var(--ink); text-align: left; cursor: pointer; transition: border-color .15s; }
+  .cell:hover { border-color: var(--ink); }
+  .cell.active { border-color: var(--ink); }
+  .ico { width: 22px; height: 22px; flex: none; fill: none; stroke: currentColor; stroke-width: 1.75; stroke-linecap: round; stroke-linejoin: round; }
+  .txt { flex: 1; min-width: 0; display: grid; gap: 2px; }
+  .lbl { font-size: var(--fs-sm); color: var(--muted); }
+  .val { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .val.empty { color: var(--muted); }
+  /* Действие справа: один штрих и размер у «+», «↗» и «×» */
+  .act { width: 18px; height: 18px; flex: none; fill: none; stroke: currentColor; stroke-width: var(--icon-stroke); stroke-linecap: round; color: var(--muted); }
+  .cell:hover .act { color: var(--ink); }
+  button.act-btn { border: 0; background: none; padding: 6px; margin: -6px; border-radius: var(--r-ctl); color: var(--muted); display: grid; cursor: pointer; }
+  button.act-btn:hover { color: var(--ink); background: var(--surface-strong); }
+  .thumb { width: 64px; height: 44px; border-radius: 8px; background: linear-gradient(135deg, #b84a2e, #5a2a1e); flex: none; }
+
+  /* Визард: ячейки в ряд */
+  .hero { margin-top: 16px; padding: 32px; border-radius: var(--r-card); background: linear-gradient(180deg, #001f26, #0b3540 60%, #2d5a4a); }
+  .row { display: flex; gap: 8px; }
+  .row .cell { flex: 1 1 0; border-color: transparent; }
+  .row .cell.w13 { flex-grow: 1.3; } .row .cell.w16 { flex-grow: 1.6; }
+  .row .cell.active { border-color: var(--ink); box-shadow: inset 0 0 0 1px var(--ink); }
+  /* В ряду визарда на десктопе иконки слева съедают ширину — прячем; на мобилке ячейки в столбик, иконки есть */
+  @media (min-width: 901px) { .row .ico { display: none; } }
+  .go { flex: none; display: flex; align-items: center; gap: 8px; padding: 0 24px; border: 0; border-radius: var(--r-card); background: var(--green); color: var(--ink); font: 600 var(--fs-md) var(--display); }
+  .go .act { color: var(--ink); width: 20px; height: 20px; stroke-width: 2; }
+  .cap { margin: 20px 0 8px; font-size: var(--fs-sm); color: rgb(249 246 246 / .72); }
+
+  /* Э2 и Э3: столбик ячеек */
+  .screens { display: grid; grid-template-columns: 1fr 1fr; gap: 32px; margin-top: 16px; align-items: start; }
+  .card { background: var(--plate); border-radius: var(--r-card); box-shadow: var(--shadow); padding: 20px; }
+  .stack { display: grid; gap: 8px; }
+  .card .cell { background: var(--paper); }
+  .price { margin-top: 20px; font-size: var(--fs-xl); font-weight: 700; }
+  .btn { margin-top: 16px; width: 100%; height: 52px; border: 0; border-radius: var(--r-ctl); background: var(--ink); color: var(--paper); font: 600 var(--fs-md) var(--display); }
+  .sc-title { font-size: var(--fs-sm); color: var(--muted); margin-bottom: 8px; }
+  @media (max-width: 900px) { .row { flex-direction: column; } .go { height: 54px; justify-content: center; } .screens { grid-template-columns: 1fr; } }
+</style>
+</head>
+<body>
+<svg width="0" height="0" style="position:absolute" aria-hidden="true">
+  <defs>
+    <path id="add" d="M10 3v14M3 10h14" />
+    <path id="open" d="M5 15 15 5M5 5h10v10" />
+    <path id="clear" d="M5 5l10 10M15 5 5 15" />
+  </defs>
+</svg>
+<main>
+  <h1>Ячейка поездки: один вид на трёх экранах</h1>
+  <p>Сейчас одни и те же параметры поездки выглядят по-разному. В визарде на главной это слитая полоса с серым кружком «×». На Э2 — общий блок со строками и «+» / «↗». На Э3 — отдельные блоки с иконкой слева и шевроном «›». Предлагаю одну ячейку для всех трёх экранов.</p>
+
+  <ul class="rules">
+    <li><b>Форма — с Э3.</b> Каждый параметр в своём блоке: белая плашка, линия 1px, радиус 16, отступ 12/16. Блоки не склеиваются в общую карточку.</li>
+    <li><b>Состав — одинаковый.</b> Иконка слева, затем подпись 14px серым, под ней значение 16px. Пустое значение тоже серое: «Выбери место». Капс-подписи из визарда уходят, подпись везде обычным регистром.</li>
+    <li><b>Действие справа — с Э2, один штрих на три значка.</b> Шеврон «›» уходит.
+      <ul>
+        <li>«+» — пусто, нажми, чтобы добавить.</li>
+        <li>«↗» — заполнено, нажми, чтобы изменить.</li>
+        <li>«×» — заполнено, и значение можно стереть прямо тут. Нарисован тем же штрихом, без серого кружка.</li>
+      </ul>
+    </li>
+    <li><b>Где «×», а где «↗».</b> «×» есть только в визарде на главной: там поиск, и город или место сбрасывают, чтобы начать заново. Вся ячейка при этом по-прежнему открывает свой шаг. На Э2 и Э3 стирать нечего, там «↗».</li>
+    <li><b>Различия по месту.</b> В визарде ячейки стоят в ряд на фото: без линии, активная обведена чернилами. На Э2 и Э3 они идут столбиком. Больше различий нет.</li>
+  </ul>
+  <div class="legend">
+    <span><svg class="act" viewBox="0 0 20 20"><use href="#add"/></svg>добавить</span>
+    <span><svg class="act" viewBox="0 0 20 20"><use href="#open"/></svg>изменить</span>
+    <span><svg class="act" viewBox="0 0 20 20"><use href="#clear"/></svg>стереть</span>
+  </div>
+
+  <h2>Главная · визард</h2>
+  <p>Город и место заполнены, остальное пусто.</p>
+  <div class="hero">
+    <div class="row">
+      <div class="cell">
+        <svg class="ico" viewBox="0 0 24 24"><path d="M3 21h18M5 21V8l6-3v16M11 21V10h8v11"/><path d="M8 10h.01M8 14h.01M15 14h.01M15 17h.01"/></svg>
+        <span class="txt"><span class="lbl">Куда едешь</span><span class="val">Мурманск</span></span>
+        <button class="act-btn" aria-label="Стереть"><svg class="act" viewBox="0 0 20 20"><use href="#clear"/></svg></button>
+      </div>
+      <div class="cell w13">
+        <svg class="ico" viewBox="0 0 24 24"><path d="M10.5 3.5c0-.8.7-1.5 1.5-1.5s1.5.7 1.5 1.5V9l7.5 4.5v2l-7.5-2.3v4.5l2.5 1.8v1.5L12 20l-4 1v-1.5l2.5-1.8v-4.5L3 15.5v-2L10.5 9z"/></svg>
+        <span class="txt"><span class="lbl">Где забрать</span><span class="val">Аэропорт Мурманска</span></span>
+        <button class="act-btn" aria-label="Стереть"><svg class="act" viewBox="0 0 20 20"><use href="#clear"/></svg></button>
+      </div>
+      <div class="cell w16 active">
+        <svg class="ico" viewBox="0 0 24 24"><rect x="3.5" y="5" width="17" height="15" rx="3"/><path d="M3.5 10h17M8 3v4M16 3v4"/></svg>
+        <span class="txt"><span class="lbl">Когда</span><span class="val empty">Даты и время</span></span>
+        <svg class="act" viewBox="0 0 20 20"><use href="#add"/></svg>
+      </div>
+      <div class="cell">
+        <svg class="ico" viewBox="0 0 24 24"><path d="M5 21V4M5 4h11l-2 4 2 4H5"/></svg>
+        <span class="txt"><span class="lbl">Параметры</span><span class="val empty">Цель, с кем, авто</span></span>
+        <svg class="act" viewBox="0 0 20 20"><use href="#add"/></svg>
+      </div>
+      <button class="go"><svg class="act" viewBox="0 0 24 24"><circle cx="10.5" cy="10.5" r="6.5"/><path d="M15.5 15.5L21 21"/></svg>Найти</button>
+    </div>
+    <div class="cap">До выбора города в ряду только «Куда едешь» с «+» и «Найти».</div>
+  </div>
+
+  <h2>Э2 подбор и Э3 допы</h2>
+  <p>Те же ячейки столбиком. Машина на Э3 — та же ячейка, только с миниатюрой вместо иконки.</p>
+  <div class="screens">
+    <div>
+      <div class="sc-title">Э2 · карточка цены</div>
+      <div class="stack">
+        <div class="stack">
+          <button class="cell">
+            <svg class="ico" viewBox="0 0 24 24"><path d="M5 21V4M5 4h11l-2 4 2 4H5"/></svg>
+            <span class="txt"><span class="lbl">Параметры поездки</span><span class="val empty">Можно уточнить</span></span>
+            <svg class="act" viewBox="0 0 20 20"><use href="#add"/></svg>
+          </button>
+          <button class="cell">
+            <svg class="ico" viewBox="0 0 24 24"><path d="M10.5 3.5c0-.8.7-1.5 1.5-1.5s1.5.7 1.5 1.5V9l7.5 4.5v2l-7.5-2.3v4.5l2.5 1.8v1.5L12 20l-4 1v-1.5l2.5-1.8v-4.5L3 15.5v-2L10.5 9z"/></svg>
+            <span class="txt"><span class="lbl">Где забрать</span><span class="val">Аэропорт Мурманска</span></span>
+            <svg class="act" viewBox="0 0 20 20"><use href="#open"/></svg>
+          </button>
+          <button class="cell">
+            <svg class="ico" viewBox="0 0 24 24"><rect x="3.5" y="5" width="17" height="15" rx="3"/><path d="M3.5 10h17M8 3v4M16 3v4"/></svg>
+            <span class="txt"><span class="lbl">Когда</span><span class="val">2 нояб. 12:00 — 3 нояб. 12:00</span></span>
+            <svg class="act" viewBox="0 0 20 20"><use href="#open"/></svg>
+          </button>
+        </div>
+        <div class="card"><div class="price" style="margin-top:0">9 000 ₽</div>
+        <button class="btn">Подобрать допы</button></div>
+      </div>
+    </div>
+    <div>
+      <div class="sc-title">Э3 · допы</div>
+      <div class="stack">
+        <button class="cell"><span class="thumb"></span>
+          <span class="txt"><span class="lbl">Твоя машина</span><span class="val">TANK 300</span></span>
+          <svg class="act" viewBox="0 0 20 20"><use href="#open"/></svg>
+        </button>
+        <button class="cell">
+          <svg class="ico" viewBox="0 0 24 24"><path d="M5 21V4M5 4h11l-2 4 2 4H5"/></svg>
+          <span class="txt"><span class="lbl">Цель поездки</span><span class="val empty">Выбери цель</span></span>
+          <svg class="act" viewBox="0 0 20 20"><use href="#add"/></svg>
+        </button>
+        <button class="cell">
+          <svg class="ico" viewBox="0 0 24 24"><path d="M10.5 3.5c0-.8.7-1.5 1.5-1.5s1.5.7 1.5 1.5V9l7.5 4.5v2l-7.5-2.3v4.5l2.5 1.8v1.5L12 20l-4 1v-1.5l2.5-1.8v-4.5L3 15.5v-2L10.5 9z"/></svg>
+          <span class="txt"><span class="lbl">Где забрать</span><span class="val">Аэропорт Мурманска</span></span>
+          <svg class="act" viewBox="0 0 20 20"><use href="#open"/></svg>
+        </button>
+        <button class="cell">
+          <svg class="ico" viewBox="0 0 24 24"><rect x="3.5" y="5" width="17" height="15" rx="3"/><path d="M3.5 10h17M8 3v4M16 3v4"/></svg>
+          <span class="txt"><span class="lbl">Когда</span><span class="val">2 нояб. 12:00 — 3 нояб. 12:00</span></span>
+          <svg class="act" viewBox="0 0 20 20"><use href="#open"/></svg>
+        </button>
+        <button class="cell">
+          <svg class="ico" viewBox="0 0 24 24"><path d="M4 12a8 8 0 1 0 2.3-5.6M4 4v4h4"/></svg>
+          <span class="txt"><span class="lbl">Где вернуть</span><span class="val">Где забрали</span></span>
+          <svg class="act" viewBox="0 0 20 20"><use href="#open"/></svg>
+        </button>
+      </div>
+    </div>
+  </div>
+</main>
+</body>
+</html>

@@ -356,7 +356,19 @@ export function Arrow({ dir = 'right', chevron = false }) {
 }
 
 export function ActionIcon({ kind = 'open' }) {
-  return <svg className="arrival-icon" viewBox="0 0 20 20" aria-hidden="true"><path d={kind === 'add' ? 'M10 3v14M3 10h14' : 'M5 15 15 5M5 5h10v10'} /></svg>
+  const d = { add: 'M10 3v14M3 10h14', open: 'M5 15 15 5M5 5h10v10', clear: 'M5 5l10 10M15 5 5 15' }[kind]
+  return <svg className="arrival-icon" viewBox="0 0 20 20" aria-hidden="true"><path d={d} /></svg>
+}
+
+// Ячейка поездки на Э2 и Э3: отдельный блок, иконка слева, справа «+» — пусто, «↗» — изменить
+function TripTile({ icon, img, label, value, empty, warn, onClick }) {
+  return (
+    <button type="button" className={`book-tile ${img ? 'book-tile-car' : ''} ${warn ? 'book-tile-warn' : ''}`} onClick={onClick}>
+      {img ? <img src={img} alt="" /> : <PlaceIcon type={icon} />}
+      <span className="cell-text"><span className="cell-label">{label}</span>{empty ? <span className="muted">{empty}</span> : value}</span>
+      <ActionIcon kind={empty ? 'add' : 'open'} />
+    </button>
+  )
 }
 
 function Sheet({ className = '', onClose, children }) {
@@ -1260,7 +1272,9 @@ export function Wizard({ ref, query, setQuery, step, setStep, placeType, setPlac
   const labels = { place: 'Где забрать', return: 'Где вернуть', when: query.mode === 'days' ? 'Когда' : 'Начало · на сколько', params: 'Параметры' }
   const placeholders = { place: 'Аэропорт, вокзал, адрес', return: 'Точка возврата', when: 'Даты и время', params: 'Цель, с кем, авто' }
   const clears = { place: { locationId: '', address: '' }, params: { planIds: [], companion: '', prefs: [] } }
-  const clearIcon = <svg viewBox="0 0 12 12" aria-hidden="true"><path d="M3 3l6 6M9 3l-6 6" /></svg>
+  // Справа в ячейке: «+» — пусто, «↗» — изменить, «×» — стереть (тот же штрих, что на Э2 и Э3)
+  const clearIcon = <ActionIcon kind="clear" />
+  const icons = { place: location?.type ?? 'Аэропорт', return: 'Возврат', when: 'Даты', params: 'Цель' }
 
   const cityValue = city ? city.name : text
   return (
@@ -1273,21 +1287,27 @@ export function Wizard({ ref, query, setQuery, step, setStep, placeType, setPlac
       </div>
         <div ref={barRef} className={`wz-bar ${step ? 'has-active' : ''}`}>
           <label data-seg="city" data-i="0" className={`wz-seg wz-seg-city ${city ? 'filled' : ''} ${step === 'city' ? 'active' : ''}`}>
+            <PlaceIcon type="Город" />
             <b>Куда едешь</b>
             <input ref={inputRef} value={cityValue} autoComplete="off" aria-label="Куда едешь"
               readOnly={mobile} onFocus={() => !mobile && step !== 'city' && setStep('city')}
               onClick={() => mobile && setStep('city')}
               onChange={(e) => { setText(e.target.value); if (city) set({ cityId: '', locationId: '', address: '' }) }} />
             {!cityValue && (step === 'city' ? <span className="drum">Город или аэропорт</span> : <CityDrum />)}
-            {city && <button type="button" className="wz-clear" aria-label="Очистить" onClick={() => { set({ cityId: '', locationId: '', address: '', returnId: '' }); go('city') }}>{clearIcon}</button>}
+            {city
+              ? <button type="button" className="wz-clear" aria-label="Стереть город" onClick={() => { set({ cityId: '', locationId: '', address: '', returnId: '' }); go('city') }}>{clearIcon}</button>
+              : <span className="wz-act"><ActionIcon kind="add" /></span>}
           </label>
           {segs.slice(1).map((id) => (
             <div key={id} data-seg={id} data-i={segs.indexOf(id)} className={`wz-seg wz-seg-${id} ${values[id] ? 'filled' : ''} ${step === id ? 'active' : ''}`}>
               <button type="button" className="wz-seg-btn" onClick={() => setStep(step === id ? null : id)}>
+                <PlaceIcon type={icons[id]} />
                 <b>{labels[id]}</b>
                 <span className={`wz-val ${values[id] ? 'filled' : ''}`}>{values[id] || placeholders[id]}</span>
               </button>
-              {values[id] && clears[id] && <button type="button" className="wz-clear" aria-label="Очистить" onClick={() => { set(clears[id]); setStep(id) }}>{clearIcon}</button>}
+              {values[id] && clears[id]
+                ? <button type="button" className="wz-clear" aria-label="Стереть" onClick={() => { set(clears[id]); setStep(id) }}>{clearIcon}</button>
+                : <span className="wz-act"><ActionIcon kind={values[id] ? 'open' : 'add'} /></span>}
             </div>
           ))}
           <button type="button" className="wz-go" aria-label="Подобрать машину" onClick={submit}>
@@ -1876,19 +1896,10 @@ export function E2({ query, setQuery, fav, onBack, onPick, openPicker }) {
   const startExtras = () => { setContinueToExtras(true); continueWith(query) }
   const arrivalIcon = (selected) => <ActionIcon kind={selected ? 'open' : 'add'} />
   const cells = () => (
-    <div className="cells cells-card">
-      <button type="button" className="cell" onClick={() => setParamsOpen(true)}>
-        <span className="cell-text"><span className="cell-label">Параметры поездки</span><span className={paramsText(query) ? '' : 'muted'}>{paramsText(query) || 'Можно уточнить'}</span></span>
-        {arrivalIcon(Boolean(paramsText(query)))}
-      </button>
-      <button type="button" className="cell" onClick={() => setPlaceOpen(true)}>
-        <span className="cell-text"><span className="cell-label">Где забрать</span><span className={location ? '' : 'muted'}>{location ? location.name : 'Выбери место'}{query.returnMode !== 'same' && ` · вернуть: ${returnText(query).toLowerCase()}`}</span></span>
-        {arrivalIcon(Boolean(location))}
-      </button>
-      <button type="button" className="cell" onClick={() => setDatesOpen(true)}>
-        <span className="cell-text"><span className="cell-label">Когда</span><span className={datesMissing ? 'muted' : ''}>{whenText(query)}</span></span>
-        {arrivalIcon(!datesMissing)}
-      </button>
+    <div className="book-tiles cells-card">
+      <TripTile icon="Цель" label="Параметры поездки" value={paramsText(query)} empty={!paramsText(query) && 'Можно уточнить'} onClick={() => setParamsOpen(true)} />
+      <TripTile icon={location?.type ?? 'Адрес'} label="Где забрать" value={location && `${location.name}${query.returnMode !== 'same' ? ` · вернуть: ${returnText(query).toLowerCase()}` : ''}`} empty={!location && 'Выбери место'} onClick={() => setPlaceOpen(true)} />
+      <TripTile icon="Даты" label="Когда" value={whenText(query)} empty={datesMissing && whenText(query)} onClick={() => setDatesOpen(true)} />
     </div>
   )
 
@@ -1932,8 +1943,9 @@ export function E2({ query, setQuery, fav, onBack, onPick, openPicker }) {
 
         <aside className="e2-aside">
           {car && (
+            <>
+            {cells()}
             <div className="book-card">
-              {cells()}
               <div className="book-sum">
                 <div className="price-big">{rub(tripTotal(car, query))}</div>
                 <div className="muted">за {unitsText(query)}{query.extraIds.length ? ', с допами' : ''}{isNow(query) && location ? ` · подадим через ${location.etaMin + car.etaAdd} мин` : ''}</div>
@@ -1941,6 +1953,7 @@ export function E2({ query, setQuery, fav, onBack, onPick, openPicker }) {
               <button className="btn-primary" onClick={startExtras}>Подобрать допы</button>
               <div className="book-note muted">✓ Бесплатная отмена за 48 ч</div>
             </div>
+            </>
           )}
 
         </aside>
@@ -2005,24 +2018,12 @@ export function E3({ query, setQuery, carId, cameFrom, fav, onBack, onPickOther,
   )
   const contextTiles = (
     <div className="book-tiles">
-      <button type="button" className="book-tile book-tile-car" onClick={onPickOther}>
-        <img src={`${import.meta.env.BASE_URL}${car.heroImage || car.image}`} alt="" />
-        <span className="cell-text"><span className="cell-label">Твоя машина</span>{car.model}</span>
-        <span className="cell-arrow"><Arrow chevron /></span>
-      </button>
-      <button type="button" className={`book-tile ${goal && !goal.test(car) ? 'book-tile-warn' : ''}`} onClick={() => setEdit('goal')}>
-        <PlaceIcon type="Цель" />
-        <span className="cell-text"><span className="cell-label">Цель поездки</span>{localGoal?.label || goal?.label || <span className="muted">Выбери цель</span>}</span>
-        <span className="cell-arrow"><Arrow chevron /></span>
-      </button>
+      <TripTile img={`${import.meta.env.BASE_URL}${car.heroImage || car.image}`} label="Твоя машина" value={car.model} onClick={onPickOther} />
+      <TripTile icon="Цель" label="Цель поездки" value={localGoal?.label || goal?.label} empty={!(localGoal || goal) && 'Выбери цель'} warn={goal && !goal.test(car)} onClick={() => setEdit('goal')} />
       {goal && !goal.test(car) && <div className="goal-warn">Для «{goal.label}» {car.model} не лучший выбор. Нужно: {goal.hint[0].toLowerCase() + goal.hint.slice(1)}.{' '}<button type="button" className="link" onClick={onPickOther}>Подобрать под цель</button></div>}
-      {[
-        ['Где', location ? location.name : 'Выбери место', location?.type ?? 'Адрес', () => openPicker('all')],
-        ['Когда', whenText(query), 'Даты', () => setEdit('when')],
-        ['Вернуть', returnText(query), 'Возврат', () => setEdit('return')],
-      ].map(([label, value, icon, onClick]) => <button key={label} type="button" className="book-tile" onClick={onClick}>
-        <PlaceIcon type={icon} /><span className="cell-text"><span className="cell-label">{label}</span>{value}</span><span className="cell-arrow"><Arrow chevron /></span>
-      </button>)}
+      <TripTile icon={location?.type ?? 'Адрес'} label="Где забрать" value={location?.name} empty={!location && 'Выбери место'} onClick={() => openPicker('all')} />
+      <TripTile icon="Даты" label="Когда" value={whenText(query)} onClick={() => setEdit('when')} />
+      <TripTile icon="Возврат" label="Где вернуть" value={returnText(query)} onClick={() => setEdit('return')} />
     </div>
   )
   const bill = <dl className="bill">
