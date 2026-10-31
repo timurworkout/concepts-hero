@@ -1,0 +1,116 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Палитры лендинга</title>
+<style>
+  html, body { margin: 0; height: 100%; font-family: Manrope, system-ui, sans-serif; background: #001f26; }
+  .bar { position: fixed; z-index: 2; top: 12px; left: 50%; translate: -50% 0; display: flex; gap: 4px; padding: 4px; background: #f9f6f6; border: 1px solid #001f26; border-radius: 12px; }
+  .bar button { border: 0; border-radius: 9px; padding: 8px 16px; font: 600 14px Manrope, sans-serif; background: none; color: #001f26; cursor: pointer; }
+  .bar button.on { background: #001f26; color: #f9f6f6; }
+  iframe { border: 0; width: 100%; height: 100%; display: block; }
+</style>
+</head>
+<body>
+<div class="bar">
+  <button data-v="was">Было</button>
+  <button data-v="north" class="on">Север</button>
+  <button data-v="trail">Тропа</button>
+</div>
+<iframe id="app" src="/concepts-hero/"></iframe>
+<script>
+// Палитры Север и Тропа: только переопределение токенов поверх живого лендинга
+const PALETTES = {
+  was: ``,
+  north: `
+:root {
+  --paper: #f9f6f6;           /* White */
+  --plate: #ffffff;           /* карточки чуть светлее фона */
+  --ink: #001f26;             /* Lazur: текст, тёмные плоскости, выбранное */
+  --muted: #4a5d62;           /* лазурь, разбавленная до AA на белом */
+  --line: #d3dadb;
+  --rec: #fde910;             /* Yellow bright: точка записи и запуск подбора */
+  --rec-text: #001f26;        /* мелкий акцентный текст — лазурью, жёлтый на белом не читается */
+  --surface-strong: #e9eeee;
+  --hover: #e9eeee;
+  --bar-active: #e9eeee;
+  --body: #22383d;
+  --night: #121212;           /* Black: подписи и плашки поверх фото */
+  --primary: #001f26;
+  --primary-active: #000f13;
+  --green: #a4e891;           /* Green: только на лазури */
+}
+/* Жёлтая заливка несёт лазурный текст, не белый */
+.logo-on { }
+@media (hover: hover) { .logo:hover .logo-on { color: var(--ink); } }
+/* Кнопки без жёлтого: жёлтый остаётся точкой записи в логотипе.
+   Поиск в полосе — зелёный из рефа, спокойнее жёлтого и читается на лазури.
+   «Подобрать машину» в панели — обычная главная кнопка лазурью: акцент уже есть в полосе */
+.wz-go { background: var(--green); color: var(--ink); }
+.wz-go:hover { background: #8fd97a; }
+.btn-accent { background: var(--primary); color: var(--paper); }
+.btn-primary:hover:not(:disabled), .btn-accent:hover:not(:disabled) { background: #0b3540; color: var(--paper); }
+.search-row .mode-toggle button.active { color: var(--ink); }
+/* Интро: вторая строка зелёным, как Travel Map в рефе */
+.hero-title em { color: var(--green); }
+/* Выбранный город — лазурью (выбранное чернилами), без красного */
+.dir-tab.on { background: var(--ink); border-color: var(--ink); color: var(--paper); }
+/* Значения обещаний — лазурью; цвет держит жирность, а не красный */
+.promise-value { color: var(--ink); }
+.delivery-list button:hover { color: var(--ink); }
+.delivery-list button:hover svg { color: var(--ink); background: var(--rec); border-radius: var(--r-ctl); }
+/* Подвал — второй тёмный пласт, как полосы лазури в рефе */
+.footer { background: var(--ink); color: var(--paper); border-color: transparent; }
+.footer p { color: rgb(249 246 246 / .7); }
+.footer .logo, .footer .back-top { color: var(--paper); }
+`,
+  trail: `
+:root {
+  --paper: #e0d9c9;           /* Canvas Sand: фон */
+  --plate: #ebe6da;           /* карточки — тот же песок светлее */
+  --ink: #272a22;             /* Departure Black: текст, тёмное интро */
+  --muted: #595b4f;           /* чёрный, разбавленный до AA на песке */
+  --line: #c4b9a3;
+  --rec: #db5445;             /* Compass Red: точка записи и запуск подбора */
+  --rec-text: #a8382b;        /* тот же красный до AA для мелкого текста */
+  --surface-strong: #d3cab6;
+  --hover: #d3cab6;
+  --bar-active: #d3cab6;
+  --body: #34372e;
+  --night: #272a22;
+  --primary: #474c3d;         /* Trail Green: главная кнопка и выбранное */
+  --primary-active: #383c30;
+  --beige: #b5a289;           /* Dune Beige: подписи и детали на тёмном */
+  --trail: #474c3d;
+}
+/* Выбранное — тропой, не красным */
+.dir-tab.on { background: var(--trail); border-color: var(--trail); color: var(--paper); }
+.wizard .mode-toggle button.active { background: var(--trail); }
+.promise-value { color: var(--trail); }
+.delivery-list button:hover { color: var(--trail); }
+/* Интро: подзаголовок и подписи бежевым, акцентная строка красным */
+.hero-sub, .hero .wizard .return-check { color: var(--beige); }
+/* Подвал — второй тёмный пласт, тропой */
+.footer { background: var(--trail); color: var(--paper); border-color: transparent; }
+.footer p { color: rgb(224 217 201 / .75); }
+.footer .logo, .footer .back-top { color: var(--paper); }
+`,
+}
+const frame = document.getElementById('app')
+let mode = 'north'
+const apply = () => {
+  const d = frame.contentDocument; if (!d || !d.head) return
+  let s = d.getElementById('palette')
+  if (!s) { s = d.createElement('style'); s.id = 'palette'; d.head.appendChild(s) }
+  s.textContent = PALETTES[mode]
+}
+frame.addEventListener('load', () => { apply(); setTimeout(apply, 300) })
+document.querySelectorAll('.bar button').forEach((b) => b.addEventListener('click', () => {
+  mode = b.dataset.v
+  document.querySelectorAll('.bar button').forEach((x) => x.classList.toggle('on', x === b))
+  apply()
+}))
+</script>
+</body>
+</html>

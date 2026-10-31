@@ -465,7 +465,7 @@ function PlaceIcon({ type }) {
   )
 }
 
-export function PlacePicker({ query, group, onPick, onClose }) {
+export function PlacePicker({ query, group, onPick, onLater, onClose }) {
   const [cityId, setCityId] = useState(query.cityId || Object.keys(cities)[0])
   const [text, setText] = useState('')
   const groupRefs = useRef({})
@@ -523,6 +523,12 @@ export function PlacePicker({ query, group, onPick, onClose }) {
             </button>
           )}
         </div>
+        {onLater && !t && (
+          <button className="picker-item" onClick={onLater}>
+            <span className="picker-icon"><PlaceIcon type="Даты" /></span>
+            <span>Решу позже<span className="picker-meet">Выберешь на подборе, когда увидишь машину</span></span>
+          </button>
+        )}
         <div ref={(el) => { groupRefs.current.cities = el }}>
           <div className="picker-group">Россия</div>
           {Object.entries(cities).filter(([id]) => id !== cityId || t).map(([id, c]) => (
@@ -531,6 +537,26 @@ export function PlacePicker({ query, group, onPick, onClose }) {
             </button>
           ))}
         </div>
+      </div>
+    </Sheet>
+  )
+}
+
+// Мобилка, первый шаг визарда: только город — точки выдачи следующей шторкой
+function CityPicker({ onPick, onClose }) {
+  return (
+    <Sheet className="sheet-full sheet-modal" onClose={onClose}>
+      <div className="picker-head">
+        <button className="icon-btn" aria-label="Назад" onClick={onClose}><Arrow dir="left" /></button>
+        <h2>Куда едешь?</h2>
+      </div>
+      <div className="picker-list">
+        {Object.entries(cities).map(([id, c]) => (
+          <button key={id} className="picker-item" onClick={() => onPick(id)}>
+            <span className="picker-icon"><PlaceIcon type="Город" /></span>
+            <span>{c.name}<span className="picker-meet">{cityHints[id]}</span></span>
+          </button>
+        ))}
       </div>
     </Sheet>
   )
@@ -963,10 +989,11 @@ function CityDrum() {
   return <span className="drum" aria-hidden="true"><span key={i} className="drum-word">{names[i]}</span></span>
 }
 
-function PlacePanel({ query, isReturn, text, type, onClearType, onPick, onReturn }) {
+// Шаг «Город» (onCity) и шаг «Где забрать» (onPick без onCity) — один список точек, разные входы
+function PlacePanel({ query, isReturn, text = '', type, onClearType, onPick, onReturn, onCity, onLater }) {
   const location = findPlace(query)
-  const [cityId, setCityId] = useState(isReturn ? location?.city : location?.city ?? '')
-  const t = isReturn ? '' : text.trim().toLowerCase()
+  const cityId = query.cityId
+  const t = isReturn || !onCity ? '' : text.trim().toLowerCase()
   const row = (l, name = l.name, meet = l.meet, onClick = () => onPick(l)) => (
     <button key={l.id + name} type="button" className="wz-item" onClick={onClick}>
       <span className="wz-ico"><PlaceIcon type={l.type} /></span>
@@ -974,13 +1001,19 @@ function PlacePanel({ query, isReturn, text, type, onClearType, onPick, onReturn
     </button>
   )
   if (t) {
+    const foundCities = Object.entries(cities).filter(([, c]) => plainText(c.name).includes(t))
     const found = locations.filter((l) => !isAddress(l) && plainText(`${l.name} ${cities[l.city].name}`).includes(t))
     const city = location?.city ?? found[0]?.city ?? Object.keys(cities)[0]
     const addrPlace = locations.find((l) => l.city === city && l.type === 'Адрес') ?? locations.find((l) => l.city === city && isAddress(l))
     const hints = (addressHints[city] ?? []).filter((a) => plainText(a).includes(t))
     return (
       <>
-        {found.length > 0 && <div className="wz-cap">Найдено</div>}
+        {foundCities.map(([id, c]) => (
+          <button key={id} type="button" className="wz-item" onClick={() => onCity(id)}>
+            <span className="wz-ico"><PlaceIcon type="Город" /></span><span><b>{c.name}</b><small>{cityHints[id]}</small></span>
+          </button>
+        ))}
+        {found.length > 0 && <div className="wz-cap">Где забрать</div>}
         {found.map((l) => row(l, `${l.name} · ${cities[l.city].name}`))}
         <div className="wz-cap">Адрес · {cities[city].name}</div>
         {(hints.length ? hints : [text.trim()]).map((a) => row(addrPlace, a, 'Привезём к подъезду или к дверям отеля', () => onPick(addrPlace, a)))}
@@ -1012,21 +1045,23 @@ function PlacePanel({ query, isReturn, text, type, onClearType, onPick, onReturn
       </>
     )
   }
-  if (cityId) {
+  if (!onCity && cityId) {
     return (
       <>
-        <button type="button" className="wz-back" onClick={() => setCityId('')}><Arrow dir="left" />Все города</button>
         <div className="wz-cap">Где забрать · {cities[cityId].name}</div>
         {locationGroups.flatMap((g) => locations.filter((l) => l.city === cityId && l.type === g.type)).map((l) => row(l))}
+        {/* Место не обязательно: подбор идёт и без него, точку выберут на Э2 */}
+        <button type="button" className="wz-item" onClick={onLater}>
+          <span className="wz-ico"><PlaceIcon type="Даты" /></span><span><b>Решу позже</b><small>Выберешь на подборе, когда увидишь машину</small></span>
+        </button>
       </>
     )
   }
   return (
     <>
-      <div className="wz-cap">Откуда стартуешь</div>
+      <div className="wz-cap">Куда едешь</div>
       {Object.entries(cities).map(([id, c]) => (
-        // Город — не выбор, а раскрытие его точек
-        <button key={id} type="button" className="wz-item" onClick={() => setCityId(id)}>
+        <button key={id} type="button" className="wz-item" onClick={() => onCity(id)}>
           <span className="wz-ico"><PlaceIcon type="Город" /></span><span><b>{c.name}</b><small>{cityHints[id]}</small></span>
         </button>
       ))}
@@ -1142,12 +1177,14 @@ export function Wizard({ ref, query, setQuery, step, setStep, placeType, setPlac
   const [panelLeft, setPanelLeft] = useState(0)
   const mobile = useMobile()
   const location = findPlace(query)
+  const city = cities[query.cityId]
   const withReturn = query.returnMode !== 'same'
   const set = (patch) => setQuery((q) => ({ ...q, ...patch }))
 
-  const segs = ['place', withReturn && 'return', 'when', 'params'].filter(Boolean)
+  // Сначала только город; остальные ячейки появляются, когда он выбран
+  const segs = ['city', city && 'place', city && withReturn && 'return', city && 'when', city && 'params'].filter(Boolean)
   const next = (id) => segs[segs.indexOf(id) + 1]
-  const go = (id) => { setStep(id); if (id === 'place') inputRef.current?.focus() }
+  const go = (id) => { setStep(id); if (id === 'city') inputRef.current?.focus() }
 
   // Одобренное превью: графитовый отклик и мягкая смена панелей без задержки шага.
   useEffect(() => {
@@ -1175,7 +1212,9 @@ export function Wizard({ ref, query, setQuery, step, setStep, placeType, setPlac
   }, [step, mobile])
 
   // Фильтр с плитки живёт, пока открыт шаг места
-  useEffect(() => { if (step !== 'place') setPlaceType?.(null) }, [step, setPlaceType])
+  useEffect(() => { if (step !== 'place' && step !== 'city') setPlaceType?.(null) }, [step, setPlaceType])
+  // Пришли с плитки места без города — сначала город, потом его точки этого типа
+  useEffect(() => { if (step === 'place' && !city) setStep('city') }, [step, city, setStep])
 
   // Панель закрывается кликом мимо и по Esc; шторки на мобилке закрываются сами
   useEffect(() => {
@@ -1198,25 +1237,32 @@ export function Wizard({ ref, query, setQuery, step, setStep, placeType, setPlac
     }
   }, [step, withReturn])
 
+  const pickCity = (id) => {
+    setQuery((q) => changeCity(q, id))
+    setText('')
+    setStep('place')
+  }
   const pickPlace = (l, address = '') => {
     setQuery((q) => ({ ...changeCity(q, l.city), locationId: l.id, address, returnId: findPlace(q)?.city === l.city ? q.returnId : '' }))
     setText('')
     setStep(withReturn ? 'return' : 'when')
   }
-  const missing = () => (!query.locationId ? 'place' : query.mode === 'days' && !(query.dateFrom && query.dateTo && query.dateTo > query.dateFrom) ? 'when' : null)
+  // Место выдачи не обязательно: без него подбор идёт, точку выберут на Э2
+  const missing = () => (!query.cityId ? 'city' : query.mode === 'days' && !(query.dateFrom && query.dateTo && query.dateTo > query.dateFrom) ? 'when' : null)
   const submit = () => { const m = missing(); if (m) go(m); else { setStep(null); onSubmit() } }
 
   const values = {
-    return: location ? returnText(query) : '',
+    place: location ? (query.address || location.name) : '',
+    return: city ? returnText(query) : '',
     when: wizardWhen(query),
     params: paramsText(query),
   }
-  const labels = { return: 'Где вернуть', when: query.mode === 'days' ? 'Когда' : 'Начало · на сколько', params: 'Параметры' }
-  const placeholders = { return: 'Точка возврата', when: 'Даты и время', params: 'Цель, с кем, авто' }
-  const clears = { params: { planIds: [], companion: '', prefs: [] } }
+  const labels = { place: 'Где забрать', return: 'Где вернуть', when: query.mode === 'days' ? 'Когда' : 'Начало · на сколько', params: 'Параметры' }
+  const placeholders = { place: 'Аэропорт, вокзал, адрес', return: 'Точка возврата', when: 'Даты и время', params: 'Цель, с кем, авто' }
+  const clears = { place: { locationId: '', address: '' }, params: { planIds: [], companion: '', prefs: [] } }
   const clearIcon = <svg viewBox="0 0 12 12" aria-hidden="true"><path d="M3 3l6 6M9 3l-6 6" /></svg>
 
-  const placeValue = location ? location.name : text
+  const cityValue = city ? city.name : text
   return (
     <div ref={(el) => { rootRef.current = el; if (ref) ref.current = el }} className="wizard">
       <div className="mode-toggle" role="tablist" ref={pillRef}>
@@ -1226,16 +1272,17 @@ export function Wizard({ ref, query, setQuery, step, setStep, placeType, setPlac
         ))}
       </div>
         <div ref={barRef} className={`wz-bar ${step ? 'has-active' : ''}`}>
-          <label data-seg="place" data-i="0" className={`wz-seg wz-wide ${step === 'place' ? 'active' : ''}`}>
+          <label data-seg="city" data-i="0" className={`wz-seg wz-seg-city ${city ? 'filled' : ''} ${step === 'city' ? 'active' : ''}`}>
             <b>Куда едешь</b>
-            <input ref={inputRef} value={placeValue} autoComplete="off" aria-label="Куда едешь"
-              readOnly={mobile} onFocus={() => step !== 'place' && setStep('place')}
-              onChange={(e) => { setText(e.target.value); if (location) set({ locationId: '', address: '' }) }} />
-            {!placeValue && (step === 'place' ? <span className="drum">Город, аэропорт или адрес</span> : <CityDrum />)}
-            {location && <button type="button" className="wz-clear" aria-label="Очистить" onClick={() => { set({ locationId: '', address: '' }); go('place') }}>{clearIcon}</button>}
+            <input ref={inputRef} value={cityValue} autoComplete="off" aria-label="Куда едешь"
+              readOnly={mobile} onFocus={() => !mobile && step !== 'city' && setStep('city')}
+              onClick={() => mobile && setStep('city')}
+              onChange={(e) => { setText(e.target.value); if (city) set({ cityId: '', locationId: '', address: '' }) }} />
+            {!cityValue && (step === 'city' ? <span className="drum">Город или аэропорт</span> : <CityDrum />)}
+            {city && <button type="button" className="wz-clear" aria-label="Очистить" onClick={() => { set({ cityId: '', locationId: '', address: '', returnId: '' }); go('city') }}>{clearIcon}</button>}
           </label>
           {segs.slice(1).map((id) => (
-            <div key={id} data-seg={id} data-i={segs.indexOf(id)} className={`wz-seg ${id === 'when' ? 'wz-wide' : ''} ${step === id ? 'active' : ''}`}>
+            <div key={id} data-seg={id} data-i={segs.indexOf(id)} className={`wz-seg wz-seg-${id} ${values[id] ? 'filled' : ''} ${step === id ? 'active' : ''}`}>
               <button type="button" className="wz-seg-btn" onClick={() => setStep(step === id ? null : id)}>
                 <b>{labels[id]}</b>
                 <span className={`wz-val ${values[id] ? 'filled' : ''}`}>{values[id] || placeholders[id]}</span>
@@ -1245,12 +1292,13 @@ export function Wizard({ ref, query, setQuery, step, setStep, placeType, setPlac
           ))}
           <button type="button" className="wz-go" aria-label="Подобрать машину" onClick={submit}>
             <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="10.5" cy="10.5" r="6.5" /><path d="M15.5 15.5L21 21" /></svg>
+            <span aria-hidden="true">Найти</span>
           </button>
           {step && !mobile && (
             <div className={`wz-panel ${step === 'when' ? 'wz-panel-wide' : ''}`} style={step === 'when' ? undefined : { left: panelLeft }} data-step={step} data-after={segs.indexOf(step)}>
-              {step === 'place' && <PlacePanel key={location?.city ?? ''} query={query} text={text} type={placeType} onClearType={() => setPlaceType(null)} onPick={pickPlace} />}
-              {step === 'return' && location && <PlacePanel isReturn query={query} text="" onReturn={(p) => { set(p); setStep('when') }} />}
-              {step === 'return' && !location && <div className="wz-cap">Сначала скажи, где забрать</div>}
+              {step === 'city' && <PlacePanel query={query} text={text} onCity={pickCity} onPick={pickPlace} />}
+              {step === 'place' && city && <PlacePanel key={query.cityId} query={query} type={placeType} onClearType={() => setPlaceType(null)} onPick={pickPlace} onLater={() => setStep(next('place'))} />}
+              {step === 'return' && city && <PlacePanel isReturn query={query} onReturn={(p) => { set(p); setStep('when') }} />}
               {step === 'when' && (query.mode === 'days'
                 ? <DatesPanel query={query} set={set} onNext={() => setStep(next('when'))} />
                 : <HoursPanel query={query} set={set} onNext={() => setStep(next('when'))} />)}
@@ -1259,17 +1307,18 @@ export function Wizard({ ref, query, setQuery, step, setStep, placeType, setPlac
           )}
       </div>
       {/* Мобилка: полноэкранные шторки по очереди — выбрал и сразу следующая */}
-      {mobile && step === 'place' && <PlacePicker query={query} group={placeType ?? 'all'} onPick={pickPlace} onClose={() => setStep(null)} />}
+      {mobile && step === 'city' && <CityPicker onPick={pickCity} onClose={() => setStep(null)} />}
+      {mobile && step === 'place' && city && <PlacePicker query={query} group={placeType ?? 'all'} onPick={pickPlace} onLater={() => setStep(next('place'))} onClose={() => setStep(null)} />}
       {mobile && step === 'return' && <ReturnPicker query={query} onApply={(p) => { set(p); setStep('when') }} onClose={() => setStep(null)} />}
       {mobile && step === 'when' && (query.mode === 'days'
         ? <DatePicker query={query} onApply={(p) => { set(p); setStep(next('when')) }} onClose={() => setStep(null)} />
         : <HoursPicker query={query} location={location} onApply={(p) => { set(p); setStep(next('when')) }} onClose={() => setStep(null)} />)}
       {mobile && step === 'params' && <ParamsPicker query={query} onApply={(p) => { set(p); setStep(null) }} onClose={() => setStep(null)} />}
-      <label className="return-check">
+      {city && <label className="return-check">
         <input type="checkbox" checked={withReturn}
-          onChange={(e) => { set(e.target.checked ? { returnMode: 'point', returnId: '' } : { returnMode: 'same', returnId: '' }); if (e.target.checked && location) setStep('return'); else if (step === 'return') setStep(null) }} />
+          onChange={(e) => { set(e.target.checked ? { returnMode: 'point', returnId: '' } : { returnMode: 'same', returnId: '' }); if (e.target.checked) setStep('return'); else if (step === 'return') setStep(null) }} />
         Вернуть в другом месте
-      </label>
+      </label>}
     </div>
   )
 }
@@ -1282,8 +1331,10 @@ function StickySearch({ shown, query, onOpen }) {
   const when = wizardWhen(query)
   const params = paramsText(query)
   const searchIcon = <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="10.5" cy="10.5" r="6.5" /><path d="M15.5 15.5L21 21" /></svg>
+  const city = cities[query.cityId]
   const segs = [
-    ['place', 'Куда едешь', location?.name, 'Город или адрес'],
+    ['city', 'Куда едешь', city?.name, 'Город'],
+    ['place', 'Где забрать', location?.name, 'Аэропорт, вокзал, адрес'],
     ['when', query.mode === 'days' ? 'Когда' : 'Начало · на\u00a0сколько', when, 'Даты и\u00a0время'],
     ['params', 'Параметры', params, 'Цель, с\u00a0кем, авто'],
   ]
@@ -1296,16 +1347,23 @@ function StickySearch({ shown, query, onOpen }) {
             <b>{label}</b><span className={value ? 'filled' : ''}>{value || ph}</span>
           </button>
         ))}
-        <button type="button" className="wz-go ss-go" aria-label="Подобрать машину" onClick={() => onOpen(location ? 'when' : 'place')}>{searchIcon}</button>
+        <button type="button" className="wz-go ss-go" aria-label="Подобрать машину" onClick={() => onOpen(city ? 'when' : 'city')}>{searchIcon}<span aria-hidden="true">Найти</span></button>
       </div>
-      <button type="button" className="ss-pill" onClick={() => onOpen('place')}>
+      <button type="button" className="ss-pill" onClick={() => onOpen('city')}>
         {searchIcon}
-        <span><b>{location?.name || 'Куда едешь'}</b><small>{[when || 'Даты и\u00a0время', params || 'параметры'].join(' · ')}</small></span>
+        <span><b>{[city?.name, location?.name].filter(Boolean).join(' · ') || 'Куда едешь'}</b><small>{[when || 'Даты и\u00a0время', params || 'параметры'].join(' · ')}</small></span>
       </button>
     </div>
   )
 }
 
+
+// Фон интро: до выбора города — Эльбрус, после — кадр города (пока первое фото его «Направлений», потом общий набор, plan.md §5)
+const heroPhoto = (cityId) => {
+  const first = cityId && cityPlans(cityId).find((p) => p.local)
+  const img = first && placeImage(first.id).split('), ')[0]
+  return img ? { '--hero-photo': `${img})` } : undefined
+}
 
 function Landing({ query, setQuery, onSubmit }) {
   const formRef = useRef(null)
@@ -1328,7 +1386,7 @@ function Landing({ query, setQuery, onSubmit }) {
     setPlaceType(type)
     openStep('place')
     if (mobile || reducedMotion()) return
-    const seg = formRef.current.querySelector('[data-seg="place"]')
+    const seg = formRef.current.querySelector('[data-seg="place"]') ?? formRef.current.querySelector('[data-seg="city"]')
     setTimeout(() => { seg.classList.add('flash'); setTimeout(() => seg.classList.remove('flash'), 800) }, 450)
   }
 
@@ -1346,7 +1404,7 @@ function Landing({ query, setQuery, onSubmit }) {
 
   return (
     <main className="landing">
-      <section className="hero">
+      <section className="hero" style={heroPhoto(query.cityId)}>
         <div className="hero-inner">
           <div className="hero-copy">
             <h1 className="hero-title">
@@ -1405,6 +1463,7 @@ function Landing({ query, setQuery, onSubmit }) {
 const changeCity = (q, cityId) => ({
   ...q, cityId,
   locationId: findPlace(q)?.city === cityId ? q.locationId : '',
+  returnId: findPlace(q)?.city === cityId ? q.returnId : '',
   planIds: q.planIds.filter((id) => cityPlans(cityId).some((p) => p.id === id)),
 })
 
@@ -1443,6 +1502,7 @@ const placePhoto = {
   'spb-vyborg': ['Sergey A. Demidov', 'CC BY 4.0', 'File:20240522_Vyborg_Castle_182.jpg'],
 }
 const newPlacePhotos = {
+  'mmk-teriberka': ['andreibas', 'Фотодженика', 'https://gorbilet.ru/blog/puteshestvija/beautiful-roads', `${import.meta.env.BASE_URL}places/mmk-kola.webp`],
   'msk-ring': ['Aleksandr Artiushenko', 'Unsplash', 'https://unsplash.com/photos/a-snowy-landscape-with-a-church-in-the-distance-XGMZxXfY5hQ', 'https://images.unsplash.com/photo-1715252752412-6e39089fe66e?auto=format&rect=120,300,13772,8800&fit=crop&w=1400&q=80'],
   'sochi-ski': ['Ilnur Kalimullin', 'Unsplash', 'https://unsplash.com/photos/white-snow-covered-mountain-under-white-cloudy-sky-during-daytime-VMrNha7YKGc', 'https://images.unsplash.com/photo-1627109921568-52b5be2a14ab?auto=format&fit=crop&w=1400&q=80'],
   'mmk-khibiny': ['Slava Auchynnikau', 'Unsplash', 'https://unsplash.com/photos/the-sun-is-setting-over-a-snowy-landscape-gy6V59JqqSU', 'https://images.unsplash.com/photo-1711631139867-199196f6d7e8?auto=format&fit=crop&w=1400&q=80'],
