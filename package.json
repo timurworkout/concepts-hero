@@ -9,7 +9,8 @@
     "preview": "vite preview",
     "storybook": "storybook dev -p 6006 --no-open",
     "build-storybook": "storybook build",
-    "build-storybook:pages": "SB_BASE=/concepts-hero/storybook/ storybook build -o dist/storybook"
+    "build-storybook:pages": "SB_BASE=/concepts-hero/storybook/ storybook build -o dist/storybook",
+    "check:style": "sh scripts/check-style.sh"
   },
   "dependencies": {
     "motion": "^14.6.0",

@@ -1,4 +1,4 @@
-/** Витрина токенов «Табло»: цвет, шрифт, срез угла. Первая страница для сверки глазом. */
+/** Витрина токенов «Табло»: цвет, шрифт, скругления. Первая страница для сверки глазом. */
 export default { title: 'Основы/Токены' }
 
 const swatches = [
@@ -29,26 +29,36 @@ export const Цвет = () => (
   </Shell>
 )
 
+// Шкала стилей — restyle.md §1b. Кегли берутся из токенов styles.css
+const styles = [
+  ['Hero', { fontSize: 'var(--fs-hero)', fontWeight: 700, letterSpacing: 'var(--ls-display)', lineHeight: 'var(--lh-tight)' }, 'Скажи, куда едешь'],
+  ['H1 · секция', { fontSize: 'var(--fs-section)', fontWeight: 700, letterSpacing: 'var(--ls-display)', lineHeight: 'var(--lh-tight)' }, 'Куда поедем'],
+  ['H2 · экран, плашка', { fontSize: 'var(--fs-xl)', fontWeight: 700, letterSpacing: 'var(--ls-head)', lineHeight: 'var(--lh-snug)' }, 'Машина под поездку'],
+  ['H3 · карточка', { fontSize: 'var(--fs-lg)', fontWeight: 600, lineHeight: 'var(--lh-snug)' }, 'Полный привод'],
+  ['Текст', { fontSize: 'var(--fs-md)', fontWeight: 400, lineHeight: 'var(--lh-body)', color: 'var(--body)' }, 'Одна машина под твою поездку, с\u00a0объяснением, почему она.'],
+  ['Второстепенный', { fontSize: 'var(--fs-sm)', fontWeight: 400, lineHeight: 'var(--lh-body)', color: 'var(--muted)' }, 'Клиренс 224\u00a0мм, багажник 400\u00a0л'],
+  ['Подпись', { fontSize: 'var(--fs-xs)', fontWeight: 600, letterSpacing: 'var(--ls-caps)', textTransform: 'uppercase', color: 'var(--muted)' }, 'REC · кадр 01'],
+]
+
 export const Шрифт = () => (
   <Shell>
-    <h2>Шрифт</h2>
-    <p style={{ fontFamily: 'var(--display)', fontSize: 44, fontWeight: 600, fontStretch: '88%', textTransform: 'uppercase', margin: '0 0 8px' }}>
-      Скажи, куда <span style={{ color: 'var(--rec)' }}>едешь</span>
-    </p>
-    <p style={{ fontFamily: 'var(--display)', fontSize: 12, letterSpacing: '.12em', textTransform: 'uppercase', color: 'var(--muted)' }}>
-      Tektur — заголовки и служебные подписи
-    </p>
-    <p style={{ fontFamily: 'var(--text)', fontSize: 16, maxWidth: 520, color: 'var(--body)' }}>
-      Onest — связный текст. Одна машина под твою поездку, с объяснением, почему она. Живой текст набираем только им.
-    </p>
-    <p style={{ fontFamily: 'var(--text)', fontSize: 14, maxWidth: 520, color: 'var(--body)' }}>
-      Правило: акцидентный шрифт — только капсом или от --fs-lg и крупнее. Некапсовый текст мельче — Onest.
+    <h2>Шрифт: Manrope, запасной Golos</h2>
+    <div style={{ display: 'grid', gap: 1, background: 'var(--line)', border: '1px solid var(--line)' }}>
+      {styles.map(([name, style, sample]) => (
+        <div key={name} style={{ display: 'grid', gridTemplateColumns: '180px 1fr', gap: 16, alignItems: 'baseline', background: 'var(--paper)', padding: '12px 16px' }}>
+          <code style={{ fontSize: 13, color: 'var(--muted)' }}>{name}</code>
+          <span style={style}>{sample}</span>
+        </div>
+      ))}
+    </div>
+    <p style={{ fontSize: 'var(--fs-sm)', maxWidth: 520, color: 'var(--body)', marginTop: 20 }}>
+      Капс — только в мелких служебных подписях. Заголовки — обычным регистром.
     </p>
   </Shell>
 )
 
 // Шкала читается из styles.css: поменяли значение там — поменялось здесь
-const sizes = ['--fs-xs', '--fs-sm', '--fs-md', '--fs-lg', '--fs-xl', '--fs-2xl', '--fs-3xl', '--fs-block', '--fs-section', '--fs-hero']
+const sizes = ['--fs-xs', '--fs-sm', '--fs-md', '--fs-lg', '--fs-xl', '--fs-block', '--fs-section', '--fs-hero']
 
 export const Размеры = () => {
   const root = getComputedStyle(document.documentElement)
@@ -68,18 +78,19 @@ export const Размеры = () => {
   )
 }
 
-export const СрезУгла = () => (
+export const Скругления = () => (
   <Shell>
-    <h2>Срез угла</h2>
-    <div style={{ display: 'flex', gap: 24, flexWrap: 'wrap' }}>
-      <div style={{ width: 240, height: 120, border: '1.5px solid var(--ink)', background: 'var(--plate)', display: 'grid', placeItems: 'center', clipPath: 'polygon(var(--cut) 0, 100% 0, 100% calc(100% - var(--cut)), calc(100% - var(--cut)) 100%, 0 100%, 0 var(--cut))' }}>
-        <code style={{ fontFamily: 'var(--display)', fontSize: 12 }}>clip-path · плита</code>
+    <h2>Скругления</h2>
+    <div style={{ display: 'flex', gap: 24, flexWrap: 'wrap', alignItems: 'center' }}>
+      <div style={{ width: 240, height: 120, border: '1px solid var(--line)', borderRadius: 'var(--r-card)', background: 'var(--plate)', boxShadow: 'var(--shadow)', display: 'grid', placeItems: 'center' }}>
+        <code style={{ fontSize: 12 }}>--r-card · карточка, фото</code>
       </div>
-      <button className="wz-go" style={{ width: 120, height: 56 }} aria-label="Пример кнопки запуска">REC</button>
-      <span className="chip" style={{ alignSelf: 'center' }}>круглый контрол</span>
+      <button className="btn-primary">--r-ctl · кнопка</button>
+      <button className="filter">--r-ctl · чип</button>
+      <button className="icon-btn" aria-label="Пример иконки-кнопки">×</button>
     </div>
-    <p style={{ fontFamily: 'var(--text)', fontSize: 14, color: 'var(--body)', maxWidth: 520, marginTop: 20 }}>
-      Правило равновесия: рамки и панели — угловатые, контролы (чипы, пилюли, иконки) — круглые.
+    <p style={{ fontSize: 'var(--fs-sm)', color: 'var(--body)', maxWidth: 520, marginTop: 20 }}>
+      16 у карточек и фото, 12 у кнопок, чипов и иконок-кнопок. Пилюль нет, круглые только тумблеры.
     </p>
   </Shell>
 )

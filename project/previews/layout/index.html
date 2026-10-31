@@ -1,0 +1,264 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Лейаут: три варианта</title>
+<link rel="stylesheet" href="../../../public/fonts/fonts.css">
+<style>
+/* Токены — копия :root из src/styles.css */
+:root {
+  --canvas: #f2efe8; --surface-soft: #fbfaf6; --ink: #15181c; --muted: #5d635f;
+  --line: #d2cfc4; --rec: #e3402a; --body: #33383a;
+  --r-card: 16px; --r-ctl: 12px;
+  --shadow: 0 18px 40px -16px rgb(21 24 28 / .25);
+  --gutter: 80px;
+  --fs-xs: 12px; --fs-sm: 14px; --fs-md: 16px; --fs-lg: 20px; --fs-xl: 28px;
+  --fs-section: clamp(30px, 3.4vw, 50px); --fs-hero: clamp(38px, 4.6vw, 64px);
+  --lh-tight: 1.05; --lh-snug: 1.25; --lh-body: 1.5;
+  --ls-display: -0.035em; --ls-head: -0.01em; --ls-caps: .08em;
+  --step: 160px; /* один шаг между блоками */
+  font-family: Manrope, 'Golos Text', system-ui, sans-serif; color: var(--ink);
+}
+* { box-sizing: border-box; margin: 0; }
+body { background: var(--canvas); font-size: var(--fs-md); line-height: var(--lh-body); color: var(--body); }
+img { display: block; width: 100%; height: 100%; object-fit: cover; }
+img[src*="/cars/"] { object-fit: contain; }
+h1, h2, h3 { color: var(--ink); font-weight: 700; }
+h1 { font-size: var(--fs-hero); line-height: var(--lh-tight); letter-spacing: var(--ls-display); }
+h2 { font-size: var(--fs-section); line-height: var(--lh-tight); letter-spacing: var(--ls-head); }
+h3 { font-size: var(--fs-lg); line-height: var(--lh-snug); }
+.caps { font-size: var(--fs-xs); letter-spacing: var(--ls-caps); text-transform: uppercase; color: var(--muted); }
+.price { font-size: var(--fs-lg); font-weight: 700; color: var(--ink); }
+.muted { color: var(--muted); font-size: var(--fs-sm); }
+.btn { display: inline-flex; align-items: center; gap: 10px; height: 56px; padding: 0 28px; border-radius: var(--r-ctl); background: var(--ink); color: #fff; font: 600 var(--fs-md) inherit; border: 0; }
+.btn i { width: 10px; height: 10px; background: var(--rec); border-radius: 2px; }
+.field { border: 1px solid var(--line); border-radius: var(--r-ctl); padding: 10px 16px; background: var(--surface-soft); }
+.field b { display: block; color: var(--ink); font-weight: 600; }
+.wz { display: grid; gap: 8px; }
+.chips { display: flex; flex-wrap: wrap; gap: 8px; }
+.chip { border: 1px solid var(--line); border-radius: var(--r-ctl); padding: 8px 14px; font-size: var(--fs-sm); background: var(--surface-soft); }
+.chip.on { border-color: var(--ink); color: var(--ink); }
+.photo { border-radius: var(--r-card); overflow: hidden; background: #e6e3da; }
+.spec { display: flex; border: 1px solid var(--line); border-radius: var(--r-ctl); overflow: hidden; width: max-content; max-width: 100%; }
+.spec span { padding: 8px 14px; font-size: var(--fs-sm); color: var(--ink); }
+.spec span + span { border-left: 1px solid var(--line); }
+.cap { font-size: var(--fs-xs); color: var(--muted); margin-top: 8px; }
+.faq div { border-top: 1px solid var(--line); padding: 20px 0; color: var(--ink); font-weight: 600; }
+
+/* Панель переключения превью */
+.bar { position: fixed; z-index: 9; left: 50%; bottom: 16px; transform: translateX(-50%); display: flex; gap: 4px; padding: 6px; background: var(--ink); border-radius: var(--r-card); box-shadow: var(--shadow); }
+.bar button { border: 0; background: none; color: #fff; opacity: .6; font: 600 var(--fs-sm) inherit; padding: 8px 12px; border-radius: var(--r-ctl); cursor: pointer; }
+.bar button.on { opacity: 1; background: rgb(255 255 255 / .14); }
+.bar hr { border: 0; border-left: 1px solid rgb(255 255 255 / .2); margin: 4px; }
+section[data-v], section [data-s] { display: none; }
+body[data-v="1"] section[data-v="1"], body[data-v="2"] section[data-v="2"], body[data-v="3"] section[data-v="3"] { display: block; }
+body[data-s="land"] [data-s="land"], body[data-s="e2"] [data-s="e2"] { display: block; }
+
+/* Общая сетка: 6 колонок, боковые оси одни на всех вариантах */
+.g { display: grid; grid-template-columns: repeat(6, 1fr); column-gap: 24px; padding: 0 var(--gutter); }
+.blk { padding-top: var(--step); }
+.blk:last-child { padding-bottom: var(--step); }
+.head { display: flex; justify-content: space-between; align-items: center; padding: 24px var(--gutter); }
+.logo { font-weight: 700; color: var(--ink); letter-spacing: var(--ls-head); }
+
+/* ── 1. Разворот: асимметрия, фото 3 колонки, текст у правой оси ── */
+.v1 .row { align-items: start; }
+.v1 .a { grid-column: 1 / 4; }
+.v1 .b { grid-column: 5 / 7; display: grid; gap: 24px; align-self: center; }
+.v1 .flip .a { grid-column: 4 / 7; grid-row: 1; }
+.v1 .flip .b { grid-column: 1 / 3; grid-row: 1; }
+.v1 .a .photo { aspect-ratio: 4 / 5; }
+.v1 .small { aspect-ratio: 16 / 9; }
+.v1 .center { grid-column: 2 / 6; text-align: center; margin-bottom: 64px; }
+.v1 .faq { grid-column: 3 / 7; }
+
+/* ── 2. Спека: ось чуть правее центра, слева колонка шагов ── */
+.v2 .top { background: #e6e3da; }
+.v2 .axis { grid-column: 4 / 7; display: grid; gap: 24px; align-content: start; }
+.v2 .left { grid-column: 2 / 4; }
+.v2 .steps { grid-column: 1 / 2; display: grid; gap: 8px; align-content: start; }
+.v2 .steps .chip { width: max-content; }
+.v2 .left .photo { aspect-ratio: 1; }
+.v2 .hero { padding-top: 96px; padding-bottom: 96px; }
+.v2 .tiles { grid-column: 2 / 7; display: grid; grid-template-columns: repeat(3, 1fr); gap: 24px; }
+.v2 .tiles .photo { aspect-ratio: 4 / 3; }
+
+/* ── 3. Кадр в кадре: фото на весь экран, белое окно поверх ── */
+.v3 .scene { position: relative; min-height: 100vh; padding: 120px var(--gutter); display: grid; grid-template-columns: repeat(6, 1fr); column-gap: 24px; align-items: center; }
+.v3 .scene > img { position: absolute; inset: 0; z-index: 0; }
+.v3 .frame { position: relative; z-index: 1; background: var(--surface-soft); border-radius: var(--r-card); padding: 48px; display: grid; gap: 24px; box-shadow: var(--shadow); }
+.v3 .l { grid-column: 1 / 4; } .v3 .r { grid-column: 4 / 7; } .v3 .c { grid-column: 2 / 6; }
+.v3 .wide { grid-column: 1 / 7; grid-template-columns: repeat(2, 1fr); align-items: center; column-gap: 48px; }
+.v3 .wide .photo { aspect-ratio: 4 / 3; }
+.v3 .over { position: absolute; z-index: 1; left: var(--gutter); top: 24px; right: var(--gutter); display: flex; justify-content: space-between; color: #fff; }
+.v3 .over .logo { color: #fff; }
+.v3 .credit { position: absolute; z-index: 1; right: var(--gutter); bottom: 16px; font-size: var(--fs-xs); color: rgb(255 255 255 / .8); }
+
+@media (max-width: 760px) {
+  :root { --gutter: 16px; --step: 96px; }
+  .g, .v3 .scene { grid-template-columns: 1fr; row-gap: 24px; }
+  .g > *, .v3 .scene > .frame { grid-column: 1 / -1 !important; grid-row: auto !important; }
+  .v3 .scene { padding: 96px 16px; }
+  .v3 .frame { padding: 24px; }
+  .v3 .wide { grid-template-columns: 1fr; }
+  .v2 .tiles { grid-template-columns: 1fr; }
+  .v2 .steps { display: flex; flex-wrap: wrap; }
+  .v1 .center { text-align: left; margin-bottom: 0; }
+  .bar { bottom: 8px; left: 8px; right: 8px; transform: none; overflow-x: auto; }
+  .bar button { white-space: nowrap; padding: 8px; }
+}
+</style>
+</head>
+<body data-v="1" data-s="land">
+
+<!-- ═══════════ 1. РАЗВОРОТ ═══════════ -->
+<section data-v="1" class="v1">
+  <div class="head"><span class="logo">ON MOVE</span><span class="muted">Мои брони</span></div>
+
+  <div data-s="land">
+    <div class="g row" style="padding-top:48px">
+      <div class="a"><div class="photo"><img src="../../../public/places/sochi-ritsa.webp" alt=""></div><p class="cap">Озеро Рица, Абхазия · фото Wikimedia Commons</p></div>
+      <div class="b">
+        <h1>Скажи, куда едешь. Машину подберём сами</h1>
+        <p>Без 50 вкладок и&nbsp;сравнений.</p>
+        <div class="wz"><div class="field"><span class="caps">Куда привезти</span><b>Сочи, аэропорт</b></div><div class="field"><span class="caps">Когда</span><b>12–19 ноября</b></div></div>
+        <div><button class="btn"><i></i>Подобрать машину</button></div>
+      </div>
+    </div>
+    <div class="g row blk flip">
+      <div class="a"><div class="photo"><img src="../../../public/places/mmk-teriberka.webp" alt=""></div><p class="cap">Териберка · фото Wikimedia Commons</p></div>
+      <div class="b"><h2>Мурманск</h2><p>Териберка, Хибины, северное сияние. Машина с&nbsp;клиренсом и&nbsp;зимней резиной.</p><div class="chips"><span class="chip on">Мурманск</span><span class="chip">Сочи</span><span class="chip">Калининград</span><span class="chip">Казань</span></div></div>
+    </div>
+    <div class="g row blk">
+      <div class="a"><div class="photo small"><img src="../../../public/places/kgd-spit.webp" alt=""></div></div>
+      <div class="b"><h2>Машина там, где ты</h2><p>Аэропорт, вокзал, отель или любой адрес. Приедешь — она уже ждёт.</p></div>
+    </div>
+    <div class="g blk"><div class="center"><h2>Без сюрпризов</h2><p class="muted" style="margin-top:16px">10 минут на&nbsp;выдачу · залог только замораживаем · поддержка круглосуточно</p></div></div>
+    <div class="g blk"><div class="b" style="grid-column:1/3"><h2>Что обычно спрашивают</h2></div><div class="faq"><div>Как вернуть залог и&nbsp;не&nbsp;спорить о&nbsp;царапинах?</div><div>Можно забрать машину ночью?</div><div>Какие нужны документы?</div></div></div>
+  </div>
+
+  <div data-s="e2">
+    <div class="g row" style="padding-top:48px;padding-bottom:var(--step)">
+      <div class="a"><div class="photo"><img src="../../../public/cars/tbank/changan-cs35plus-new-6.webp" alt=""></div></div>
+      <div class="b">
+        <h1>Changan CS35 Plus</h1>
+        <span class="muted">Подобрали под серпантин</span>
+        <p>Клиренс 18&nbsp;см на&nbsp;подъём к&nbsp;Розе Хутор, багажник на&nbsp;4 чемодана.</p>
+        <div class="spec"><span>5 мест</span><span>автомат</span><span>бензин</span></div>
+        <div><span class="caps">Что важнее</span><div class="chips" style="margin-top:8px"><span class="chip on">Дешевле</span><span class="chip">Просторнее</span><span class="chip">Полный привод</span></div></div>
+        <p class="price">4 200 ₽ в сутки</p>
+        <div><button class="btn"><i></i>Забронировать</button></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ═══════════ 2. СПЕКА ═══════════ -->
+<section data-v="2" class="v2">
+  <div class="top">
+    <div class="head"><span class="logo">ON MOVE</span><span class="muted">Мои брони</span></div>
+
+    <div data-s="land">
+      <div class="g hero">
+        <div class="steps"><span class="chip on">Куда</span><span class="chip">Когда</span><span class="chip">Планы</span></div>
+        <div class="left"><div class="photo"><img src="../../../public/places/sochi-ritsa.webp" alt=""></div></div>
+        <div class="axis">
+          <span class="muted">Расскажи о поездке</span>
+          <h1>Скажи, куда едешь. Машину подберём сами</h1>
+          <div class="field"><span class="caps">Куда привезти</span><b>Сочи, аэропорт</b></div>
+          <div><button class="btn"><i></i>Подобрать машину</button></div>
+        </div>
+      </div>
+    </div>
+
+    <div data-s="e2">
+      <div class="g hero">
+        <div class="steps"><span class="chip">Поездка</span><span class="chip on">Машина</span><span class="chip">Допы</span><span class="chip">Бронь</span></div>
+        <div class="left"><div class="photo"><img src="../../../public/cars/tbank/changan-cs35plus-new-6.webp" alt=""></div></div>
+        <div class="axis">
+          <span class="muted">Подобрали под серпантин</span>
+          <h1>Changan CS35 Plus</h1>
+          <div class="spec"><span>5 мест</span><span>автомат</span><span>клиренс 18 см</span><span>4 чемодана</span></div>
+          <p class="price">4 200 ₽ в сутки</p>
+          <div><button class="btn"><i></i>Забронировать</button></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div data-s="land">
+    <div class="g blk"><div class="axis"><span class="muted">Направления</span><h2>Куда едешь</h2></div></div>
+    <div class="g" style="margin-top:48px"><div class="tiles">
+      <div><div class="photo"><img src="../../../public/places/mmk-teriberka.webp" alt=""></div><h3 style="margin-top:12px">Мурманск</h3><p class="muted">Териберка, Хибины</p></div>
+      <div><div class="photo"><img src="../../../public/places/kgd-spit.webp" alt=""></div><h3 style="margin-top:12px">Калининград</h3><p class="muted">Коса, Янтарный</p></div>
+      <div><div class="photo"><img src="../../../public/places/kzn-sviyazhsk.webp" alt=""></div><h3 style="margin-top:12px">Казань</h3><p class="muted">Свияжск, Раифа</p></div>
+    </div></div>
+    <div class="g blk"><div class="axis"><span class="muted">Машина там, где ты</span><h2>Аэропорт, вокзал, отель или любой адрес</h2></div></div>
+    <div class="g blk"><div class="axis"><span class="muted">Без сюрпризов</span><div class="spec"><span>10 минут на выдачу</span><span>залог замораживаем</span><span>поддержка 24/7</span></div></div></div>
+    <div class="g blk"><div class="axis faq"><h2 style="margin-bottom:24px">Что обычно спрашивают</h2><div>Как вернуть залог и&nbsp;не&nbsp;спорить о&nbsp;царапинах?</div><div>Можно забрать машину ночью?</div></div></div>
+  </div>
+  <div data-s="e2">
+    <div class="g blk"><div class="axis"><span class="muted">Что важнее</span><div class="chips"><span class="chip on">Дешевле</span><span class="chip">Просторнее</span><span class="chip">Полный привод</span></div><p>Просторнее — +900 ₽ в&nbsp;сутки, багажник на&nbsp;6 чемоданов.</p></div></div>
+  </div>
+</section>
+
+<!-- ═══════════ 3. КАДР В КАДРЕ ═══════════ -->
+<section data-v="3" class="v3">
+  <div data-s="land">
+    <div class="scene">
+      <img src="../../../public/places/sochi-ritsa.webp" alt="">
+      <div class="over"><span class="logo">ON MOVE</span><span>Мои брони</span></div>
+      <div class="frame c">
+        <h1>Скажи, куда едешь. Машину подберём сами</h1>
+        <div class="wz" style="grid-template-columns:1fr 1fr"><div class="field"><span class="caps">Куда привезти</span><b>Сочи, аэропорт</b></div><div class="field"><span class="caps">Когда</span><b>12–19 ноября</b></div></div>
+        <div><button class="btn"><i></i>Подобрать машину</button></div>
+      </div>
+      <span class="credit">Озеро Рица · Wikimedia Commons</span>
+    </div>
+    <div class="scene">
+      <img src="../../../public/places/mmk-teriberka.webp" alt="">
+      <div class="frame l"><h2>Мурманск</h2><p>Териберка, Хибины, северное сияние.</p><div class="chips"><span class="chip on">Мурманск</span><span class="chip">Сочи</span><span class="chip">Казань</span></div></div>
+    </div>
+    <div class="scene">
+      <img src="../../../public/places/kgd-spit.webp" alt="">
+      <div class="frame r"><h2>Машина там, где ты</h2><p>Аэропорт, вокзал, отель или любой адрес.</p></div>
+    </div>
+    <div class="g blk"><div style="grid-column:1/4"><h2>Без сюрпризов</h2></div><div style="grid-column:4/7" class="faq"><div>10 минут на&nbsp;выдачу</div><div>Залог только замораживаем</div><div>Поддержка круглосуточно</div></div></div>
+    <div class="g blk"><div style="grid-column:1/4"><h2>Что обычно спрашивают</h2></div><div style="grid-column:4/7" class="faq"><div>Как вернуть залог и&nbsp;не&nbsp;спорить о&nbsp;царапинах?</div><div>Можно забрать машину ночью?</div></div></div>
+  </div>
+
+  <div data-s="e2">
+    <div class="scene">
+      <img src="../../../public/places/sochi-ski.webp" alt="">
+      <div class="over"><span class="logo">ON MOVE</span><span>Мои брони</span></div>
+      <div class="frame wide">
+        <div class="photo"><img src="../../../public/cars/tbank/changan-cs35plus-new-6.webp" alt=""></div>
+        <div style="display:grid;gap:20px">
+          <h1>Changan CS35 Plus</h1>
+          <span class="muted">Подобрали под серпантин</span>
+          <div class="spec"><span>5 мест</span><span>автомат</span><span>клиренс 18 см</span></div>
+          <div class="chips"><span class="chip on">Дешевле</span><span class="chip">Просторнее</span><span class="chip">Полный привод</span></div>
+          <p class="price">4 200 ₽ в сутки</p>
+          <div><button class="btn"><i></i>Забронировать</button></div>
+        </div>
+      </div>
+      <span class="credit">Роза Хутор · Wikimedia Commons</span>
+    </div>
+  </div>
+</section>
+
+<nav class="bar">
+  <button data-set-v="1" class="on">1 Разворот</button><button data-set-v="2">2 Спека</button><button data-set-v="3">3 Кадр</button>
+  <hr><button data-set-s="land" class="on">Лендинг</button><button data-set-s="e2">Э2</button>
+</nav>
+<script>
+document.querySelectorAll('.bar button').forEach(b => b.onclick = () => {
+  const k = b.dataset.setV ? 'v' : 's';
+  document.body.dataset[k] = b.dataset.setV || b.dataset.setS;
+  b.parentNode.querySelectorAll(`[data-set-${k}]`).forEach(x => x.classList.toggle('on', x === b));
+  scrollTo(0, 0);
+});
+</script>
+</body>
+</html>

@@ -6,7 +6,6 @@ export default { title: 'Блоки/Лендинг' }
 
 const Shell = ({ title, children }) => (
   <div style={{ background: 'var(--paper)', color: 'var(--ink)', padding: 32, minHeight: '100vh' }}>
-    <p className="kicker">{title}</p>
     {children}
   </div>
 )
@@ -27,8 +26,7 @@ export const Обещания = () => (
 
 export const Доставка = () => (
   <Shell title="Доставка">
-    <div className="delivery-plate cut-both" style={{ position: 'relative', left: 'auto', bottom: 'auto', width: '100%', maxWidth: 460 }}>
-      <p className="kicker">Доставка</p>
+    <div className="delivery-plate" style={{ position: 'relative', left: 'auto', bottom: 'auto', width: '100%', maxWidth: 460 }}>
       <h2>Машина там,<br />где ты</h2>
       <p>Привезём к аэропорту, вокзалу или к дверям отеля.</p>
       <ul className="delivery-list">

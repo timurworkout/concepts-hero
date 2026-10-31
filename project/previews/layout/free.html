@@ -1,0 +1,270 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Свободный лейаут</title>
+<link rel="stylesheet" href="../../../public/fonts/fonts.css">
+<style>
+/* Токены — копия :root из src/styles.css, плюс --step-block (новый, 31.10) */
+:root {
+  --canvas: #f2efe8; --plate: #fbfaf6; --ink: #15181c; --muted: #5d635f;
+  --line: #d2cfc4; --rec: #e3402a; --body: #33383a;
+  --dur-medium: .3s; --r-card: 16px; --r-ctl: 12px;
+  --shadow: 0 18px 40px -16px rgb(21 24 28 / .25);
+  --gutter: 80px;
+  --step-block: clamp(96px, 10vw, 160px); /* один шаг между блоками лендинга */
+  --fs-xs: 12px; --fs-sm: 14px; --fs-md: 16px; --fs-lg: 20px; --fs-xl: 28px;
+  --fs-section: clamp(30px, 3.4vw, 50px); --fs-hero: clamp(38px, 4.6vw, 64px);
+  --lh-tight: 1.05; --lh-snug: 1.25; --lh-body: 1.5;
+  --ls-display: -0.035em; --ls-head: -0.01em; --ls-caps: .08em;
+  font-family: Manrope, 'Golos Text', system-ui, sans-serif; color: var(--ink);
+}
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body { background: var(--canvas); font-size: var(--fs-md); line-height: var(--lh-body); color: var(--body); }
+img { display: block; width: 100%; height: 100%; object-fit: cover; }
+h1, h2, h3 { color: var(--ink); font-weight: 700; }
+h2 { font-size: var(--fs-section); line-height: var(--lh-tight); letter-spacing: var(--ls-display); }
+h3 { font-size: var(--fs-lg); line-height: var(--lh-snug); }
+.muted { color: var(--muted); font-size: var(--fs-sm); }
+.caps { font-size: var(--fs-xs); letter-spacing: var(--ls-caps); text-transform: uppercase; color: var(--muted); }
+
+/* Две оси: левое поле и середина (начало 4-й из 6 колонок) */
+.g { display: grid; grid-template-columns: repeat(6, minmax(0, 1fr)); column-gap: 24px; padding: 0 var(--gutter); }
+.left { grid-column: 1 / 4; }
+.right { grid-column: 4 / 7; }
+.blk { margin-top: var(--step-block); }
+
+/* ── Интро: кадр до краёв, заголовок — самая большая масса ── */
+.hero { position: relative; isolation: isolate; background: var(--ink); height: calc(100vh - 96px); min-height: 600px; color: #fff; display: flex; flex-direction: column; }
+.hero > img { position: absolute; inset: 0; z-index: -2; filter: brightness(.82); transition: opacity var(--dur-medium); }
+/* Вид за стеклом медленно «едет» навстречу — движение без эффекта ради эффекта */
+.wz-top > img { animation: drive 24s ease-in-out infinite alternate; transform-origin: 50% 45%; }
+@keyframes drive { from { transform: scale(1.02); } to { transform: scale(1.14); } }
+@media (prefers-reduced-motion: reduce) { .wz-top > img { animation: none; } }
+.glass { display: none; position: absolute; inset: 0; width: 100%; height: 100%; z-index: -1; fill: var(--ink); }
+.wz-top .glass { display: block; }
+.cities li { cursor: pointer; }
+.head { display: flex; justify-content: space-between; align-items: center; padding: 24px var(--gutter); }
+.logo { font-weight: 700; letter-spacing: var(--ls-head); color: inherit; }
+.hero h1 { color: #fff; font-size: clamp(56px, 8vw, 128px); line-height: var(--lh-tight); letter-spacing: var(--ls-display); }
+.hero-bottom { display: contents; }
+.hero-row { padding: 0 var(--gutter) !important; }
+.wz-wrap { position: relative; z-index: 2; margin: 0 var(--gutter); }
+/* Визард вверху: сразу под шапкой, панели раскрываются вниз, заголовок прижат к низу кадра */
+.wz-top .wz-wrap { order: 1; }
+.wz-top .hero-row { order: 2; margin-top: auto; padding-bottom: 48px !important; }
+/* Визард внизу: на кромке кадра, панели раскрываются вверх, над полосой */
+.wz-bottom .hero-row { order: 1; margin-top: auto; }
+.wz-bottom .wz-wrap { order: 2; margin-top: 24px; margin-bottom: 32px; }
+.wz-panel { display: none; position: absolute; left: 0; width: min(640px, 100%); padding: 20px; background: var(--plate); color: var(--ink); border: 1px solid var(--ink); border-radius: var(--r-card); box-shadow: var(--shadow); }
+.wz-panel.open { display: block; }
+.wz-top .wz-panel { top: calc(100% + 10px); }
+.wz-bottom .wz-panel { bottom: calc(100% + 10px); }
+.wz-panel[data-for="when"] { left: 30%; }
+.cal { display: grid; grid-template-columns: 1fr 1fr; gap: 32px; }
+.cal .mon { font-weight: 600;  font-size: var(--fs-md); margin-bottom: 12px; }
+.days { display: grid; grid-template-columns: repeat(7, 1fr); gap: 2px; text-align: center; font-size: var(--fs-sm); }
+.days span { padding: 8px 0; border-radius: var(--r-ctl); }
+.days .sel { background: var(--ink); color: #fff; }
+.days .rng { background: rgb(21 24 28 / .08); }
+.opts { display: grid; gap: 4px; }
+.opts span { padding: 10px 12px; border-radius: var(--r-ctl); }
+.opts span:first-child { background: rgb(21 24 28 / .08); }
+.wz [data-open] { cursor: pointer; border-radius: var(--r-ctl); }
+.wz [data-open].active { background: rgb(21 24 28 / .06); }
+.hero-row { align-items: end; }
+.hero-sub { color: rgb(255 255 255 / .85); max-width: 40ch; }
+.cities { list-style: none; justify-self: end; text-align: right; font-size: var(--fs-sm); display: grid; gap: 4px; }
+.cities li { color: rgb(255 255 255 / .85); }
+.cities li.on { color: #fff; font-weight: 600; }
+.wz { display: grid; grid-template-columns: 2fr 1.4fr 1.4fr auto; background: var(--plate); border-radius: var(--r-card); padding: 8px; box-shadow: var(--shadow); }
+.wz div { padding: 10px 16px; color: var(--ink); }
+.wz div + div { border-left: 1px solid var(--line); }
+.wz b { display: block; font-weight: 600; }
+.btn { display: inline-flex; align-items: center; gap: 10px; height: 56px; padding: 0 28px; border-radius: var(--r-ctl); background: var(--ink); color: #fff; font: 600 var(--fs-md) inherit; border: 0; }
+.btn i { width: 10px; height: 10px; background: var(--rec); border-radius: 2px; }
+
+/* ── Направления: одно большое фото и два меньше со сдвигом вверх ── */
+.tabs { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 24px; }
+.tab { border: 1px solid var(--line); border-radius: var(--r-ctl); padding: 8px 14px; font-size: var(--fs-sm); color: var(--ink); }
+.tab.on { border-color: var(--ink); }
+.dir-head { align-items: end; }
+.dir-head p { align-self: end; }
+.places { margin-top: 48px; align-items: start; }
+.place .photo { border-radius: var(--r-card); overflow: hidden; }
+.place.big .photo { aspect-ratio: 4 / 5; }
+.smalls { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 24px; margin-top: -120px; }
+.smalls .photo { aspect-ratio: 3 / 4; }
+.smalls .place:nth-child(2) { margin-top: 96px; }
+.place h3 { margin-top: 16px; }
+.place p { margin-top: 4px; }
+.price { color: var(--ink); font-weight: 600; font-size: var(--fs-sm); margin-top: 8px; }
+
+/* ── Машина там, где ты: кадр без полей, плашка на левой оси ── */
+.delivery { position: relative; isolation: isolate; height: clamp(480px, 56vw, 760px); }
+.delivery > img { position: absolute; inset: 0; z-index: -1; }
+.delivery .g { height: 100%; align-items: end; padding-bottom: 48px; }
+.plate { grid-column: 1 / 3; background: var(--plate); border-radius: var(--r-card); padding: 32px; }
+.plate p { margin-top: 16px; color: var(--muted); }
+.plate ul { list-style: none; margin-top: 16px; }
+.plate li { padding: 12px 0; border-top: 1px solid var(--line); color: var(--ink); font-weight: 600; }
+
+/* ── Без сюрпризов: строка крупных значений, 3-е встаёт на вторую ось ── */
+.promises { grid-column: 1 / 7; display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); column-gap: 24px; margin-top: 48px; border-top: 1px solid var(--line); padding-top: 24px; }
+.promise b { display: block; font-size: var(--fs-section); line-height: var(--lh-tight); letter-spacing: var(--ls-display); color: var(--ink); }
+.promise h3 { margin-top: 16px; font-size: var(--fs-md); }
+.promise p { margin-top: 4px; }
+
+/* ── FAQ: заголовок на левой оси, список на второй ── */
+.faq div { border-top: 1px solid var(--line); padding: 20px 0; color: var(--ink); font-weight: 600; }
+.foot { margin-top: var(--step-block); border-top: 1px solid var(--line); padding: 24px var(--gutter); display: flex; justify-content: space-between; }
+
+/* Было / стало */
+.bar { position: fixed; z-index: 9; left: 50%; bottom: 16px; transform: translateX(-50%); display: flex; gap: 4px; padding: 6px; background: var(--ink); border-radius: var(--r-card); box-shadow: var(--shadow); }
+.bar button { border: 0; background: none; color: #fff; opacity: .6; font: 600 var(--fs-sm) inherit; padding: 8px 14px; border-radius: var(--r-ctl); cursor: pointer; }
+.bar button.on { opacity: 1; background: rgb(255 255 255 / .14); }
+#was { display: none; position: fixed; inset: 0; width: 100%; height: 100%; border: 0; z-index: 8; background: var(--canvas); }
+body.was #was { display: block; }
+
+@media (max-width: 760px) {
+  :root { --gutter: 16px; }
+  .g { grid-template-columns: 1fr; row-gap: 16px; }
+  .left, .right, .plate, .promises { grid-column: 1 / -1; }
+  .hero { height: auto; min-height: 100svh; }
+  .hero h1 { font-size: var(--fs-hero); }
+  .cities { display: none; }
+  .wz { grid-template-columns: 1fr; }
+  .wz div + div { border-left: 0; border-top: 1px solid var(--line); }
+  .wz .btn { width: 100%; justify-content: center; }
+  .wz-wrap { margin: 0 16px; }
+  .wz-panel, .wz-panel[data-for="when"] { position: static; left: auto; width: auto; margin-top: 8px; }
+  .cal { grid-template-columns: 1fr; }
+  .smalls { margin-top: 0; }
+  .smalls .place:nth-child(2) { margin-top: 48px; }
+  .promises { grid-template-columns: 1fr 1fr; row-gap: 32px; }
+  .delivery { height: auto; min-height: 560px; }
+  .delivery .g { padding-top: 240px; padding-bottom: 16px; }
+  .plate { padding: 24px; }
+  .bar { bottom: 8px; }
+}
+</style>
+</head>
+<body>
+
+<section class="hero wz-top">
+  <img id="hero-img" src="../../../public/places/sochi-ritsa.webp" alt="Вид на место поездки">
+  <!-- Силуэт лобового стекла: один тёмный тон, без салона. Машина угадывается, не показана -->
+  <svg class="glass" viewBox="0 0 1440 900" preserveAspectRatio="none" aria-hidden="true">
+    <path fill-rule="evenodd" d="M0 0H1440V900H0Z M230 70 Q720 40 1210 70 L1440 640 Q720 590 0 640 Z"/>
+    <rect x="650" y="0" width="12" height="96"/>
+    <rect x="600" y="92" width="240" height="56" rx="16"/>
+  </svg>
+  <div class="head"><span class="logo">ON MOVE</span><span>Избранное · Профиль</span></div>
+  <div class="hero-bottom">
+    <div class="g hero-row" style="padding:0">
+      <div class="left" style="grid-column:1/6">
+        <h1>Скажи, куда. Машину найдём.</h1>
+        <p class="hero-sub" style="margin-top:16px">Расскажи о&nbsp;поездке&nbsp;— подберём одну машину и&nbsp;объясним почему. Без вечера в&nbsp;каталогах.</p>
+      </div>
+      <ul class="cities">
+        <li class="on" data-img="sochi-ritsa">Сочи</li><li data-img="mmk-teriberka">Мурманск</li><li data-img="kgd-spit">Калининград</li><li data-img="kzn-sviyazhsk">Казань</li><li data-img="spb-karelia">Петербург</li><li data-img="msk-ring">Москва</li>
+      </ul>
+    </div>
+    <div class="wz-wrap">
+    <form class="wz" onsubmit="return false">
+      <div data-open="where"><span class="caps">Куда едешь</span><b>Сочи, аэропорт</b></div>
+      <div data-open="when"><span class="caps">Когда</span><b>12–19 ноября</b></div>
+      <div><span class="caps">Параметры</span><b>Горы, семья</b></div>
+      <button class="btn"><i></i>Подобрать</button>
+    </form>
+    <div class="wz-panel" data-for="where"><div class="opts"><span>Сочи, аэропорт Адлер</span><span>Сочи, вокзал</span><span>Красная Поляна, отель</span><span>Другой адрес</span></div></div>
+    <div class="wz-panel" data-for="when"><div class="cal"><div><div class="mon">Ноябрь</div><div class="days" id="m1"></div></div><div><div class="mon">Декабрь</div><div class="days" id="m2"></div></div></div></div>
+    </div>
+  </div>
+</section>
+
+<section class="blk">
+  <div class="g dir-head">
+    <div class="left"><h2>Хороший план&nbsp;— просто уехать</h2>
+      <p class="muted" style="margin-top:16px">От города до&nbsp;мест, ради которых ты приехал. Покажи, куда хочется,&nbsp;— найдём подходящую машину.</p>
+      <div class="tabs"><span class="tab on">Сочи</span><span class="tab">Петербург</span><span class="tab">Москва</span><span class="tab">Калининград</span><span class="tab">Мурманск</span><span class="tab">Казань</span></div>
+    </div>
+  </div>
+  <div class="g places">
+    <div class="place big left"><div class="photo"><img src="../../../public/places/sochi-ski.webp" alt=""></div><h3>Горнолыжка в&nbsp;Красной Поляне</h3><p class="muted">Бокс и&nbsp;крепление для лыж уже стоят</p><p class="price">от 4 200 ₽ в&nbsp;сутки</p></div>
+    <div class="right smalls">
+      <div class="place"><div class="photo"><img src="../../../public/places/sochi-lagonaki.webp" alt=""></div><h3>Плато Лаго-Наки</h3><p class="muted">Полный привод и&nbsp;клиренс от&nbsp;200&nbsp;мм</p></div>
+      <div class="place"><div class="photo"><img src="../../../public/places/sochi-imereti.webp" alt=""></div><h3>Имеретинка</h3><p class="muted">Море и&nbsp;набережная</p></div>
+    </div>
+  </div>
+</section>
+
+<section class="delivery blk">
+  <img src="https://images.unsplash.com/photo-1759486582799-c0d8789824bb?auto=format&fit=crop&w=2400&q=80" alt="Дорога к горам">
+  <div class="g">
+    <div class="plate"><h2>Машина там, где ты</h2><p>Привезём к&nbsp;аэропорту, вокзалу или к&nbsp;дверям отеля.</p>
+      <ul><li>Встретим в&nbsp;аэропорту</li><li>Привезём к&nbsp;отелю</li><li>Подгоним по&nbsp;адресу</li></ul></div>
+  </div>
+</section>
+
+<section class="blk">
+  <div class="g">
+    <h2 class="left">Сюрпризы пусть будут в&nbsp;поездке</h2>
+    <div class="promises">
+      <div class="promise"><b>10 мин</b><h3>И&nbsp;ты за&nbsp;рулём</h3><p class="muted">Документы заранее онлайн. На&nbsp;месте только осмотр и&nbsp;ключи</p></div>
+      <div class="promise"><b>0 ₽</b><h3>Залог заморозим</h3><p class="muted">Только блокируем сумму и&nbsp;размораживаем в&nbsp;день возврата</p></div>
+      <div class="promise"><b>24/7</b><h3>На&nbsp;связи круглосуточно</h3><p class="muted">Сломалась&nbsp;— привезём подменную туда, где ты</p></div>
+      <div class="promise"><b>Проверено</b><h3>Не&nbsp;ведро с&nbsp;гайками</h3><p class="muted">Перед каждой поездкой моем и&nbsp;фотографируем</p></div>
+    </div>
+  </div>
+</section>
+
+<section class="blk">
+  <div class="g">
+    <h2 class="left">Что обычно спрашивают</h2>
+    <div class="right faq"><div>А&nbsp;если подобранная машина мне не&nbsp;нравится?</div><div>А&nbsp;если я&nbsp;сам знаю, какую машину хочу?</div><div>Откуда вы знаете, что мне нужно?</div><div>Как вернуть залог и&nbsp;не&nbsp;спорить о&nbsp;царапинах?</div></div>
+  </div>
+</section>
+
+<footer class="foot"><span class="logo">ON MOVE</span><span class="muted">Учебный концепт</span></footer>
+
+<iframe id="was" src="/concepts-hero/" title="Было"></iframe>
+<nav class="bar"><button data-wz="top" class="on">Визард вверху</button><button data-wz="bottom">Внизу</button><button data-k="was">Было</button><button data-k="now" class="on">Стало</button></nav>
+<script>
+document.querySelectorAll('.bar [data-k]').forEach(b => b.onclick = () => {
+  document.body.classList.toggle('was', b.dataset.k === 'was');
+  document.querySelectorAll('.bar [data-k]').forEach(x => x.classList.toggle('on', x === b));
+});
+const hero = document.querySelector('.hero');
+document.querySelectorAll('.bar [data-wz]').forEach(b => b.onclick = () => {
+  hero.classList.toggle('wz-top', b.dataset.wz === 'top');
+  hero.classList.toggle('wz-bottom', b.dataset.wz === 'bottom');
+  // Вверху — кадр из окна машины, внизу — прежний пейзаж
+  document.querySelectorAll('.bar [data-wz]').forEach(x => x.classList.toggle('on', x === b));
+});
+document.querySelectorAll('.wz [data-open]').forEach(f => f.onclick = () => {
+  const open = !f.classList.contains('active');
+  document.querySelectorAll('.wz [data-open]').forEach(x => x.classList.toggle('active', open && x === f));
+  document.querySelectorAll('.wz-panel').forEach(p => p.classList.toggle('open', open && p.dataset.for === f.dataset.open));
+});
+// Календарь-заглушка: 12–19 ноября выбрано
+const month = (el, skip, len, from, to) => {
+  let h = '';
+  for (let i = 0; i < skip; i++) h += '<span></span>';
+  for (let d = 1; d <= len; d++) h += `<span class="${d === from || d === to ? 'sel' : d > from && d < to ? 'rng' : ''}">${d}</span>`;
+  el.innerHTML = h;
+};
+month(document.getElementById('m1'), 6, 30, 12, 19);
+month(document.getElementById('m2'), 1, 31, 0, 0);
+// Город меняет вид за стеклом: гаснет, меняется, проявляется
+const view = document.getElementById('hero-img');
+document.querySelectorAll('.cities [data-img]').forEach(li => li.onclick = () => {
+  document.querySelectorAll('.cities li').forEach(x => x.classList.toggle('on', x === li));
+  document.querySelector('.wz b').textContent = li.textContent;
+  view.style.opacity = 0;
+  setTimeout(() => { view.src = `../../../public/places/${li.dataset.img}.webp`; view.onload = () => view.style.opacity = 1; }, 300);
+});
+</script>
+</body>
+</html>

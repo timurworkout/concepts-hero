@@ -7,14 +7,13 @@ export default { title: 'Компоненты/Базовые' }
 
 const Shell = ({ title, children }) => (
   <div style={{ background: 'var(--paper)', color: 'var(--ink)', padding: 32, minHeight: '100vh' }}>
-    <p className="kicker">{title}</p>
     {children}
   </div>
 )
 
 export const Кнопки = () => (
   <Shell title="Контролы">
-    <h2 style={{ fontFamily: 'var(--display)', textTransform: 'uppercase', marginBottom: 20 }}>Кнопки</h2>
+    <h2 style={{ marginBottom: 20 }}>Кнопки</h2>
     <div style={{ display: 'flex', gap: 16, flexWrap: 'wrap', alignItems: 'center', marginBottom: 28 }}>
       <button type="button" className="btn-primary">Основная</button>
       <button type="button" className="btn-primary btn-accent">Подобрать машину</button>

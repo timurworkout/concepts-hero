@@ -1363,7 +1363,6 @@ function Landing({ query, setQuery, onSubmit }) {
       <WhereYouAre onPick={pickPlaceType} />
 
       <section className="section" id="promises">
-        <p className="kicker">Без сюрпризов</p>
         <h2>{nb('Сюрпризы пусть будут в поездке')}</h2>
         <div className="promises">
           {promises.map((p) => (
@@ -1379,7 +1378,6 @@ function Landing({ query, setQuery, onSubmit }) {
       <section className="section faq" id="faq">
         <div className="faq-grid">
           <div>
-            <p className="kicker">Вопросы</p>
             <h2>{nb('Что обычно спрашивают')}</h2>
           </div>
           <div className="faq-list">
@@ -1445,7 +1443,7 @@ const placePhoto = {
   'spb-vyborg': ['Sergey A. Demidov', 'CC BY 4.0', 'File:20240522_Vyborg_Castle_182.jpg'],
 }
 const newPlacePhotos = {
-  'msk-ring': ['Aleksandr Artiushenko', 'Unsplash', 'https://unsplash.com/photos/a-snowy-landscape-with-a-church-in-the-distance-XGMZxXfY5hQ', 'https://images.unsplash.com/photo-1715252752412-6e39089fe66e?auto=format&fit=crop&w=1400&q=80'],
+  'msk-ring': ['Aleksandr Artiushenko', 'Unsplash', 'https://unsplash.com/photos/a-snowy-landscape-with-a-church-in-the-distance-XGMZxXfY5hQ', 'https://images.unsplash.com/photo-1715252752412-6e39089fe66e?auto=format&rect=120,300,13772,8800&fit=crop&w=1400&q=80'],
   'sochi-ski': ['Ilnur Kalimullin', 'Unsplash', 'https://unsplash.com/photos/white-snow-covered-mountain-under-white-cloudy-sky-during-daytime-VMrNha7YKGc', 'https://images.unsplash.com/photo-1627109921568-52b5be2a14ab?auto=format&fit=crop&w=1400&q=80'],
   'mmk-khibiny': ['Slava Auchynnikau', 'Unsplash', 'https://unsplash.com/photos/the-sun-is-setting-over-a-snowy-landscape-gy6V59JqqSU', 'https://images.unsplash.com/photo-1711631139867-199196f6d7e8?auto=format&fit=crop&w=1400&q=80'],
   'spb-ladoga': ['Michail Dementiev', 'Unsplash', 'https://unsplash.com/photos/an-aerial-view-of-islands-G_0vKsIdxyU', 'https://images.unsplash.com/photo-1662804118977-481122aa1d10?auto=format&fit=crop&w=1400&q=80'],
@@ -1469,7 +1467,6 @@ function Directions({ onPick }) {
     <section className="dir" id="directions">
       <div className="section-top">
         <div>
-          <p className="kicker">Направления</p>
           <h2>{nb('Хороший план — просто уехать')}</h2>
         </div>
         <p>{nb('От города до мест, ради которых ты приехал. Покажи, куда хочется, — найдём подходящую машину.')}</p>
@@ -1483,7 +1480,7 @@ function Directions({ onPick }) {
         {places.slice(0, 3).map((p, i) => {
           const price = fromPrice(p)
           return (
-            <button key={p.id} type="button" style={{ '--i': i }} className="dir-place cut-both"
+            <button key={p.id} type="button" style={{ '--i': i }} className="dir-place"
               onMouseEnter={() => setActive(i)} onFocus={() => setActive(i)} onClick={() => onPick(cityId, p)}>
               <div className="dir-place-photo" style={{ backgroundImage: placeImage(p.id) }} />
               <div className="dir-caption">
@@ -1550,29 +1547,29 @@ const deliveryCopy = {
   'Парковка': 'Заберёшь сам в центре проката',
 }
 
-// Доставка: кадр побережья, поверх — плита со списком точек. Клик уводит в визард с нужным типом места
+// Доставка: пять равных точек старта — свобода выбрать, откуда начать. Клик уводит в визард с нужным типом места
 function WhereYouAre({ onPick }) {
-  const order = ['Аэропорт', 'Отель', 'Адрес', 'Вокзал', 'Парковка']
+  const order = ['Аэропорт', 'Вокзал', 'Отель', 'Адрес', 'Парковка']
   return (
     <section className="delivery" id="delivery">
-      <div className="delivery-stage">
-        <img src="https://images.unsplash.com/photo-1759486582799-c0d8789824bb?auto=format&fit=crop&w=2400&q=80" alt="Дорога к заснеженным горам Кабардино-Балкарии" loading="lazy" />
-        <a className="stage-caption" href="https://unsplash.com/photos/curving-road-leads-to-snow-capped-mountains-under-cloudy-sky-clrderMRqLk" target="_blank" rel="noreferrer">Кабардино-Балкария · фото Georgii Eletskikh</a>
-        <div className="delivery-plate cut-both">
-          <p className="kicker">Доставка</p>
+      <div className="delivery-grid">
+        <div className="delivery-head">
           <h2>Машина там,<br />где ты</h2>
-          <p>{nb('Привезём к аэропорту, вокзалу или к дверям отеля. Чемодан далеко нести не придётся.')}</p>
-          <ul className="delivery-list">
-            {order.map((type) => (
-              <li key={type}>
-                <button type="button" onClick={() => onPick(type)} title={whereCopy[type]}>
-                  <span>{deliveryCopy[type]}</span>
-                  <Arrow />
-                </button>
-              </li>
-            ))}
-          </ul>
+          <p>{nb('Начни поездку откуда удобно: с трапа, с перрона или от двери. Выбери точку — остальное подстроим.')}</p>
         </div>
+        <ul className="delivery-list">
+          {order.map((type) => (
+            <li key={type}>
+              <button type="button" onClick={() => onPick(type)}>
+                <span>
+                  <b>{deliveryCopy[type]}</b>
+                  {whereCopy[type] && <small>{nb(whereCopy[type])}</small>}
+                </span>
+                <Arrow />
+              </button>
+            </li>
+          ))}
+        </ul>
       </div>
     </section>
   )
