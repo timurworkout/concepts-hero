@@ -1,7 +1,7 @@
 import '../public/fonts/fonts.css'
 import '../src/styles.css'
 
-/** Фон — бумага «Табло», как в приложении. */
+/** Фон — White палитры «Север», как в приложении. */
 export default {
   tags: ['autodocs'],
   parameters: {
@@ -18,8 +18,8 @@ export default {
     },
     backgrounds: {
       options: {
-        paper: { name: 'Бумага', value: '#f2efe8' },
-        ink: { name: 'Чернила', value: '#15181c' },
+        paper: { name: 'White', value: '#f9f6f6' },
+        ink: { name: 'Lazur', value: '#001f26' },
       },
     },
   },

@@ -858,7 +858,13 @@ label.wz-seg, .wz-seg-btn { display: flex; flex-direction: column; align-items: 
 .wz-seg.flash { animation: wzFlash 0.7s var(--ease-out); }
 @keyframes wzFlash { 0% { box-shadow: 0 0 0 0 var(--accent); } 40% { box-shadow: 0 0 0 4px var(--accent); } 100% { box-shadow: 0 0 0 0 transparent; } }
 .wz-back { display: inline-flex; align-items: center; gap: 6px; border: 0; background: none; padding: 4px 8px 8px; color: var(--muted); font-size: var(--fs-sm); }
-.wz-cal { display: grid; grid-template-columns: 1fr 1fr; gap: 48px; }
+.wz-cal { display: grid; grid-template-columns: 1fr; }
+/* Один месяц в узкой панели: время в две колонки, итог и «Далее» строкой ниже */
+.wz-panel[data-step="when"]:not(.wz-panel-wide) .wz-times { display: grid; grid-template-columns: 1fr 1fr; width: 100%; }
+.wz-panel[data-step="when"]:not(.wz-panel-wide) .wz-times .dates-time { width: auto; }
+.wz-panel[data-step="when"]:not(.wz-panel-wide) .wz-times .muted { grid-column: 1 / -1; }
+.wz-panel[data-step="when"]:not(.wz-panel-wide) .wz-foot { margin-top: 8px; padding-top: 10px; gap: 8px; }
+.wz-panel[data-step="when"]:not(.wz-panel-wide) .wz-foot .btn-primary { margin-left: auto; }
 .wz-month-head { display: flex; justify-content: space-between; align-items: center; margin-bottom: 4px; }
 .wz-month-head .month-name { margin: 0; }
 .wz-month-head button, .wz-month-head > span:empty { width: 32px; height: 32px; border: 0; border-radius: var(--r-ctl); background: none; font-size: var(--fs-lg); }
@@ -1182,3 +1188,19 @@ label.wz-seg, .wz-seg-btn { display: flex; flex-direction: column; align-items: 
 
 .arrival-icon path, .dir-caption > .arrow-icon path, .delivery-list .arrow-icon path { vector-effect: non-scaling-stroke; }
 .btn-with-icon { display: inline-flex; align-items: center; justify-content: center; gap: 12px; }
+
+/* Э2: «Ещё варианты под поездку» — три альтернативы и «Подобрать ещё» */
+.more-cars { margin-top: 48px; }
+.more-cars h2 { margin: 0; font-family: var(--display); font-size: var(--fs-xl); font-weight: 700; letter-spacing: var(--ls-head); line-height: var(--lh-snug); }
+.more-cars > p { margin: 8px 0 0; font-size: var(--fs-md); }
+.more-cars-grid { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 12px; margin-top: 20px; }
+.more-car { display: grid; align-content: start; padding: 0; overflow: hidden; text-align: left; color: var(--ink); background: var(--plate); border: 1px solid var(--line); border-radius: var(--r-card); transition: border-color var(--dur-fast); }
+.more-car:hover { border-color: var(--ink); }
+.more-car img { display: block; width: 100%; height: 120px; object-fit: cover; background: var(--surface-strong); }
+.more-car-body { position: relative; display: grid; gap: 2px; padding: 12px 40px 14px 14px; font-size: var(--fs-sm); }
+.more-car-body .arrival-icon { position: absolute; right: 14px; top: 14px; color: var(--muted); }
+.more-car:hover .arrival-icon { color: var(--ink); }
+.more-car-why { font-weight: 600; }
+.more-car-model { font-family: var(--display); font-size: var(--fs-lg); font-weight: 600; line-height: var(--lh-snug); }
+.more-car-ask { align-content: center; justify-items: start; gap: 6px; padding: 18px; background: var(--paper); font-size: var(--fs-sm); }
+@media (max-width: 1100px) { .more-cars-grid { grid-template-columns: 1fr 1fr; } }

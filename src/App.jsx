@@ -1,6 +1,6 @@
 import { Fragment, useCallback, useEffect, useLayoutEffect, useRef, useState } from 'react'
 import { createPortal } from 'react-dom'
-import { selectCars, rankCars, hasNumber, isAutomatic, savedCarIds, savedBookings } from './fleet.js'
+import { selectCars, rankCars, carSummary, hasNumber, isAutomatic, savedCarIds, savedBookings } from './fleet.js'
 import EntryIntro, { hasSeenEntryIntro } from './EntryIntro.jsx'
 import { locations, locationGroups, cars, nb, rub, carDetails, rentTerms, cities, inCity, cityPrice, extras, plans, prefOptions, companions, promises, faq, addressHints } from './data.js'
 
@@ -1096,9 +1096,9 @@ function DatesPanel({ query, set, onNext }) {
     return (
       <div key={i} className="wz-month">
         <div className="wz-month-head">
-          {i === 0 ? <button type="button" disabled={!offset} onClick={() => setOffset(offset - 1)} aria-label="Раньше"><Arrow dir="left" chevron /></button> : <span />}
+          <button type="button" disabled={!offset} onClick={() => setOffset(offset - 1)} aria-label="Раньше"><Arrow dir="left" chevron /></button>
           <span className="month-name">{m.toLocaleDateString('ru-RU', { month: 'long', year: 'numeric' }).replace(' г.', '')}</span>
-          {i === 1 ? <button type="button" onClick={() => setOffset(offset + 1)} aria-label="Позже"><Arrow chevron /></button> : <span />}
+          <button type="button" onClick={() => setOffset(offset + 1)} aria-label="Позже"><Arrow chevron /></button>
         </div>
         <div className="month-grid">
           {['Пн', 'Вт', 'Ср', 'Чт', 'Пт', 'Сб', 'Вс'].map((w) => <span key={w} className="wd">{w}</span>)}
@@ -1115,7 +1115,8 @@ function DatesPanel({ query, set, onNext }) {
   }
   return (
     <>
-      <div className="wz-cal">{month(0)}{month(1)}</div>
+      {/* Один месяц — две сетки цифр мешали смотреть (С8 №13) */}
+      <div className="wz-cal">{month(0)}</div>
       <div className="wz-foot">
         <div className="wz-times">
           <TimeSelect label="Получение" value={query.timeFrom} onChange={(v) => set({ timeFrom: v })} />
@@ -1315,7 +1316,7 @@ export function Wizard({ ref, query, setQuery, step, setStep, placeType, setPlac
             <span aria-hidden="true">Найти</span>
           </button>
           {step && !mobile && (
-            <div className={`wz-panel ${step === 'when' ? 'wz-panel-wide' : ''}`} style={step === 'when' ? undefined : { left: panelLeft }} data-step={step} data-after={segs.indexOf(step)}>
+            <div className={`wz-panel ${step === 'when' && query.mode === 'hours' ? 'wz-panel-wide' : ''}`} style={step === 'when' && query.mode === 'hours' ? undefined : { left: panelLeft }} data-step={step} data-after={segs.indexOf(step)}>
               {step === 'city' && <PlacePanel query={query} text={text} onCity={pickCity} onPick={pickPlace} />}
               {step === 'place' && city && <PlacePanel key={query.cityId} query={query} type={placeType} onClearType={() => setPlaceType(null)} onPick={pickPlace} onLater={() => setStep(next('place'))} />}
               {step === 'return' && city && <PlacePanel isReturn query={query} onReturn={(p) => { set(p); setStep('when') }} />}
@@ -1771,6 +1772,35 @@ function PickGallery({ car, prev, fav }) {
   )
 }
 
+// «Ещё варианты под поездку»: три альтернативы и «Подобрать ещё» — куда идти, если эта машина не та
+function MoreCars({ car, query, items, onPick, onMore }) {
+  if (!items.length) return null
+  return (
+    <section className="more-cars">
+      <h2>Ещё варианты под поездку</h2>
+      <p className="muted">{nb(`Те же даты и цель. Нажми — сравним с ${car.model}.`)}</p>
+      <div className="more-cars-grid">
+        {items.map(({ car: c, label }) => (
+          <button key={c.id} type="button" className="more-car" onClick={() => onPick(c.id)}>
+            <img src={`${import.meta.env.BASE_URL}${c.image}`} alt="" loading="lazy" />
+            <span className="more-car-body">
+              {label && <span className="more-car-why">{label[0].toUpperCase() + label.slice(1)}</span>}
+              <span className="more-car-model">{c.model}</span>
+              <span className="muted">{rub(query.mode === 'hours' ? c.pricePerHour : c.pricePerDay)} {query.mode === 'hours' ? 'в час' : 'в\u00a0сутки'}</span>
+              <ActionIcon kind="open" />
+            </span>
+          </button>
+        ))}
+        <button type="button" className="more-car more-car-ask" onClick={onMore}>
+          <ActionIcon kind="add" />
+          <span className="more-car-model">Подобрать ещё</span>
+          <span className="muted">{nb('Поменяй цель, с кем едешь или что важно в машине')}</span>
+        </button>
+      </div>
+    </section>
+  )
+}
+
 function PickSpecs({ car, query }) {
   const d = carDetails[car.id]
   const month = new Date(query.dateFrom || Date.now()).getMonth() + 1
@@ -1866,6 +1896,9 @@ export function E2({ query, setQuery, fav, onBack, onPick, openPicker }) {
   // Рекомендации сохраняют выбранную цель, спутников и локальные планы.
   const alternatives = car ? fit.filter((c) => c.id !== car.id && places.every((p) => p.test(c))) : []
   const recommendations = []
+  // Внизу Э2 — три варианта под ту же поездку: сначала с явным плюсом, потом остальные по цене
+  const moreCars = car ? [...alternatives.map((c) => ({ car: c, label: goods(car, c, query)[0] || (tripTotal(c, query) < tripTotal(car, query) ? `Дешевле на ${rub(tripTotal(car, query) - tripTotal(c, query))}` : null) }))]
+    .sort((a, b) => Boolean(b.label) - Boolean(a.label)).slice(0, 3) : []
   for (const candidate of alternatives) {
     const improvements = goods(car, candidate, query)
     const cheaper = tripTotal(candidate, query) < tripTotal(car, query)
@@ -1925,6 +1958,7 @@ export function E2({ query, setQuery, fav, onBack, onPick, openPicker }) {
               </section>
               <PickGallery key={car.id} car={car} prev={prev} fav={fav} />
               <PickSpecs car={car} query={query} />
+              <MoreCars car={car} query={query} items={moreCars} onPick={choose} onMore={() => setParamsOpen(true)} />
             </div>
           ) : (
             <div className="empty">

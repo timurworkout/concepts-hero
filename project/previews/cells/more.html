@@ -1,0 +1,145 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Календарь и варианты</title>
+<link rel="stylesheet" href="/concepts-hero/fonts/fonts.css">
+<style>
+  /* Токены Севера из src/styles.css */
+  :root {
+    --paper: #f9f6f6; --plate: #ffffff; --ink: #001f26; --muted: #4a5d62; --line: #d3dadb;
+    --green: #a4e891; --surface-strong: #e9eeee; --range: rgb(0 31 38 / .08);
+    --r-card: 16px; --r-ctl: 12px; --icon-stroke: 1.5px;
+    --fs-xs: 12px; --fs-sm: 14px; --fs-md: 16px; --fs-lg: 20px; --fs-xl: 28px;
+    --lh-snug: 1.25; --lh-body: 1.5;
+    --shadow: 0 18px 40px -16px rgb(0 31 38 / .25);
+    --display: Manrope, system-ui, sans-serif;
+  }
+  * { box-sizing: border-box; }
+  button { font: inherit; color: inherit; cursor: pointer; }
+  body { margin: 0; background: var(--paper); color: var(--ink); font: 400 var(--fs-md)/var(--lh-body) var(--display); }
+  main { max-width: 1200px; margin: 0 auto; padding: 48px 24px 96px; }
+  h1 { margin: 0; font-size: var(--fs-xl); font-weight: 700; }
+  .h2 { margin: 64px 0 8px; font-size: var(--fs-lg); font-weight: 700; }
+  p.note { margin: 8px 0 0; max-width: 72ch; color: var(--muted); }
+  .act { width: 18px; height: 18px; flex: none; fill: none; stroke: currentColor; stroke-width: var(--icon-stroke); stroke-linecap: round; }
+
+  /* ── 1. Календарь: один месяц, панель под ячейкой «Когда» ── */
+  .stage { margin-top: 16px; padding: 32px; border-radius: var(--r-card); background: linear-gradient(180deg, #001f26, #0b3540 70%, #2d5a4a); min-height: 640px; }
+  .row { display: flex; gap: 8px; }
+  .cell { flex: 1 1 0; position: relative; padding: 12px 48px 12px 16px; background: var(--plate); border-radius: var(--r-card); display: grid; gap: 2px; }
+  .cell.when { flex-grow: 1.6; box-shadow: inset 0 0 0 1px var(--ink); }
+  .cell .lbl { font-size: var(--fs-sm); color: var(--muted); }
+  .cell .val { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .cell .val.empty { color: var(--muted); }
+  .cell .act { position: absolute; right: 16px; top: 50%; translate: 0 -50%; color: var(--muted); }
+  .go { flex: none; display: flex; align-items: center; gap: 8px; padding: 0 24px; border: 0; border-radius: var(--r-card); background: var(--green); color: var(--ink); font: 600 var(--fs-md) var(--display); }
+  .wrap { position: relative; }
+  .panel { position: absolute; top: calc(100% + 10px); width: 380px; padding: 16px 20px 20px; background: var(--plate); border: 1px solid var(--ink); border-radius: var(--r-card); box-shadow: var(--shadow); }
+  .m-head { display: flex; align-items: center; justify-content: space-between; height: 32px; }
+  .m-head b { font-size: var(--fs-md); font-weight: 600; text-transform: capitalize; }
+  .nav { width: 32px; height: 32px; border: 0; border-radius: var(--r-ctl); background: none; color: var(--ink); display: grid; place-items: center; }
+  .nav:disabled { color: var(--line); }
+  .nav svg { width: 16px; height: 16px; fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
+  .grid { display: grid; grid-template-columns: repeat(7, 1fr); row-gap: 2px; margin-top: 8px; text-align: center; }
+  .wd { font-size: var(--fs-xs); color: var(--muted); padding: 6px 0; }
+  .d { height: 40px; display: grid; place-items: center; font-size: var(--fs-md); border-radius: var(--r-ctl); }
+  .d.past { color: var(--line); }
+  .d.in { background: var(--range); border-radius: 0; }
+  .d.edge { background: var(--ink); color: var(--paper); font-weight: 600; }
+  .foot { margin-top: 12px; padding-top: 12px; border-top: 1px solid var(--line); display: grid; gap: 12px; }
+  .times { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+  .time { background: var(--surface-strong); border-radius: var(--r-ctl); padding: 8px 12px; display: grid; }
+  .time small { font-size: var(--fs-xs); color: var(--muted); }
+  .time b { font-weight: 600; }
+  .foot-row { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
+  .foot-row span { font-size: var(--fs-sm); color: var(--muted); }
+  .btn { height: 44px; padding: 0 24px; border: 0; border-radius: var(--r-ctl); background: var(--ink); color: var(--paper); font: 600 var(--fs-md) var(--display); }
+
+  /* ── 2. Э2: варианты под поездку внизу ── */
+  .alts { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 16px; margin-top: 24px; }
+  .alt { display: grid; align-content: start; overflow: hidden; padding: 0; background: var(--plate); border: 1px solid var(--line); border-radius: var(--r-card); text-align: left; transition: border-color .15s; }
+  .alt:hover { border-color: var(--ink); }
+  .alt img { width: 100%; height: 150px; object-fit: cover; display: block; background: var(--surface-strong); }
+  .alt-body { position: relative; padding: 14px 44px 16px 16px; display: grid; gap: 4px; }
+  .alt-body .act { position: absolute; right: 16px; top: 16px; color: var(--muted); }
+  .why { font-size: var(--fs-sm); font-weight: 600; color: var(--ink); }
+  .model { font-size: var(--fs-lg); font-weight: 600; line-height: var(--lh-snug); }
+  .price { font-size: var(--fs-sm); color: var(--muted); }
+  .more { display: grid; align-content: center; justify-items: start; gap: 8px; padding: 20px; border: 1px solid var(--line); border-radius: var(--r-card); background: var(--paper); text-align: left; }
+  .more .act { width: 22px; height: 22px; }
+  .more b { font-size: var(--fs-lg); font-weight: 600; line-height: var(--lh-snug); }
+  .more span { font-size: var(--fs-sm); color: var(--muted); }
+  .sec-title { font-size: var(--fs-section, 40px); font-size: 40px; font-weight: 700; letter-spacing: -0.035em; line-height: 1.05; margin: 0; }
+  .sec-sub { margin: 12px 0 0; color: var(--muted); }
+  .e2 { margin-top: 32px; padding-top: 32px; border-top: 1px solid var(--line); }
+  @media (max-width: 900px) { .alts { grid-template-columns: 1fr 1fr; } .row { flex-direction: column; } .panel { position: static; width: auto; margin-top: 10px; } }
+</style>
+</head>
+<body>
+<svg width="0" height="0" style="position:absolute" aria-hidden="true">
+  <defs>
+    <path id="add" d="M10 3v14M3 10h14" />
+    <path id="open" d="M5 15 15 5M5 5h10v10" />
+  </defs>
+</svg>
+<main>
+  <h1>Календарь на один месяц и варианты на Э2</h1>
+  <p class="note">Два пункта фидбека Миши: №13 «разгрузить календарь» и №11 «три машины + подбери ещё».</p>
+
+  <div class="h2">1. Календарь «Когда»: один месяц</div>
+  <p class="note">Вместо двух месяцев на всю ширину — один месяц в узкой панели прямо под ячейкой «Когда», как остальные шаги визарда. Листание стрелками по бокам названия. Время получения и возврата, итог в сутках и «Далее» — под сеткой. Панель ниже на ~70px, на окне 800px помещается целиком.</p>
+  <div class="stage">
+    <div class="row">
+      <div class="cell"><span class="lbl">Куда едешь</span><span class="val">Мурманск</span></div>
+      <div class="cell"><span class="lbl">Где забрать</span><span class="val">Аэропорт Мурманска</span></div>
+      <div class="wrap cell when" style="flex-grow:1.6">
+        <span class="lbl">Когда</span><span class="val">7 нояб., 12:00 — 10 нояб., 12:00</span>
+        <svg class="act" viewBox="0 0 20 20"><use href="#open"/></svg>
+        <div class="panel">
+          <div class="m-head">
+            <button class="nav" disabled aria-label="Раньше"><svg viewBox="0 0 24 24"><path d="M15 5l-7 7 7 7"/></svg></button>
+            <b>ноябрь 2026</b>
+            <button class="nav" aria-label="Позже"><svg viewBox="0 0 24 24"><path d="M9 5l7 7-7 7"/></svg></button>
+          </div>
+          <div class="grid" id="month"></div>
+          <div class="foot">
+            <div class="times">
+              <div class="time"><small>Получение</small><b>12:00</b></div>
+              <div class="time"><small>Возврат</small><b>12:00</b></div>
+            </div>
+            <div class="foot-row"><span>3 суток</span><button class="btn">Далее</button></div>
+          </div>
+        </div>
+      </div>
+      <div class="cell"><span class="lbl">Параметры</span><span class="val empty">Цель, с кем, авто</span></div>
+      <button class="go">Найти</button>
+    </div>
+  </div>
+
+  <div class="h2">2. Э2: внизу «Ещё варианты под поездку»</div>
+  <p class="note">Главной остаётся одна машина с объяснением — так в <code>intent.md</code>. Внизу экрана, после характеристик, три альтернативы под те же цель и даты. У каждой первой строкой — чем она лучше этой: это уже считается в коде для чипов «Что для тебя важнее?». Четвёртая плитка — «Подобрать ещё»: открывает параметры поездки. Это и есть «куда дальше» из пункта №9.</p>
+  <div class="e2">
+    <h2 class="sec-title">Ещё варианты под поездку</h2>
+    <p class="sec-sub">Те же даты и цель. Нажми — сравним с TANK 300.</p>
+    <div class="alts">
+      <button class="alt"><img src="/cars/tbank/tank-400-161.webp" alt="">
+        <span class="alt-body"><span class="why">Багажник +170 л</span><span class="model">TANK 400</span><span class="price">6 500 ₽ в сутки</span><svg class="act" viewBox="0 0 20 20"><use href="#open"/></svg></span></button>
+      <button class="alt"><img src="/cars/tbank/haval-dargo-16.webp" alt="">
+        <span class="alt-body"><span class="why">Дешевле на 3 800 ₽</span><span class="model">Haval Dargo</span><span class="price">5 200 ₽ в сутки</span><svg class="act" viewBox="0 0 20 20"><use href="#open"/></svg></span></button>
+      <button class="alt"><img src="/cars/tbank/geely-monjaro-75.webp" alt="">
+        <span class="alt-body"><span class="why">Вариатор</span><span class="model">Geely Monjaro</span><span class="price">6 500 ₽ в сутки</span><svg class="act" viewBox="0 0 20 20"><use href="#open"/></svg></span></button>
+      <button class="more"><svg class="act" viewBox="0 0 20 20"><use href="#add"/></svg><b>Подобрать ещё</b><span>Поменяй цель, с кем едешь или что важно в машине</span></button>
+    </div>
+  </div>
+</main>
+<script>
+  // ноябрь 2026: 1-е — воскресенье; сегодня 1.11, выбрано 7–10
+  const g = document.getElementById('month')
+  g.innerHTML = ['Пн','Вт','Ср','Чт','Пт','Сб','Вс'].map((w) => `<span class="wd">${w}</span>`).join('')
+    + '<span></span>'.repeat(6)
+    + Array.from({ length: 30 }, (_, i) => { const d = i + 1; const c = d === 7 || d === 10 ? 'edge' : d > 7 && d < 10 ? 'in' : ''; return `<span class="d ${c}">${d}</span>` }).join('')
+</script>
+</body>
+</html>
