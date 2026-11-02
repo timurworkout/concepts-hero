@@ -17,7 +17,7 @@ function rememberEntryIntro() {
 }
 
 // Утверждённая сцена, разбор по шагам — project/animations.md: видоискатель ищет машину в сетке,
-// берёт её в фокус и превращает в move из лого. Около 14 секунд, один раз за сессию.
+// берёт её в фокус и превращает в move из лого, под лого — тезис. Около 15 секунд, один раз за сессию.
 export default function EntryIntro({ full, onDone }) {
   const overlayRef = useRef(null)
 
@@ -38,6 +38,7 @@ export default function EntryIntro({ full, onDone }) {
     const backdrop = overlay.querySelector('.entry-intro-backdrop')
     const veil = overlay.querySelector('.entry-intro-veil')
     const skip = overlay.querySelector('.entry-intro-skip')
+    const thesis = overlay.querySelector('.entry-intro-thesis')
     const corners = [...overlay.querySelectorAll('.entry-intro-vf i')]
     const moveBox = logo.querySelector('.logo-move')
     const moveText = logo.querySelector('.entry-intro-move-text')
@@ -268,7 +269,12 @@ export default function EntryIntro({ full, onDone }) {
         play(logoCorners, { opacity: [0, 1] }, { duration: 1 })
       }, 11500)
 
-      const fly = 12.1
+      // 6. Под лого — что значит название; держим, пока читается
+      thesis.style.top = `${innerHeight / 2 + logo.offsetHeight * scale / 2 + (mobile ? 24 : 40)}px`
+      later(() => play(thesis, { opacity: [0, 1], transform: ['translate(-50%, 8px)', 'translate(-50%, 0)'] }, { duration: 500, easing: focusEase }), 11700)
+      later(() => play(thesis, { opacity: [1, 0] }, { duration: 300, easing: 'ease-in' }), 13300)
+
+      const fly = 13.6
       later(() => {
         overlay.dataset.phase = 'flying'
         // Цель измеряем перед перелётом: шрифты за время заставки могли догрузиться.
@@ -320,6 +326,7 @@ export default function EntryIntro({ full, onDone }) {
       <div className="logo entry-intro-logo" aria-hidden="true">
         <span className="logo-on">on</span><span className="logo-move"><i /><i /><i /><i /><span className="entry-intro-move-text">move</span></span>
       </div>
+      <p className="entry-intro-thesis" aria-hidden="true">На муве — значит в движении: собрался и поехал, куда захотел.</p>
       <button type="button" className="entry-intro-skip">Пропустить <small>Esc</small></button>
     </div>,
     document.body,

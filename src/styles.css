@@ -211,8 +211,6 @@ h2 { font-family: var(--display); font-size: var(--fs-lg); font-weight: 600; let
 .hero-inner { position: relative; width: 100%; min-height: calc(100svh - 72px - 72px); padding: 24px var(--gutter) 48px; display: grid; align-content: start; gap: 24px; text-align: left; }
 .hero-inner > form { width: 100%; }
 /* Подзаголовок справа от заголовка: так визард стоит выше и панели раскрываются целиком */
-.hero-copy { display: grid; grid-template-columns: max-content minmax(0, 36ch); justify-content: space-between; align-items: end; gap: 16px 48px; }
-@media (max-width: 1100px) { .hero-copy { grid-template-columns: 1fr; } }
 .hero-title {
   margin: 0;
   font-family: var(--display);
@@ -222,13 +220,8 @@ h2 { font-family: var(--display); font-size: var(--fs-lg); font-weight: 600; let
   color: var(--paper);
 }
 /* Вторая строка со сдвигом — как две строки на указателе */
-/* На десктопе одной строкой, на узком — две со сдвигом, как на указателе */
-.hero-title-line { display: inline; }
-.hero-title-line + .hero-title-line { margin-left: .3em; }
-@media (max-width: 1100px) {
-  .hero-title-line { display: block; }
-  .hero-title-line + .hero-title-line { margin-left: 0; padding-left: .6em; }
-}
+/* Две строки по одной левой линии с визардом и подписью */
+.hero-title-line { display: block; }
 .hero-title em { font-style: normal; color: var(--green); } /* вторая строка — зелёный на лазури, как в рефе */
 .hero-sub { margin: 0; max-width: 46ch; font-size: var(--fs-md); line-height: var(--lh-body); color: var(--paper-dim); }
 /* Визард не меняем: светлеет только то, что лежит прямо на тёмном */
@@ -237,7 +230,6 @@ h2 { font-family: var(--display); font-size: var(--fs-lg); font-weight: 600; let
 @media (max-width: 743px) {
   .hero-inner { min-height: 0; padding: 40px var(--gutter) 32px; gap: 28px; }
   .hero-title { font-size: var(--fs-hero); }
-  .hero-title-line + .hero-title-line { padding-left: .6em; }
   .hero-sub { font-size: var(--fs-md); }
 }
 
@@ -265,6 +257,7 @@ h2 { font-family: var(--display); font-size: var(--fs-lg); font-weight: 600; let
 .entry-intro-vf i:nth-child(4) { border-bottom-width: var(--intro-w); border-left-width: var(--intro-w); border-bottom-left-radius: var(--intro-r); }
 /* move и его рамка появляются только в конце сцены */
 .entry-intro-move-text, .entry-intro-logo .logo-move i { opacity: 0; }
+.entry-intro-thesis { position: absolute; left: 50%; width: min(32ch, calc(100% - 2 * var(--gutter))); margin: 0; transform: translateX(-50%); text-align: center; color: var(--muted); font-size: var(--fs-lg); line-height: var(--lh-snug); opacity: 0; pointer-events: none; }
 .entry-intro-skip { position: absolute; top: 28px; right: max(28px, var(--gutter)); border: 1px solid var(--line); border-radius: var(--r-ctl); padding: 10px 16px; background: var(--plate); color: var(--ink); font-size: var(--fs-sm); }
 .entry-intro-skip small { margin-left: 8px; opacity: .5; }
 .entry-intro-skip:focus-visible { outline-color: var(--ink); }
@@ -447,15 +440,16 @@ h2 { font-family: var(--display); font-size: var(--fs-lg); font-weight: 600; let
 .sticky-search { position: fixed; top: 0; left: 0; right: 0; z-index: 25; display: flex; justify-content: center; padding: 10px var(--gutter); background: var(--paper); border-bottom: 1px solid var(--line); box-shadow: var(--shadow); transform: translateY(-100%); opacity: 0; transition: transform var(--dur-medium) var(--ease-out), opacity var(--dur-medium) var(--ease-out); }
 .sticky-search.on { transform: none; opacity: 1; }
 /* Полоса на скролле повторяет визард: светлая плашка, без пилюль */
-.ss-bar { width: 100%; max-width: 760px; display: flex; align-items: center; background: var(--plate); border: 1px solid var(--ink); border-radius: var(--r-card); color: var(--ink); border-radius: var(--r-card); }
-.ss-seg { flex: 1 1 0; min-width: 0; display: grid; gap: 2px; padding: 7px 20px; border: 0; background: none; text-align: left; border-radius: var(--r-card); }
-.ss-seg:first-child { flex-grow: 1.4; }
-.ss-seg + .ss-seg { border-left: 1px solid var(--line); border-radius: 0; }
+.ss-bar { width: 100%; max-width: 760px; display: flex; align-items: stretch; overflow: hidden; background: var(--plate); border: 1px solid var(--ink); border-radius: var(--r-card); color: var(--ink); border-radius: var(--r-card); }
+.ss-seg { flex: 1 1 0; min-width: 0; display: grid; align-content: center; gap: 2px; padding: 7px 20px; border: 0; background: none; text-align: left; }
+.ss-seg:nth-child(2) { flex-grow: 1.5; }
+.ss-seg + .ss-seg { border-left: 1px solid var(--line); }
 .ss-seg:hover { background: rgba(0,0,0,0.05); }
 .ss-seg b { font-family: var(--display); font-size: var(--fs-xs); font-weight: 600; letter-spacing: var(--ls-caps); text-transform: uppercase; color: var(--muted); }
+.ss-seg b, .ss-seg span { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .ss-seg span { font-size: var(--fs-sm); color: var(--muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .ss-seg span.filled { color: var(--ink); font-weight: 600; }
-.ss-go { height: 40px; margin: 5px 6px; padding: 0 16px; border-radius: var(--r-ctl); }
+.ss-go { align-self: center; height: 40px; margin: 5px 6px; padding: 0 16px; border-radius: var(--r-ctl); }
 .ss-pill { display: none; }
 .ss-logo { position: absolute; left: var(--gutter); top: 50%; translate: 0 -50%; color: var(--ink); }
 @media (max-width: 1100px) { .ss-logo { display: none; } }
@@ -1198,7 +1192,10 @@ label.wz-seg, .wz-seg-btn { display: flex; flex-direction: column; align-items: 
 .e2 .pick-suggestions h2 { margin: 0 0 6px; font-size: var(--fs-lg); }
 .e2 .pick-suggestions p { margin: 0 0 14px; }
 .pick-suggestion-tags { display: flex; flex-wrap: wrap; gap: 8px; }
-.pick-suggestion { display: inline-flex; align-items: center; gap: 8px; border: 1px solid var(--ink); border-radius: var(--r-ctl); padding: 10px 14px; background: var(--plate); text-align: left; }
+.pick-suggestion { display: inline-grid; grid-template-columns: 1fr auto; align-items: center; gap: 2px 8px; max-width: 100%; border: 1px solid var(--ink); border-radius: var(--r-ctl); padding: 10px 14px; background: var(--plate); text-align: left; }
+/* Плюс с машиной — строкой, цена и минус — под ней, стрелка справа на обе */
+.pick-suggestion > .muted { grid-column: 1; font-size: var(--fs-sm); }
+.pick-suggestion > :last-child { grid-column: 2; grid-row: 1 / span 2; }
 .pick-suggestion:hover { background: var(--ink); color: var(--plate); }
 .pick-suggestion:hover .muted { color: var(--plate); }
 .arrival-icon { width: 18px; height: 18px; flex: none; fill: none; stroke: currentColor; stroke-width: var(--icon-stroke); vector-effect: non-scaling-stroke; }
