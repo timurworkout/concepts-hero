@@ -1,0 +1,213 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Почему эта машина</title>
+<link rel="stylesheet" href="/concepts-hero/fonts/fonts.css">
+<style>
+  /* Токены Севера из src/styles.css */
+  :root {
+    --paper: #f9f6f6; --plate: #ffffff; --ink: #001f26; --muted: #4a5d62; --line: #d3dadb; --body: #22383d;
+    --green: #a4e891; --surface-strong: #e9eeee;
+    --r-card: 16px; --r-ctl: 12px; --icon-stroke: 1.5px;
+    --fs-xs: 12px; --fs-sm: 14px; --fs-md: 16px; --fs-lg: 20px; --fs-xl: 28px;
+    --fs-block: clamp(28px, 3vw, 44px); --fs-hero: clamp(38px, 4.6vw, 64px);
+    --lh-tight: 1.05; --lh-snug: 1.25; --lh-body: 1.5;
+    --ls-display: -0.035em; --ls-head: -0.01em; --ls-caps: .08em;
+    --shadow: 0 18px 40px -16px rgb(0 31 38 / .25);
+    --display: Manrope, system-ui, sans-serif;
+  }
+  * { box-sizing: border-box; }
+  button { font: inherit; color: inherit; cursor: pointer; }
+  body { margin: 0; background: var(--paper); color: var(--ink); font: 400 var(--fs-md)/var(--lh-body) var(--display); }
+  .act { width: 18px; height: 18px; flex: none; fill: none; stroke: currentColor; stroke-width: var(--icon-stroke); stroke-linecap: round; stroke-linejoin: round; }
+
+  /* ── Переключатель превью (не часть интерфейса) ── */
+  .switch { position: sticky; top: 0; z-index: 9; display: flex; gap: 8px; align-items: center; flex-wrap: wrap; padding: 12px 24px; background: var(--ink); color: var(--paper); font-size: var(--fs-sm); }
+  .switch button { height: 36px; padding: 0 16px; border: 1px solid rgb(249 246 246 / .3); border-radius: var(--r-ctl); background: none; color: var(--paper); }
+  .switch button[aria-pressed="true"] { background: var(--paper); color: var(--ink); }
+  .switch span { margin-left: auto; opacity: .72; }
+
+  /* ── Э2 ── */
+  main { max-width: 1200px; margin: 0 auto; padding: 32px 24px 96px; }
+  .layout { display: grid; grid-template-columns: minmax(0, 1fr) 340px; gap: 48px; align-items: start; }
+  .kicker { color: var(--muted); }
+  h1 { margin: 4px 0 0; font-size: var(--fs-hero); font-weight: 700; letter-spacing: var(--ls-display); line-height: var(--lh-tight); }
+  .photo { position: relative; margin-top: 24px; aspect-ratio: 16 / 9; border-radius: var(--r-card); background: var(--surface-strong) center / contain no-repeat; }
+
+  /* A — совет крупно */
+  .advice { margin: 20px 0 0; max-width: 22ch; font-size: var(--fs-block); font-weight: 600; letter-spacing: var(--ls-head); line-height: var(--lh-snug); color: var(--body); }
+  .advice b { color: var(--ink); font-weight: 700; }
+
+  /* B — три причины */
+  .lead { margin: 16px 0 0; font-size: var(--fs-lg); font-weight: 600; }
+  .reasons { list-style: none; margin: 16px 0 0; padding: 0; display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; }
+  .reasons li { padding: 14px 16px; background: var(--plate); border-radius: var(--r-card); display: grid; gap: 2px; align-content: start; }
+  .reasons .num { font-size: var(--fs-lg); font-weight: 700; letter-spacing: var(--ls-head); line-height: var(--lh-snug); }
+  .reasons .why { font-size: var(--fs-sm); color: var(--body); line-height: var(--lh-snug); }
+  body[data-show="b"] ul.reasons[data-v] { display: grid; }
+  .reasons + .photo { margin-top: 12px; }
+
+  /* C — причина на фото, рамка видоискателя */
+  .photo.tall { aspect-ratio: 4 / 3; }
+  .focus { position: absolute; width: 18%; aspect-ratio: 1; translate: -50% -50%; }
+  .focus i { position: absolute; width: 14px; height: 14px; border: 0 solid var(--ink); }
+  .focus i:nth-child(1) { top: 0; left: 0; border-width: 1px 0 0 1px; }
+  .focus i:nth-child(2) { top: 0; right: 0; border-width: 1px 1px 0 0; }
+  .focus i:nth-child(3) { bottom: 0; left: 0; border-width: 0 0 1px 1px; }
+  .focus i:nth-child(4) { bottom: 0; right: 0; border-width: 0 1px 1px 0; }
+  .tag { position: absolute; max-width: 31%; padding: 10px 14px; background: var(--plate); border-radius: var(--r-ctl); box-shadow: var(--shadow); font-size: var(--fs-sm); line-height: var(--lh-snug); }
+  .tag b { display: block; font-size: var(--fs-md); }
+  .advice-sm { margin: 16px 0 0; max-width: 40ch; font-size: var(--fs-lg); font-weight: 600; line-height: var(--lh-snug); color: var(--body); }
+
+  /* Характеристики (как «Всё для дороги») */
+  .specs { margin-top: 48px; }
+  .specs h2, .more h2 { margin: 0; font-size: var(--fs-xl); font-weight: 700; letter-spacing: var(--ls-head); }
+  .spec-grid { margin-top: 16px; display: grid; grid-template-columns: repeat(4, 1fr); border-top: 1px solid var(--line); }
+  .spec-grid div { padding: 12px 0; border-bottom: 1px solid var(--line); }
+  .spec-grid small { display: block; color: var(--muted); font-size: var(--fs-sm); }
+
+  /* Можно иначе — внизу */
+  .more { margin-top: 64px; padding-top: 32px; border-top: 1px solid var(--line); }
+  .more > p { margin: 4px 0 0; color: var(--muted); }
+  .chips { margin-top: 16px; display: flex; flex-wrap: wrap; gap: 8px; }
+  .chip { height: 44px; padding: 0 12px 0 16px; border: 1px solid var(--line); border-radius: var(--r-ctl); background: var(--plate); display: inline-flex; align-items: center; gap: 8px; }
+  .chip .muted { color: var(--muted); font-size: var(--fs-sm); }
+  .chip .act { color: var(--muted); }
+  .chip:hover, .chip[aria-pressed="true"] { border-color: var(--ink); }
+  .alts { margin-top: 20px; display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; }
+  .alt { padding: 0; border: 0; text-align: left; background: var(--plate); border-radius: var(--r-card); overflow: hidden; display: grid; }
+  .alt .img { aspect-ratio: 16 / 10; background: var(--surface-strong) center / contain no-repeat; }
+  .alt .txt { padding: 16px; display: grid; gap: 4px; }
+  .alt .what { font-weight: 600; }
+  .alt .trade { font-size: var(--fs-sm); color: var(--body); line-height: var(--lh-snug); }
+  .alt .delta { font-size: var(--fs-sm); color: var(--muted); }
+  .alt:hover { box-shadow: inset 0 0 0 1px var(--ink); }
+  .more-btn { margin-top: 16px; height: 44px; padding: 0 20px; border: 1px solid var(--line); border-radius: var(--r-ctl); background: none; display: inline-flex; align-items: center; gap: 8px; }
+
+  /* Правая колонка */
+  aside { position: sticky; top: 76px; display: grid; gap: 8px; }
+  .cell { position: relative; padding: 12px 48px 12px 16px; background: var(--plate); border-radius: var(--r-card); display: grid; gap: 2px; }
+  .cell .lbl { font-size: var(--fs-sm); color: var(--muted); }
+  .cell .act { position: absolute; right: 16px; top: 50%; translate: 0 -50%; color: var(--muted); }
+  .price { padding: 20px; background: var(--plate); border-radius: var(--r-card); display: grid; gap: 12px; }
+  .price b { font-size: var(--fs-xl); font-weight: 700; letter-spacing: var(--ls-head); }
+  .price small { color: var(--muted); font-size: var(--fs-sm); }
+  .btn { height: 48px; border: 0; border-radius: var(--r-ctl); background: var(--ink); color: var(--paper); font-weight: 600; }
+
+  [data-v] { display: none; }
+  body[data-show="a"] [data-v~="a"], body[data-show="b"] [data-v~="b"], body[data-show="c"] [data-v~="c"] { display: revert; }
+
+  @media (max-width: 900px) {
+    .layout { grid-template-columns: 1fr; gap: 32px; }
+    aside { position: static; }
+    .alts { grid-template-columns: 1fr; }
+    .reasons li { padding: 12px; }
+    .spec-grid { grid-template-columns: repeat(2, 1fr); }
+    main { padding: 24px 16px 64px; }
+    .tag { display: none; }
+    .focus { display: none; }
+    body[data-show="c"] .tags-list { display: grid !important; }
+  }
+  body .tags-list { display: none !important; }
+  .tags-list { list-style: none; margin: 12px 0 0; padding: 0; gap: 8px; }
+  .tags-list li { padding: 12px 16px; background: var(--plate); border-radius: var(--r-ctl); font-size: var(--fs-sm); }
+  .tags-list b { display: block; font-size: var(--fs-md); }
+</style>
+</head>
+<body data-show="b">
+
+<div class="switch" role="group" aria-label="Вариант">
+  <button data-pick="a" aria-pressed="false">A. Совет крупно</button>
+  <button data-pick="b" aria-pressed="true">B. Три причины</button>
+  <button data-pick="c" aria-pressed="false">C. Причина на&nbsp;фото</button>
+  <span>Поездка: в&nbsp;горы, семьёй, Минводы</span>
+</div>
+
+<main>
+  <div class="layout">
+    <div>
+      <div class="kicker">Советуем · Внедорожник</div>
+      <h1>Tank 300</h1>
+
+      <!-- A -->
+      <p class="advice" data-v="a">Бери Tank&nbsp;300. В&nbsp;горах выручит полный привод, а&nbsp;в&nbsp;багажник влезут чемоданы и&nbsp;коляска</p>
+
+      <!-- B -->
+      <p class="lead" data-v="b">Бери Tank&nbsp;300 — вот почему он под эту поездку</p>
+      <ul class="reasons" data-v="b">
+        <li><span class="num">224 мм</span><span class="why">клиренс — грунтовку к&nbsp;Домбаю пройдёт</span></li>
+        <li><span class="num">4×4</span><span class="why">с&nbsp;понижающей — серпантин не&nbsp;страшен</span></li>
+        <li><span class="num">400 л</span><span class="why">багажник — влезут чемоданы и&nbsp;коляска</span></li>
+      </ul>
+
+
+      <!-- A, B: обычное фото -->
+      <div class="photo" data-v="a b" style="background-image:url(/concepts-hero/cars/tbank/tank-300-69.webp)"></div>
+
+      <!-- C: фото с фокусом на деталях -->
+      <p class="advice-sm" data-v="c">Бери Tank&nbsp;300. В&nbsp;горах выручит полный привод, а&nbsp;в&nbsp;багажник влезут чемоданы и&nbsp;коляска</p>
+      <div class="photo" data-v="c" style="background-image:url(/concepts-hero/cars/tbank/tank-300-69.webp)">
+        <span class="focus" style="left:21%;top:72%"><i></i><i></i><i></i><i></i></span>
+        <div class="tag" style="left:2%;top:4%"><b>Клиренс 224 мм</b>грунтовку к&nbsp;Домбаю пройдёт</div>
+        <span class="focus" style="left:79%;top:70%"><i></i><i></i><i></i><i></i></span>
+        <div class="tag" style="left:35%;top:4%"><b>4×4 с&nbsp;понижающей</b>серпантин не&nbsp;страшен</div>
+        <span class="focus" style="left:89%;top:40%"><i></i><i></i><i></i><i></i></span>
+        <div class="tag" style="right:2%;top:4%"><b>Багажник 400 л</b>чемоданы и&nbsp;коляска</div>
+      </div>
+      <ul class="tags-list" data-v="c">
+        <li><b>Клиренс 224 мм</b>грунтовку к&nbsp;Домбаю пройдёт</li>
+        <li><b>4×4 с&nbsp;понижающей</b>серпантин не&nbsp;страшен</li>
+        <li><b>Багажник 400 л</b>чемоданы и&nbsp;коляска</li>
+      </ul>
+
+      <section class="specs">
+        <h2>Всё для дороги</h2>
+        <div class="spec-grid">
+          <div><small>Привод</small>Полный</div>
+          <div><small>Клиренс</small>224 мм</div>
+          <div><small>Мест</small>5</div>
+          <div><small>Багажник</small>400 л</div>
+        </div>
+      </section>
+
+      <section class="more" id="more">
+        <h2>Можно иначе</h2>
+        <p>Скажи, что важнее, — покажем, что выиграешь и&nbsp;что потеряешь</p>
+        <div class="chips">
+          <button class="chip" aria-pressed="false">Подешевле <span class="muted">−9 600 ₽</span><svg class="act" viewBox="0 0 24 24"><path d="M9 6l6 6-6 6"/></svg></button>
+          <button class="chip" aria-pressed="false">Мягче на трассе <span class="muted">−3 200 ₽</span><svg class="act" viewBox="0 0 24 24"><path d="M9 6l6 6-6 6"/></svg></button>
+          <button class="chip" aria-pressed="false">Экономичнее <span class="muted">до 8 л на 100 км</span><svg class="act" viewBox="0 0 24 24"><path d="M9 6l6 6-6 6"/></svg></button>
+          <button class="chip" aria-pressed="false">Вместительнее <span class="muted">7 мест · +6 400 ₽</span><svg class="act" viewBox="0 0 24 24"><path d="M9 6l6 6-6 6"/></svg></button>
+          <button class="chip" aria-pressed="false">На автомате попроще <span class="muted">−12 000 ₽</span><svg class="act" viewBox="0 0 24 24"><path d="M9 6l6 6-6 6"/></svg></button>
+        </div>
+        <div class="alts">
+          <button class="alt"><span class="img" style="background-image:url(/concepts-hero/cars/tbank/haval-jolion-255.webp)"></span>
+            <span class="txt"><span class="what">Подешевле — Haval Jolion</span><span class="trade">Клиренс ниже на&nbsp;34 мм, на&nbsp;асфальте разницы не&nbsp;заметишь</span><span class="delta">−9 600 ₽ за&nbsp;поездку</span></span></button>
+          <button class="alt"><span class="img" style="background-image:url(/concepts-hero/cars/tbank/geely-monjaro-75.webp)"></span>
+            <span class="txt"><span class="what">Мягче в&nbsp;дороге — Geely Monjaro</span><span class="trade">Тише на&nbsp;трассе, но&nbsp;грунтовку лучше объехать</span><span class="delta">−3 200 ₽ за&nbsp;поездку</span></span></button>
+          <button class="alt"><span class="img" style="background-image:url(/concepts-hero/cars/tbank/lada-niva-travel-181.webp)"></span>
+            <span class="txt"><span class="what">Проще всего — Niva Travel</span><span class="trade">Пройдёт где угодно, но&nbsp;коляска влезет впритык</span><span class="delta">−16 800 ₽ за&nbsp;поездку</span></span></button>
+        </div>
+        <button class="more-btn">Подобрать ещё <svg class="act" viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></svg></button>
+      </section>
+    </div>
+
+    <aside>
+      <div class="cell"><span class="lbl">Про поездку</span>В&nbsp;горы, семьёй<svg class="act" viewBox="0 0 24 24"><path d="M9 6l6 6-6 6"/></svg></div>
+      <div class="cell"><span class="lbl">Где заберёшь</span>Аэропорт Минводы<svg class="act" viewBox="0 0 24 24"><path d="M9 6l6 6-6 6"/></svg></div>
+      <div class="cell"><span class="lbl">Когда</span>12–18 ноября<svg class="act" viewBox="0 0 24 24"><path d="M9 6l6 6-6 6"/></svg></div>
+      <div class="price"><b>48 300 ₽</b><small>за 6 дней</small><button class="btn">Дальше — допы</button></div>
+    </aside>
+  </div>
+</main>
+
+<script>
+  document.querySelectorAll('[data-pick]').forEach((b) => b.addEventListener('click', () => {
+    document.body.dataset.show = b.dataset.pick
+    document.querySelectorAll('[data-pick]').forEach((x) => x.setAttribute('aria-pressed', x === b))
+  }))
+</script>
+</body>
+</html>

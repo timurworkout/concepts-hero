@@ -1030,28 +1030,34 @@ label.wz-seg, .wz-seg-btn { display: flex; flex-direction: column; align-items: 
 
 /* Подбор: машина и её детали перед переходом к допам */
 .e2 .pick-card { background: transparent; overflow: visible; }
-.e2 .pick-heading { display: grid; gap: 10px; margin-bottom: 22px; }
+/* Ритм Э2: 8 внутри подписи, 16 внутри группы, 40 между группами, 80 между разделами */
+.e2 .pick-heading { display: grid; gap: 16px; margin-bottom: 16px; }
 .e2 .pick-title { margin: 0; font-size: var(--fs-hero); letter-spacing: var(--ls-display); line-height: var(--lh-tight); }
 .pick-reason { max-width: 620px; color: var(--body); line-height: var(--lh-body); }
 .e2 .pick-photo { aspect-ratio: 16 / 9; border-radius: var(--r-card); }
 .pick-photo-open { position: absolute; inset: 0; width: 100%; height: 100%; padding: 0; }
-.pick-gallery .car-gallery-thumbs { margin-top: 10px; }
-.pick-details { margin-top: 38px; }
-.pick-details h2 { margin: 0 0 18px; }
-.pick-details-list { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); margin: 0; border-top: 1px solid var(--line); }
-.pick-details-list > div { padding: 14px 12px 14px 0; border-bottom: 1px solid var(--line); }
-.pick-details-list dt { color: var(--muted); font-size: var(--fs-sm); }
-.pick-details-list dd { margin: 5px 0 0; font-weight: 600; }
+.pick-gallery .car-gallery-thumbs { margin-top: 8px; }
+.pick-details { margin-top: 40px; }
+.pick-details h2 { margin: 0; color: var(--muted); font-size: var(--fs-lg); font-weight: 600; letter-spacing: var(--ls-head); line-height: var(--lh-snug); }
+.pick-story { margin: 8px 0 0; max-width: 48ch; font-size: var(--fs-xl); font-weight: 600; letter-spacing: var(--ls-head); line-height: var(--lh-snug); }
+.pick-figures { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 16px; margin-top: 80px; }
+.pick-figure { font-size: var(--fs-hero); font-weight: 700; letter-spacing: var(--ls-display); line-height: var(--lh-tight); }
+.pick-figure small { margin-left: 4px; font-size: var(--fs-lg); font-weight: 600; letter-spacing: 0; }
+.pick-figures p { margin: 8px 0 0; font-size: var(--fs-sm); color: var(--body); line-height: var(--lh-snug); }
+.pick-details-list { max-width: 720px; margin: 80px 0 0; }
+.pick-details-list div { display: grid; grid-template-columns: 1fr 1fr; padding: 16px 0; border-top: 1px solid var(--line); }
+.pick-details-list dt { color: var(--muted); }
+.pick-details-list dd { margin: 0; }
 .sheet-photo { position: fixed; inset: 0; display: grid; align-content: center; justify-items: center; gap: 16px; padding: 56px 24px 24px; background: var(--night); color: #fff; }
 .sheet-photo img { max-width: min(1100px, 100%); max-height: 75vh; object-fit: contain; }
 .photo-close { position: absolute; top: 16px; right: 24px; color: #fff; font-size: var(--fs-block); line-height: 1; }
 .photo-controls { display: flex; align-items: center; gap: 24px; }
 .photo-controls button { color: #fff; padding: 10px; }
 @media (max-width: 743px) {
-  .e2 .pick-heading { margin-bottom: 18px; }
   .e2 .pick-title { font-size: var(--fs-block); }
-  .pick-details { margin-top: 28px; }
-  .pick-details-list { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+    .pick-details { margin-top: 32px; }
+  .pick-figures { grid-template-columns: repeat(2, minmax(0, 1fr)); row-gap: 32px; margin-top: 56px; }
+  .pick-details-list { margin-top: 56px; }
   .e2 .book-card { padding-bottom: max(16px, env(safe-area-inset-bottom)); }
   .e2 .book-card .btn-primary { padding: 0 18px; }
 }
@@ -1191,16 +1197,10 @@ label.wz-seg, .wz-seg-btn { display: flex; flex-direction: column; align-items: 
 }
 
 /* Экран подбора: одна машина и управление параметрами поездки */
-.e2 .pick-suggestions { border-top: 1px solid var(--ink); padding-top: 20px; margin: 24px 0; }
-.e2 .pick-suggestions h2 { margin: 0 0 6px; font-size: var(--fs-lg); }
-.e2 .pick-suggestions p { margin: 0 0 14px; }
 .pick-suggestion-tags { display: flex; flex-wrap: wrap; gap: 8px; }
-.pick-suggestion { display: inline-grid; grid-template-columns: 1fr auto; align-items: center; gap: 2px 8px; max-width: 100%; border: 1px solid var(--ink); border-radius: var(--r-ctl); padding: 10px 14px; background: var(--plate); text-align: left; }
-/* Плюс с машиной — строкой, цена и минус — под ней, стрелка справа на обе */
-.pick-suggestion > .muted { grid-column: 1; font-size: var(--fs-sm); }
-.pick-suggestion > :last-child { grid-column: 2; grid-row: 1 / span 2; }
-.pick-suggestion:hover { background: var(--ink); color: var(--plate); }
-.pick-suggestion:hover .muted { color: var(--plate); }
+.pick-suggestion { display: inline-flex; align-items: center; gap: 8px; height: 44px; padding: 0 16px; border: 1px solid var(--line); border-radius: var(--r-ctl); background: var(--plate); color: var(--ink); }
+.pick-suggestion:hover { border-color: var(--ink); }
+.pick-suggestion[aria-pressed="true"] { background: var(--ink); border-color: var(--ink); color: var(--plate); }
 .arrival-icon { width: 18px; height: 18px; flex: none; fill: none; stroke: currentColor; stroke-width: var(--icon-stroke); vector-effect: non-scaling-stroke; }
 .pick-route-note { margin-top: 5px; color: var(--muted); font-size: var(--fs-sm); }
 .e2 .book-card { background: var(--plate); }
@@ -1229,19 +1229,21 @@ label.wz-seg, .wz-seg-btn { display: flex; flex-direction: column; align-items: 
 .btn-with-icon { display: inline-flex; align-items: center; justify-content: center; gap: 12px; }
 
 /* Э2: «Ещё варианты под поездку» — три альтернативы и «Подобрать ещё» */
-.more-cars { margin-top: 48px; }
-.more-cars h2 { margin: 0; font-family: var(--display); font-size: var(--fs-xl); font-weight: 700; letter-spacing: var(--ls-head); line-height: var(--lh-snug); }
-.more-cars > p { margin: 8px 0 0; font-size: var(--fs-md); }
-.more-cars-grid { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 12px; margin-top: 20px; }
-.more-car { display: grid; align-content: start; padding: 0; overflow: hidden; text-align: left; color: var(--ink); background: var(--plate); border: 1px solid var(--line); border-radius: var(--r-card); transition: border-color var(--dur-fast); }
-.more-car img { display: block; width: 100%; height: 132px; padding: 16px 20px; object-fit: contain; background: var(--surface-strong); }
-.more-car-body { position: relative; display: grid; gap: 2px; padding: 12px 40px 14px 14px; font-size: var(--fs-sm); }
-.more-car-body .arrival-icon { position: absolute; right: 14px; top: 14px; color: var(--muted); }
-.more-car[data-vf-hot] .arrival-icon { color: var(--ink); }
-.more-car-why { font-weight: 600; }
+.more-cars { margin-top: 80px; }
+@media (max-width: 743px) { .more-cars { margin-top: 56px; } }
+.more-cars h2 { margin: 0 0 8px; font-size: var(--fs-xl); font-weight: 700; letter-spacing: var(--ls-head); line-height: var(--lh-snug); }
+.more-cars > p { margin: 0; }
+.more-cars-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 40px 16px; margin-top: 16px; }
+/* Плитка как в каталоге: фото — отдельная плашка, текст под ней без подложки; фокус берёт фото */
+.more-car { display: grid; align-content: start; gap: 16px; padding: 0; text-align: left; color: var(--ink); background: none; border: 0; }
+.more-car-photo { display: grid; place-items: center; aspect-ratio: 4 / 3; border-radius: var(--r-card); background: var(--surface-strong); }
+.more-car-photo img { display: block; width: 100%; height: 100%; padding: 16px 20px; object-fit: contain; }
+.more-car-body { display: grid; gap: 8px; }
+.more-car-why { color: var(--body); line-height: var(--lh-snug); }
 .more-car-model { font-family: var(--display); font-size: var(--fs-lg); font-weight: 600; line-height: var(--lh-snug); }
-.more-car-ask { align-content: center; justify-items: start; gap: 6px; padding: 18px; background: var(--paper); font-size: var(--fs-sm); }
-@media (max-width: 1100px) { .more-cars-grid { grid-template-columns: 1fr 1fr; } }
+.more-car-body .muted { font-size: var(--fs-sm); }
+.more-car-ask .more-car-photo { background: none; border: 1px solid var(--line); color: var(--muted); }
+@media (max-width: 743px) { .more-cars-grid { grid-template-columns: 1fr; } }
 
 /* ── Видоискатель: одна рамка на группу (attachViewfinder в App.jsx) ── */
 .more-cars-grid, .dir-places { position: relative; }

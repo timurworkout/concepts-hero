@@ -1871,7 +1871,22 @@ function Picking({ query, onDone }) {
 
 const stockText = (n) => (n === 1 ? 'Осталась 1' : `Осталось ${n}`)
 const goods = (prev, cur, q) => carDiff(prev, cur, q).filter((d) => d.good && !d.text.includes('₽')).map((d) => d.text)
-const priceDelta = (base, c, q) => { const d = tripTotal(c, q) - tripTotal(base, q); return d ? `${d > 0 ? '+' : '−'}${rub(Math.abs(d))}` : 'та же цена' }
+// Плитка альтернативы словами друга: что выиграешь, что потеряешь и сколько это стоит за поездку
+const cap = (t) => t[0].toUpperCase() + t.slice(1)
+function tradeoff(base, c, q) {
+  const plus = [], minus = []
+  const num = (a, b, more, less, unit) => { if (!hasNumber(a) || !hasNumber(b) || a === b) return; (b > a ? plus : minus).push(`${b > a ? more : less} на\u00a0${Math.abs(b - a)}${unit}`) }
+  num(base.clearance, c.clearance, 'клиренс выше', 'клиренс ниже', '\u00a0мм')
+  num(base.trunk, c.trunk, 'багажник больше', 'багажник меньше', '\u00a0л')
+  num(base.seats, c.seats, 'мест больше', 'мест меньше', '')
+  if (base.drive && c.drive && base.drive !== c.drive) (c.drive === 'полный' ? plus : minus).push(`${c.drive} привод`)
+  if (base.gearbox && c.gearbox && isAutomatic(base) !== isAutomatic(c)) (isAutomatic(c) ? plus : minus).push(isAutomatic(c) ? 'автомат' : 'механика')
+  const d = tripTotal(c, q) - tripTotal(base, q)
+  const head = d < 0 ? 'Подешевле' : plus.length ? cap(plus.shift()) : 'Классом повыше'
+  const [good] = plus, [bad] = minus
+  const text = good && bad ? `${cap(good)}, но\u00a0${bad}` : good || bad ? cap(good || bad) : 'По\u00a0характеристикам не\u00a0уступает'
+  return { head, text, price: d ? `${d > 0 ? '+' : '−'}${rub(Math.abs(d))} за\u00a0поездку` : 'Та же цена за\u00a0поездку' }
+}
 
 function PickGallery({ car, prev, fav }) {
   const photos = car.gallery.length ? car.gallery : [car.heroImage || car.image]
@@ -1909,36 +1924,80 @@ function MoreCars({ car, query, items, onPick, onMore }) {
       <h2>Ещё варианты под поездку</h2>
       <p className="muted">{nb(`Те же даты и цель. Нажми — сравним с ${car.model}.`)}</p>
       <div className="more-cars-grid" ref={vf}>
-        {items.map(({ car: c, label }) => (
+        {items.map(({ car: c }) => { const t = tradeoff(car, c, query); return (
           <button key={c.id} type="button" className="more-car" data-vf-item onClick={() => onPick(c.id)}>
-            <img src={`${import.meta.env.BASE_URL}${c.image}`} alt="" loading="lazy" />
+            <span className="more-car-photo" data-vf-target><img src={`${import.meta.env.BASE_URL}${c.image}`} alt="" loading="lazy" /></span>
             <span className="more-car-body">
-              {label && <span className="more-car-why">{label[0].toUpperCase() + label.slice(1)}</span>}
-              <span className="more-car-model">{c.model}</span>
-              <span className="muted">{rub(query.mode === 'hours' ? c.pricePerHour : c.pricePerDay)} {query.mode === 'hours' ? 'в час' : 'в\u00a0сутки'}</span>
-              <ActionIcon kind="open" />
+              <span className="more-car-model">{t.head} — {c.model}</span>
+              {t.text && <span className="more-car-why">{t.text}</span>}
+              <span className="muted">{t.price}</span>
             </span>
           </button>
-        ))}
+        ) })}
         <button type="button" className="more-car more-car-ask" data-vf-item onClick={onMore}>
-          <ActionIcon kind="add" />
-          <span className="more-car-model">Подобрать ещё</span>
-          <span className="muted">{nb('Поменяй цель, с кем едешь или что важно в машине')}</span>
+          <span className="more-car-photo" data-vf-target><ActionIcon kind="add" /></span>
+          <span className="more-car-body">
+            <span className="more-car-model">Подобрать ещё</span>
+            <span className="muted">{nb('Поменяй цель, с кем едешь или что важно в машине')}</span>
+          </span>
         </button>
       </div>
     </section>
   )
 }
 
-function PickSpecs({ car, query }) {
+// Описание над параметрами: тип машины, цель, компания и где заберёшь — из того, что выбрал человек
+const kindLines = {
+  'Внедорожник': 'Настоящий внедорожник: ему всё равно, асфальт под колёсами или грунтовка после дождя.',
+  'Кроссовер': 'Кроссовер, который одинаково спокойно едет по трассе и по просёлку.',
+  'Седан': 'Седан для дороги: тихий на трассе и мягкий на неровностях.',
+  'Лифтбек': 'Лифтбек с мягкой подвеской и большим багажником под заднюю дверь.',
+}
+const goalLines = {
+  mountains: 'В горах держит дорогу на серпантине и не боится грунтовки к смотровым.',
+  sea: 'Вдоль моря пробки, но на автомате они не утомляют.',
+  city: 'В городе встанет в тесный карман у тротуара.',
+  dacha: 'Грунтовку к даче после дождя проедет без нервов.',
+  business: 'К встрече приедешь в чистой машине без оклейки.',
+  highway: 'На трассе хватит мощности, чтобы спокойно обогнать фуру.',
+}
+function carStory(car, { goal, companion, city, place }) {
+  const people = {
+    family: 'Сзади хватит места детскому креслу, а в багажник влезут чемоданы и коляска.',
+    friends: `Сядут ${car.seats}, и сумки поместятся.`,
+    two: 'Вдвоём просторно, заднее сиденье можно отдать под вещи.',
+  }[companion?.id] ?? (hasNumber(car.trunk) ? `В багажник на ${car.trunk} л уйдут все сумки.` : null)
+  const dest = place?.label ?? city?.routes?.[0]
+  const pickup = city && `Заберёшь ${city.in} с полным баком${dest ? `, и можно сразу ехать: ${dest}` : ''}.`
+  return [kindLines[car.kind] ?? `${car.model} — машина для дороги.`, goalLines[goal?.id], people, pickup].filter(Boolean).join(' ')
+}
+
+function PickSpecs({ car, query, story }) {
   const d = carDetails[car.id]
   const month = new Date(query.dateFrom || Date.now()).getMonth() + 1
+  // Четыре главных цифры крупно, под каждой — что это даёт в поездке
+  const hero = [
+    car.drive === 'полный' && { num: '4×4', why: 'Полный привод — грунтовка не страшна' },
+    hasNumber(car.clearance) && { num: car.clearance, unit: 'мм', why: 'Клиренс — бордюры и ямы проедешь' },
+    hasNumber(car.trunk) && { num: car.trunk, unit: 'л', why: 'Багажник — влезут чемоданы' },
+    hasNumber(car.range) && { num: car.range, unit: 'км', why: 'Запас хода — реже на заправку' },
+    hasNumber(car.power) && { num: car.power, unit: 'л.с.', why: 'Мощность — обгон без нервов' },
+    hasNumber(car.seats) && { num: car.seats, unit: 'мест', why: 'Места хватит всем' },
+  ].filter(Boolean).slice(0, 4)
+  const shown = hero.map((h) => h.unit ?? 'привод')
   const rows = [
-    ['Привод', car.drive], ['Клиренс', d.clearance], ['Коробка', car.gearbox], ['Мест', car.seats],
-    ['Багажник', d.bags], ['Двигатель', car.engine], ['Расход', d.fuel], ['Запас хода', d.range], ['Топливо', car.fuelType],
+    ['Тип', car.kind?.toLowerCase()], ['Привод', !shown.includes('привод') && car.drive], ['Клиренс', !shown.includes('мм') && d.clearance], ['Коробка', car.gearbox], ['Мест', !shown.includes('мест') && car.seats],
+    ['Багажник', !shown.includes('л') && d.bags], ['Двигатель', car.engine], ['Расход', d.fuel], ['Запас хода', !shown.includes('км') && d.range], ['Топливо', car.fuelType],
     ...([3, 4, 10, 11].includes(month) ? [['Резина', d.winter ? 'уже зимняя, шипы' : 'летняя']] : []),
-  ].filter(([, value]) => value != null && value !== '')
-  return <section className="pick-details"><h2>Всё для дороги</h2><dl className="pick-details-list">{rows.map(([label, value]) => <div key={label}><dt>{label}</dt><dd>{value}</dd></div>)}</dl></section>
+  ].filter(([, value]) => value != null && value !== '' && value !== false)
+  return (
+    <section className="pick-details">
+      <h2>Почему именно эта машина</h2>
+      {story && <p className="pick-story">{nb(story)}</p>}
+      <div className="pick-figures">{hero.map((h) => <div key={h.why}><span className="pick-figure">{h.num}{h.unit && <small>{h.unit}</small>}</span><p>{nb(h.why)}</p></div>)}</div>
+      <dl className="pick-details-list">{rows.map(([label, value]) => <div key={label}><dt>{label}</dt><dd>{value}</dd></div>)}</dl>
+    </section>
+  )
 }
 
 function CarAssessment({ car, goal, onComplete, onDismiss }) {
@@ -2024,31 +2083,9 @@ export function E2({ query, setQuery, fav, onBack, onPick, openPicker }) {
 
   // Рекомендации сохраняют выбранную цель, спутников и локальные планы.
   const alternatives = car ? fit.filter((c) => c.id !== car.id && places.every((p) => p.test(c))) : []
-  const recommendations = []
   // Внизу Э2 — три варианта под ту же поездку: сначала с явным плюсом, потом остальные по цене
   const moreCars = car ? [...alternatives.map((c) => ({ car: c, label: goods(car, c, query)[0] || (tripTotal(c, query) < tripTotal(car, query) ? `Дешевле на ${rub(tripTotal(car, query) - tripTotal(c, query))}` : null) }))]
     .sort((a, b) => Boolean(b.label) - Boolean(a.label)).slice(0, 3) : []
-  for (const candidate of alternatives) {
-    const improvements = goods(car, candidate, query)
-    const cheaper = tripTotal(candidate, query) < tripTotal(car, query)
-    const label = improvements[0] || (cheaper ? 'Подешевле' : null)
-    // Честный компромисс: первый минус по характеристикам, цена идёт отдельно
-    const loss = carDiff(car, candidate, query).find((d) => !d.good && !d.text.includes('₽'))?.text
-    if (label && !recommendations.some((item) => item.label === label)) {
-      recommendations.push({ car: candidate, label, loss })
-      if (recommendations.length === 3) break
-    }
-  }
-  const specs = car ? [
-    car.drive === 'полный' ? 'полный привод' : null,
-    hasNumber(car.clearance) ? `клиренс ${car.clearance} мм` : null,
-    hasNumber(car.seats) ? `мест: ${car.seats}` : null,
-    hasNumber(car.trunk) ? `багажник ${car.trunk} л` : null,
-  ].filter(Boolean).join(', ') : ''
-  // Совет друга: модель и причина из поездки; без цели — характеристики
-  const whys = [goal?.why, companion?.why].filter(Boolean)
-  const describeCar = car ? `Бери ${car.model}. ${whys.length ? whys.join(', а\u00a0') : specs}`.replace(/\. (.)/, (m, c) => `. ${c.toUpperCase()}`) : ''
-  const routeNotes = places.filter((p) => !skipped.includes(p)).map((p) => p.hint)
 
   const fixes = !car ? active.filter((o) => pickCar(query, query.prefs.filter((x) => x !== o.id)).car) : []
 
@@ -2061,7 +2098,6 @@ export function E2({ query, setQuery, fav, onBack, onPick, openPicker }) {
     if (nextCar) onPick(nextCar.id)
   }
   const startExtras = () => { setContinueToExtras(true); continueWith(query) }
-  const arrivalIcon = (selected) => <ActionIcon kind={selected ? 'open' : 'add'} />
   const cells = () => (
     <div className="book-tiles cells-card">
       <TripTile icon="Цель" label="Про поездку" value={paramsText(query)} empty={!paramsText(query) && 'Можно уточнить'} onClick={() => setParamsOpen(true)} />
@@ -2079,19 +2115,11 @@ export function E2({ query, setQuery, fav, onBack, onPick, openPicker }) {
           {car ? (
             <div className="pick-card">
               <div className="pick-heading">
-                <div className="muted">Советуем · {car.kind}</div>
                 <h1 className="pick-title swap-in" key={car.id}>{car.model}</h1>
-                <div className="pick-reason">{describeCar || 'Подобрали машину для твоей поездки'}{routeNotes.map((note) => <div className="pick-route-note" key={note}>{note}</div>)}{skipped.map((item) => <div className="pick-route-note" key={item.id}>Не удалось учесть: {item.label.toLowerCase()}</div>)}</div>
+                {skipped.length > 0 && <div className="pick-reason">{skipped.map((item) => <div className="pick-route-note" key={item.id}>Не удалось учесть: {item.label.toLowerCase()}</div>)}</div>}
               </div>
-              <section className="pick-suggestions">
-                <h2>{recommendations.length ? 'Можно иначе' : alternatives.length ? 'Остальные проигрывают ей по\u00a0всем пунктам' : 'Лучше под эту поездку не\u00a0найдём'}</h2>
-                <p className="muted">{recommendations.length ? 'Скажи, что важнее, — покажем, что выиграешь и\u00a0что потеряешь' : 'Можно изменить параметры и посмотреть другие варианты'}</p>
-                <div className="pick-suggestion-tags">
-                  {recommendations.length ? recommendations.map((item) => <button type="button" className="pick-suggestion" key={item.car.id} onClick={() => choose(item.car.id)}><span>{item.label[0].toUpperCase() + item.label.slice(1)} — {item.car.model}</span><span className="muted">{priceDelta(car, item.car, query)}{item.loss ? `, но\u00a0${item.loss}` : ''}</span>{arrivalIcon(true)}</button>) : <><button type="button" className="pick-suggestion" onClick={() => setParamsOpen(true)}>Поискать дешевле {arrivalIcon(true)}</button><button type="button" className="pick-suggestion" onClick={() => setParamsOpen(true)}>Другие параметры {arrivalIcon(true)}</button></>}
-                </div>
-              </section>
               <PickGallery key={car.id} car={car} prev={prev} fav={fav} />
-              <PickSpecs car={car} query={query} />
+              <PickSpecs car={car} query={query} story={carStory(car, { goal, companion, city: cities[location?.city ?? query.cityId], place: places.find((p) => p.test(car)) })} />
               <MoreCars car={car} query={query} items={moreCars} onPick={choose} onMore={() => setParamsOpen(true)} />
             </div>
           ) : (

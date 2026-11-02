@@ -11,6 +11,15 @@
         ],
         "createdAt": "2026-11-01T15:26:13.008Z",
         "reason": "agent triage: .logo-stage (height 220px, place-items center) and .bar (height 72px, align-items center) center the logo vertically; detector reads fixed-height centering as zero inset"
+      },
+      {
+        "rule": "tight-leading",
+        "value": "*",
+        "files": [
+          "project/previews/why-car/index.html"
+        ],
+        "createdAt": "2026-11-02T17:29:53.685Z",
+        "reason": "project design system: --lh-snug 1.25 / --lh-tight are the required tokens for large display text and captions (CLAUDE.md, src/styles.css)"
       }
     ]
   },

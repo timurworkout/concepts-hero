@@ -1,0 +1,163 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Параметры машины</title>
+<link rel="stylesheet" href="/concepts-hero/fonts/fonts.css">
+<style>
+  /* Токены Севера из src/styles.css */
+  :root {
+    --paper: #f9f6f6; --plate: #ffffff; --ink: #001f26; --muted: #4a5d62; --line: #d3dadb; --body: #22383d;
+    --green: #a4e891; --surface-strong: #e9eeee;
+    --r-card: 16px; --r-ctl: 12px; --icon-stroke: 1.5px;
+    --fs-xs: 12px; --fs-sm: 14px; --fs-md: 16px; --fs-lg: 20px; --fs-xl: 28px;
+    --fs-block: clamp(28px, 3vw, 44px); --fs-hero: clamp(38px, 4.6vw, 64px);
+    --lh-tight: 1.05; --lh-snug: 1.25; --lh-body: 1.5;
+    --ls-display: -0.035em; --ls-head: -0.01em; --ls-caps: .08em;
+    --shadow: 0 18px 40px -16px rgb(0 31 38 / .25);
+    --display: Manrope, system-ui, sans-serif;
+  }
+  * { box-sizing: border-box; }
+  button { font: inherit; color: inherit; cursor: pointer; }
+  body { margin: 0; background: var(--paper); color: var(--ink); font: 400 var(--fs-md)/var(--lh-body) var(--display); }
+  .act { width: 18px; height: 18px; flex: none; fill: none; stroke: currentColor; stroke-width: var(--icon-stroke); stroke-linecap: round; stroke-linejoin: round; }
+  /* ── Переключатель превью (не часть интерфейса) ── */
+  .switch { position: sticky; top: 0; z-index: 9; display: flex; gap: 8px; align-items: center; flex-wrap: wrap; padding: 12px 24px; background: var(--ink); color: var(--paper); font-size: var(--fs-sm); }
+  .switch button { height: 36px; padding: 0 16px; border: 1px solid rgb(249 246 246 / .3); border-radius: var(--r-ctl); background: none; color: var(--paper); }
+  .switch button[aria-pressed="true"] { background: var(--paper); color: var(--ink); }
+  .switch span { margin-left: auto; opacity: .72; }
+
+  main { max-width: 1040px; margin: 0 auto; padding: 56px 24px 96px; }
+  h2 { margin: 0; font-size: var(--fs-xl); font-weight: 700; letter-spacing: var(--ls-head); line-height: var(--lh-snug); }
+  [data-v] { display: none; }
+  body[data-show="a"] [data-v="a"], body[data-show="b"] [data-v="b"], body[data-show="c"] [data-v="c"] { display: block; }
+  .num { font-weight: 700; letter-spacing: var(--ls-display); line-height: var(--lh-tight); }
+  .unit { font-weight: 600; letter-spacing: 0; }
+
+  /* A — крупные цифры в ряд + тихий список */
+  .a-hero { display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px; margin-top: 40px; }
+  .a-hero .num { font-size: var(--fs-hero); }
+  .a-hero .unit { font-size: var(--fs-lg); margin-left: 4px; }
+  .a-hero p { margin: 8px 0 0; font-size: var(--fs-sm); color: var(--body); line-height: var(--lh-snug); }
+  .a-list { margin: 80px 0 0; max-width: 720px; }
+  .a-story { margin: 40px 0 0; max-width: 30ch; font-size: var(--fs-block); font-weight: 600; letter-spacing: var(--ls-head); line-height: var(--lh-snug); }
+  .a-story + .a-hero { margin-top: 80px; }
+  .a-list div { display: grid; grid-template-columns: 1fr 1fr; padding: 16px 0; border-top: 1px solid var(--line); }
+  .a-list dt { color: var(--muted); } .a-list dd { margin: 0; }
+
+  /* B — тёмная плита, столбик крупных цифр с переводом в поездку */
+  .b-plate { margin-top: 40px; display: grid; grid-template-columns: 1fr 1fr; gap: 40px; padding: 48px; border-radius: var(--r-card); background: var(--ink); color: var(--paper); }
+  .b-plate .num { font-size: clamp(56px, 7vw, 96px); }
+  .b-plate .unit { font-size: var(--fs-xl); margin-left: 6px; }
+  .b-plate b { display: block; margin-top: 8px; font-size: var(--fs-lg); font-weight: 600; }
+  .b-plate span.why { display: block; margin-top: 4px; font-size: var(--fs-sm); opacity: .72; }
+  .b-rest { margin-top: 16px; display: flex; flex-wrap: wrap; gap: 8px 32px; color: var(--body); font-size: var(--fs-sm); }
+  .b-rest b { color: var(--ink); font-weight: 600; }
+
+  /* C — группы по смыслу поездки */
+  .c-group { display: grid; grid-template-columns: 240px 1fr; gap: 24px; padding: 32px 0; border-top: 1px solid var(--line); }
+  .c-group:first-of-type { margin-top: 40px; }
+  .c-group h3 { margin: 0; font-size: var(--fs-lg); font-weight: 600; }
+  .c-group h3 + p { margin: 8px 0 0; font-size: var(--fs-sm); color: var(--muted); line-height: var(--lh-snug); }
+  .c-vals { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; }
+  .c-vals .num { font-size: var(--fs-xl); }
+  .c-vals .unit { font-size: var(--fs-md); margin-left: 4px; }
+  .c-vals p { margin: 4px 0 0; font-size: var(--fs-sm); color: var(--body); }
+  .c-icons { display: flex; gap: 8px; margin-top: 16px; }
+  .c-icons span { display: grid; place-items: center; width: 48px; height: 48px; border-radius: var(--r-ctl); background: var(--surface-strong); }
+  .c-icons .act { width: 24px; height: 24px; }
+
+  @media (max-width: 743px) {
+    main { padding: 40px 16px 64px; }
+    .a-hero { grid-template-columns: 1fr 1fr; row-gap: 32px; }
+    .b-plate { grid-template-columns: 1fr; padding: 32px 24px; }
+    .c-group { grid-template-columns: 1fr; }
+    .c-vals { grid-template-columns: 1fr 1fr; }
+  }
+</style>
+</head>
+<body data-show="a">
+<div class="switch">
+  <button data-to="a" aria-pressed="true">A · Цифры в ряд</button>
+  <button data-to="b" aria-pressed="false">B · Тёмная плита</button>
+  <button data-to="c" aria-pressed="false">C · Группы под поездку</button>
+  <span>Tank&nbsp;300, горы, семья</span>
+</div>
+<main>
+  <h2>Всё для дороги</h2>
+
+  <!-- A -->
+  <section data-v="a">
+    <p class="a-story">Рамный внедорожник, которому всё равно, асфальт под колёсами или грунтовка после дождя. В&nbsp;салоне тихо, кресла с&nbsp;подогревом, сзади спокойно спит ребёнок. Встретим в&nbsp;аэропорту Минвод с&nbsp;полным баком — через три часа ты&nbsp;уже в&nbsp;Домбае.</p>
+    <div class="a-hero">
+      <div><span class="num">4×4</span><p>Полный привод — грунтовка к&nbsp;Эльбрусу не&nbsp;страшна</p></div>
+      <div><span class="num">220</span><span class="unit">мм</span><p>Клиренс — бордюры и&nbsp;ямы проедешь</p></div>
+      <div><span class="num">500</span><span class="unit">л</span><p>Багажник — влезут чемоданы и&nbsp;коляска</p></div>
+      <div><span class="num">700</span><span class="unit">км</span><p>Запас хода — от&nbsp;Минвод до&nbsp;Домбая и&nbsp;обратно</p></div>
+    </div>
+    <dl class="a-list">
+      <div><dt>Тип</dt><dd>внедорожник</dd></div>
+      <div><dt>Коробка</dt><dd>автомат</dd></div>
+      <div><dt>Мест</dt><dd>5</dd></div>
+      <div><dt>Двигатель</dt><dd>2.0 турбо, 220 л.с.</dd></div>
+      <div><dt>Расход</dt><dd>11 л на&nbsp;100 км</dd></div>
+      <div><dt>Топливо</dt><dd>АИ-95</dd></div>
+    </dl>
+  </section>
+
+  <!-- B -->
+  <section data-v="b">
+    <div class="b-plate">
+      <div><span class="num">4×4</span><b>Полный привод</b><span class="why">Грунтовка к&nbsp;Эльбрусу не&nbsp;страшна</span></div>
+      <div><span class="num">220</span><span class="unit">мм</span><b>Клиренс</b><span class="why">Бордюры и&nbsp;ямы проедешь</span></div>
+      <div><span class="num">500</span><span class="unit">л</span><b>Багажник</b><span class="why">Влезут чемоданы и&nbsp;коляска</span></div>
+      <div><span class="num">700</span><span class="unit">км</span><b>Запас хода</b><span class="why">Одна заправка на&nbsp;весь маршрут</span></div>
+    </div>
+    <p class="b-rest"><span>Внедорожник</span><span>Автомат</span><span><b>5</b> мест</span><span><b>2.0</b> турбо, 220 л.с.</span><span><b>11</b> л на&nbsp;100 км</span><span>АИ-95</span></p>
+  </section>
+
+  <!-- C -->
+  <section data-v="c">
+    <div class="c-group">
+      <div><h3>Дорога</h3><p>Горы и&nbsp;грунтовка</p></div>
+      <div>
+        <div class="c-vals">
+          <div><span class="num">4×4</span><p>Полный привод</p></div>
+          <div><span class="num">220</span><span class="unit">мм</span><p>Клиренс</p></div>
+          <div><span class="num">220</span><span class="unit">л.с.</span><p>2.0 турбо</p></div>
+        </div>
+        <div class="c-icons" aria-label="Режимы езды">
+          <span title="Шоссе"><svg class="act" viewBox="0 0 24 24"><path d="M6 21 9 3M18 21 15 3M12 4v3M12 11v3M12 18v3"/></svg></span>
+          <span title="Горы"><svg class="act" viewBox="0 0 24 24"><path d="M3 20 10 7l4 7 2-3 5 9z"/></svg></span>
+          <span title="Снег"><svg class="act" viewBox="0 0 24 24"><path d="M12 3v18M4.2 7.5l15.6 9M4.2 16.5l15.6-9"/></svg></span>
+          <span title="Грязь"><svg class="act" viewBox="0 0 24 24"><path d="M3 15c3-3 6 3 9 0s6 3 9 0M3 20c3-3 6 3 9 0s6 3 9 0M12 4v6"/></svg></span>
+        </div>
+      </div>
+    </div>
+    <div class="c-group">
+      <div><h3>Салон</h3><p>Семья с&nbsp;ребёнком</p></div>
+      <div class="c-vals">
+        <div><span class="num">5</span><p>Мест</p></div>
+        <div><span class="num">500</span><span class="unit">л</span><p>Багажник, влезет коляска</p></div>
+        <div><span class="num">АКП</span><p>Автомат</p></div>
+      </div>
+    </div>
+    <div class="c-group">
+      <div><h3>Заправки</h3><p>Минводы — Домбай</p></div>
+      <div class="c-vals">
+        <div><span class="num">700</span><span class="unit">км</span><p>Запас хода</p></div>
+        <div><span class="num">11</span><span class="unit">л</span><p>На&nbsp;100 км</p></div>
+        <div><span class="num">95</span><p>Бензин АИ-95</p></div>
+      </div>
+    </div>
+  </section>
+</main>
+<script>
+  document.querySelectorAll('.switch button').forEach(b => b.onclick = () => {
+    document.body.dataset.show = b.dataset.to
+    document.querySelectorAll('.switch button').forEach(x => x.setAttribute('aria-pressed', x === b))
+  })
+</script>
+</body>
+</html>
