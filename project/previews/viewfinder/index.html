@@ -1,0 +1,372 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Видоискатель</title>
+<link rel="stylesheet" href="/concepts-hero/fonts/fonts.css">
+<style>
+  /* Токены Севера из src/styles.css */
+  :root {
+    --paper: #f9f6f6; --plate: #ffffff; --ink: #001f26; --muted: #4a5d62; --line: #d3dadb;
+    --rec: #fde910; --green: #a4e891; --surface-strong: #e9eeee; --range: rgb(0 31 38 / 0.08); --disabled: #a9a79e;
+    --r-card: 16px; --r-ctl: 12px; --icon-stroke: 1.5px;
+    --fs-xs: 12px; --fs-sm: 14px; --fs-md: 16px; --fs-lg: 20px; --fs-xl: 28px;
+    --lh-snug: 1.25; --lh-body: 1.5; --ls-caps: .08em; --ls-head: -0.01em;
+    --dur-fast: .15s; --dur-base: .2s; --ease-out: ease-out;
+    --display: Manrope, system-ui, sans-serif;
+    /* Видоискатель: кандидаты в токены, в коде — спросить */
+    --vf-arm: 16px;            /* длина плеча уголка */
+    --vf-in: 160ms;            /* схождение при наведении */
+    --vf-glide: 200ms;         /* переезд между карточками */
+    --vf-out: 120ms;           /* уход */
+    --vf-press: 100ms;         /* дожим при нажатии */
+    --vf-ease: cubic-bezier(.16, 1, .3, 1);
+  }
+  * { box-sizing: border-box; }
+  ::selection { background: var(--ink); color: var(--paper); }
+  body { margin: 0; background: var(--paper); color: var(--ink); font: 400 var(--fs-md)/var(--lh-body) var(--display); }
+  button { font: inherit; color: inherit; cursor: pointer; }
+  main { max-width: 1200px; margin: 0 auto; padding: 48px 24px 120px; }
+  h1 { margin: 0; font-size: var(--fs-xl); font-weight: 700; letter-spacing: var(--ls-head); }
+  h2 { margin: 0; font-size: var(--fs-xl); font-weight: 700; letter-spacing: var(--ls-head); line-height: var(--lh-snug); }
+  .lead { margin: 8px 0 0; max-width: 70ch; color: var(--muted); }
+  section { margin-top: 88px; }
+  .sec-head { display: grid; gap: 8px; margin-bottom: 24px; }
+  .sec-head p { margin: 0; color: var(--muted); max-width: 70ch; }
+  .tag { justify-self: start; font-size: var(--fs-sm); font-weight: 600; padding: 2px 10px; border-radius: var(--r-ctl); background: var(--green); }
+
+  /* ── Видоискатель ── */
+  [data-vf] { position: relative; }
+  .vf { position: absolute; left: 0; top: 0; width: 0; height: 0; pointer-events: none; z-index: 5; opacity: 0; transition: opacity var(--vf-out) linear; }
+  .vf.on { opacity: 1; transition-duration: var(--vf-in); }
+  .vf i { position: absolute; left: 0; top: 0; width: var(--arm); height: var(--arm); border: 0 solid var(--vf-color, var(--ink));
+    transition: transform var(--vf-glide) var(--vf-ease); will-change: transform; }
+  .vf { --w: var(--vf-stroke, var(--icon-stroke)); }
+  .vf i:nth-child(1) { border-top-width: var(--w); border-left-width: var(--w); border-top-left-radius: var(--rad); }
+  .vf i:nth-child(2) { border-top-width: var(--w); border-right-width: var(--w); border-top-right-radius: var(--rad); }
+  .vf i:nth-child(3) { border-bottom-width: var(--w); border-right-width: var(--w); border-bottom-right-radius: var(--rad); }
+  .vf i:nth-child(4) { border-bottom-width: var(--w); border-left-width: var(--w); border-bottom-left-radius: var(--rad); }
+  .vf.instant i { transition: none; }
+  .vf.converge i { transition-duration: var(--vf-in); }
+  .vf.press i { transition-duration: var(--vf-press); }
+
+  /* Кружок фокуса в точке нажатия */
+  .vf-ring { position: absolute; width: 28px; height: 28px; margin: -14px 0 0 -14px; pointer-events: none; z-index: 6; color: var(--vf-color, var(--ink)); }
+  .vf-ring svg { display: block; width: 100%; height: 100%; fill: none; stroke: currentColor; stroke-width: var(--icon-stroke); }
+
+  /* ── 1. Э2: ещё варианты ── */
+  .e2 { display: grid; grid-template-columns: minmax(0, 1fr); gap: 0; }
+  .hero { position: relative; height: 340px; border-radius: var(--r-card); background: var(--surface-strong); overflow: hidden; }
+  .hero img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: contain; padding: 32px 64px; transition: opacity var(--dur-base); }
+  .hud { position: absolute; right: 48px; top: 40px; z-index: 6; display: flex; gap: 8px; align-items: center; font-size: var(--fs-xs); font-weight: 600; letter-spacing: var(--ls-caps); text-transform: uppercase; opacity: 0; transition: opacity var(--dur-base); }
+  .hud.on { opacity: 1; }
+  .hud .dot { width: 8px; height: 8px; border-radius: 50%; background: var(--rec); box-shadow: 0 0 0 1px var(--ink); }
+  .hud.on .dot { animation: blink 1s steps(1) 2; }
+  @keyframes blink { 50% { opacity: 0; } }
+
+  .more-cars { margin-top: 40px; }
+  .more-cars > p { margin: 8px 0 0; color: var(--muted); }
+  .more-cars-grid { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 12px; margin-top: 20px; }
+  .more-car { display: grid; align-content: start; padding: 0; overflow: hidden; text-align: left; background: var(--plate); border: 1px solid var(--line); border-radius: var(--r-card); }
+  .more-car img { display: block; width: 100%; height: 132px; padding: 16px 20px; object-fit: contain; background: var(--surface-strong); }
+  .more-car-body { position: relative; display: grid; gap: 2px; padding: 12px 40px 14px 14px; font-size: var(--fs-sm); }
+  .more-car-why { font-weight: 600; }
+  .more-car-model { font-size: var(--fs-lg); font-weight: 600; line-height: var(--lh-snug); }
+  .muted { color: var(--muted); }
+  .ico { position: absolute; right: 14px; top: 14px; width: 20px; height: 20px; fill: none; stroke: var(--muted); stroke-width: var(--icon-stroke); stroke-linecap: round; stroke-linejoin: round; }
+  .more-car[data-vf-hot] .ico { stroke: var(--ink); }
+  .more-car-ask { align-content: center; justify-items: start; gap: 6px; padding: 18px; background: var(--paper); font-size: var(--fs-sm); }
+  .more-car-ask .ico { position: static; stroke: var(--ink); }
+  .more-car.current { opacity: .45; pointer-events: none; }
+
+  /* ── 2. Главная: фотолокации ── */
+  .tabs { display: flex; gap: 24px; margin-bottom: 20px; font-size: var(--fs-md); }
+  .tabs span { padding-bottom: 6px; color: var(--muted); }
+  .tabs span.on { color: var(--ink); font-weight: 600; border-bottom: 1px solid var(--ink); }
+  .dir-places { display: grid; grid-template-columns: repeat(3, 1fr); gap: 14px; }
+  .dir-place { display: grid; align-content: start; border-radius: var(--r-card); text-align: left; padding: 0; overflow: hidden; background: var(--plate); border: 1px solid var(--line); }
+  .dir-place-photo { position: relative; overflow: hidden; height: clamp(220px, 21vw, 300px); }
+  .dir-place-photo > div { position: absolute; inset: 0; background-size: cover; background-position: center; filter: saturate(.9); transition: transform .5s var(--ease-out); }
+  .dir-place[data-vf-hot] .dir-place-photo > div { transform: scale(1.04); }
+  .dir-caption { padding: 18px 20px 20px; }
+  .dir-caption b { display: block; font-size: var(--fs-lg); font-weight: 600; line-height: var(--lh-snug); }
+  .dir-caption span { display: block; font-size: var(--fs-sm); color: var(--muted); margin-top: 6px; }
+  .dir-caption em { display: block; font-style: normal; margin-top: 10px; font-size: var(--fs-sm); font-weight: 600; }
+
+  /* ── 4. Лого ── */
+  .logo-rows { display: grid; gap: 12px; }
+  .bar { display: flex; align-items: center; justify-content: space-between; height: 72px; padding: 0 32px; border-radius: var(--r-card); border: 1px solid var(--line); background: var(--plate); }
+  .bar.dark { background: var(--ink); color: var(--paper); border-color: var(--ink); }
+  .bar nav { display: flex; gap: 28px; font-size: var(--fs-sm); }
+  .logo { display: inline-flex; align-items: center; gap: .36em; border: 0; background: none; padding: 0; font-weight: 700; letter-spacing: .04em; line-height: 1; font-size: var(--fs-lg); }
+  .logo.big { font-size: 56px; }
+  .logo-on { position: relative; padding: .2em .32em; font-size: .72em; --c: .42em; }
+  .logo-on i { position: absolute; width: var(--c); height: var(--c); border: 0 solid currentColor; }
+  .logo-on i:nth-child(1) { left: 0; top: 0; border-top-width: 2px; border-left-width: 2px; border-top-left-radius: .3em; }
+  .logo-on i:nth-child(2) { right: 0; top: 0; border-top-width: 2px; border-right-width: 2px; border-top-right-radius: .3em; }
+  .logo-on i:nth-child(3) { right: 0; bottom: 0; border-bottom-width: 2px; border-right-width: 2px; border-bottom-right-radius: .3em; }
+  .logo-on i:nth-child(4) { left: 0; bottom: 0; border-bottom-width: 2px; border-left-width: 2px; border-bottom-left-radius: .3em; }
+  .logo.big .logo-on i { border-width: 0; }
+  .logo.big .logo-on i:nth-child(1) { border-top-width: 4px; border-left-width: 4px; }
+  .logo.big .logo-on i:nth-child(2) { border-top-width: 4px; border-right-width: 4px; }
+  .logo.big .logo-on i:nth-child(3) { border-bottom-width: 4px; border-right-width: 4px; }
+  .logo.big .logo-on i:nth-child(4) { border-bottom-width: 4px; border-left-width: 4px; }
+  /* B: на наведении уголки расходятся и сводятся обратно — «навели фокус» */
+  .logo:hover .logo-on i { animation: refocus .5s var(--vf-ease); }
+  @keyframes refocus { 35% { translate: var(--dx) var(--dy); } }
+  .logo-on i:nth-child(1) { --dx: -.14em; --dy: -.14em; }
+  .logo-on i:nth-child(2) { --dx: .14em; --dy: -.14em; }
+  .logo-on i:nth-child(3) { --dx: .14em; --dy: .14em; }
+  .logo-on i:nth-child(4) { --dx: -.14em; --dy: .14em; }
+  .logo-stage { display: grid; place-items: center; height: 220px; border-radius: var(--r-card); background: var(--plate); border: 1px solid var(--line); }
+  .rules { margin: 24px 0 0; padding: 0; list-style: none; display: grid; gap: 12px; max-width: 80ch; }
+  .rules li { padding-top: 12px; border-top: 1px solid var(--line); }
+
+  @media (max-width: 900px) {
+    .more-cars-grid { grid-template-columns: 1fr 1fr; }
+    .dir-places { grid-template-columns: 1fr; }
+    .hero { height: 240px; }
+    .hero img { padding: 24px; }
+    .bar nav { display: none; }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .vf i { transition: none !important; }
+    .logo-on i { animation: none !important; }
+  }
+</style>
+</head>
+<body>
+<main>
+  <h1>Видоискатель</h1>
+  <p class="lead">Уголки фокуса вместо подсветки карточки. Наведи курсор: рамка сходится к&nbsp;карточке и&nbsp;переезжает за&nbsp;курсором, как точка автофокуса. Нажми: прицел дожимается, на&nbsp;фото в&nbsp;точке нажатия появляется кружок фокуса. Tab тоже работает.</p>
+
+  <!-- 1. Э2 -->
+  <section>
+    <div class="sec-head">
+      <h2>Э2: ещё варианты под поездку</h2>
+      <p>Рамка снаружи карточки, обводка на&nbsp;наведении убрана. Нажми на&nbsp;машину: она встанет главной, и&nbsp;большие уголки один раз возьмут её в&nbsp;фокус, загорится REC. Название машины на&nbsp;фото не&nbsp;ставим. Это предложенный акцентный момент.</p>
+    </div>
+    <div class="e2">
+      <div class="hero" data-vf="hero" style="--vf-color: var(--ink)">
+        <img id="heroImg" src="/cars/tbank/haval-f7-70.webp" alt="">
+        <div class="hud" id="hud"><span class="dot"></span>Rec</div>
+      </div>
+      <div class="more-cars">
+        <h2>Ещё варианты под поездку</h2>
+        <p>Те же даты и&nbsp;цель. Нажми&nbsp;— сравним с&nbsp;<span id="curModel">Haval F7 II</span>.</p>
+        <div class="more-cars-grid" data-vf="out" data-ring>
+          <button type="button" class="more-car" data-vf-item data-car="geely-monjaro-75" data-price="6&nbsp;500" data-model="Geely Monjaro">
+            <img src="/cars/tbank/geely-monjaro-75.webp" alt="">
+            <span class="more-car-body"><span class="more-car-why">Просторнее</span><span class="more-car-model">Geely Monjaro</span><span class="muted">6&nbsp;500&nbsp;₽ в&nbsp;сутки</span>
+              <svg class="ico" viewBox="0 0 20 20" aria-hidden="true"><path d="M5 15 15 5M5 5h10v10"/></svg></span>
+          </button>
+          <button type="button" class="more-car" data-vf-item data-car="jetour-t2-49" data-price="6&nbsp;800" data-model="Jetour T2">
+            <img src="/cars/tbank/jetour-t2-49.webp" alt="">
+            <span class="more-car-body"><span class="more-car-why">Выше клиренс</span><span class="more-car-model">Jetour T2</span><span class="muted">6&nbsp;800&nbsp;₽ в&nbsp;сутки</span>
+              <svg class="ico" viewBox="0 0 20 20" aria-hidden="true"><path d="M5 15 15 5M5 5h10v10"/></svg></span>
+          </button>
+          <button type="button" class="more-car" data-vf-item data-car="lada-niva-legend-342" data-price="3&nbsp;500" data-model="LADA Niva Legend">
+            <img src="/cars/tbank/lada-niva-legend-342.webp" alt="">
+            <span class="more-car-body"><span class="more-car-why">Дешевле</span><span class="more-car-model">LADA Niva Legend</span><span class="muted">3&nbsp;500&nbsp;₽ в&nbsp;сутки</span>
+              <svg class="ico" viewBox="0 0 20 20" aria-hidden="true"><path d="M5 15 15 5M5 5h10v10"/></svg></span>
+          </button>
+          <button type="button" class="more-car more-car-ask" data-vf-item>
+            <svg class="ico" viewBox="0 0 20 20" aria-hidden="true"><path d="M10 3v14M3 10h14"/></svg>
+            <span class="more-car-model">Подобрать ещё</span>
+            <span class="muted">Поменяй цель, с&nbsp;кем едешь или что важно в&nbsp;машине</span>
+          </button>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- 2. Главная -->
+  <section>
+    <div class="sec-head">
+      <h2>Главная: куда съездить</h2>
+      <p>Рамка внутри фото, светлая. Подъём карточки убран, лёгкий зум фото оставлен. При нажатии&nbsp;— кружок фокуса.</p>
+    </div>
+    <div class="tabs"><span class="on">Сочи</span><span>Петербург</span><span>Москва</span><span>Калининград</span></div>
+    <div class="dir-places" data-vf="photo" data-ring style="--vf-color: var(--paper); --vf-stroke: 2px">
+      <button type="button" class="dir-place" data-vf-item>
+        <div class="dir-place-photo" data-vf-target><div style="background-image:url(/concepts-hero/places/sochi-ski.webp)"></div></div>
+        <div class="dir-caption"><b>Горнолыжка в&nbsp;Красной Поляне</b><span>Бокс и&nbsp;крепление для лыж уже стоят. Тебе осталось взять лыжи</span><em>от 3&nbsp;800&nbsp;₽ в&nbsp;сутки</em></div>
+      </button>
+      <button type="button" class="dir-place" data-vf-item>
+        <div class="dir-place-photo" data-vf-target><div style="background-image:url(/concepts-hero/places/sochi-ritsa.webp)"></div></div>
+        <div class="dir-caption"><b>Абхазия, озеро Рица</b><span>Оформим доверенность на&nbsp;выезд, маршрут в&nbsp;подарок</span><em>от 3&nbsp;500&nbsp;₽ в&nbsp;сутки</em></div>
+      </button>
+      <button type="button" class="dir-place" data-vf-item>
+        <div class="dir-place-photo" data-vf-target><div style="background-image:url(/concepts-hero/places/sochi-lagonaki.webp)"></div></div>
+        <div class="dir-caption"><b>Плато Лаго-Наки</b><span>Грунтовка на&nbsp;подъёме&nbsp;— полный привод и&nbsp;клиренс от&nbsp;200&nbsp;мм</span><em>от 6&nbsp;800&nbsp;₽ в&nbsp;сутки</em></div>
+      </button>
+    </div>
+  </section>
+
+  <!-- 4. Лого -->
+  <section>
+    <div class="sec-head">
+      <h2>Лого: ON в&nbsp;уголках</h2>
+      <p>Полная рамка заменена четырьмя уголками. На&nbsp;наведении уголки расходятся и&nbsp;сводятся.</p>
+    </div>
+    <div class="logo-rows">
+      <div class="logo-stage"><span class="logo big"><span class="logo-on"><i></i><i></i><i></i><i></i>ON</span>MOVE</span></div>
+      <div class="bar"><button type="button" class="logo"><span class="logo-on"><i></i><i></i><i></i><i></i>ON</span>MOVE</button><nav><span>Куда съездить</span><span>Как это работает</span><span>Войти</span></nav></div>
+      <div class="bar dark"><button type="button" class="logo"><span class="logo-on"><i></i><i></i><i></i><i></i>ON</span>MOVE</button><nav><span>Наверх</span></nav></div>
+    </div>
+  </section>
+
+  <section>
+    <div class="sec-head"><h2>Правила</h2></div>
+    <ul class="rules">
+      <li>Видоискатель только на выборе: машина и&nbsp;место, плюс фото машины на&nbsp;Э2 в&nbsp;момент выбора. Чипы, кнопки, поля и&nbsp;ссылки без уголков.</li>
+      <li>В&nbsp;календаре уголков нет: на&nbsp;мелких ячейках рядом с&nbsp;выбранными датами получается грязно.</li>
+      <li>Схождение 160&nbsp;мс, переезд 200&nbsp;мс, уход 120&nbsp;мс, дожим 100&nbsp;мс. Кружок фокуса до&nbsp;400&nbsp;мс, переход не&nbsp;ждёт его.</li>
+      <li>Уголок: толщина <code>--icon-stroke</code>, скругление повторяет карточку. На&nbsp;светлом&nbsp;— чернила, на&nbsp;фото&nbsp;— бумага и&nbsp;линия 2px, иначе теряется на&nbsp;небе.</li>
+      <li>Фокус с&nbsp;клавиатуры показывает ту&nbsp;же рамку. На&nbsp;тач-экране&nbsp;— только дожим и&nbsp;кружок при касании.</li>
+      <li>Reduced motion: рамка проявляется на&nbsp;месте, без переезда и&nbsp;кружка.</li>
+    </ul>
+  </section>
+</main>
+
+<script>
+const reduced = () => matchMedia('(prefers-reduced-motion: reduce)').matches
+
+// Геометрия по типу группы: отступ рамки от цели (+ снаружи, − внутрь), плечо уголка, радиус
+const kinds = {
+  out:   { pad: 6,   from: 8,  press: -4, arm: 18, rad: 'var(--r-card)' },
+  photo: { pad: -14, from: 8,  press: -4, arm: 22, rad: '6px' },
+  hero:  { pad: -20, from: 40, press: 0,  arm: 32, rad: '8px' },
+}
+
+function setup(group) {
+  const k = kinds[group.dataset.vf]
+  const vf = document.createElement('div')
+  vf.className = 'vf'
+  vf.style.setProperty('--arm', k.arm + 'px')
+  vf.style.setProperty('--rad', k.rad)
+  vf.innerHTML = '<i></i><i></i><i></i><i></i>'
+  group.append(vf)
+  const corners = [...vf.children]
+  let cur = null, pressing = false
+
+  const rectOf = (item) => {
+    const t = item.querySelector('[data-vf-target]') || item
+    const g = group.getBoundingClientRect(), r = t.getBoundingClientRect()
+    return { x: r.left - g.left, y: r.top - g.top, w: r.width, h: r.height }
+  }
+  const place = (r, pad) => {
+    const a = k.arm
+    const pts = [[r.x - pad, r.y - pad], [r.x + r.w + pad - a, r.y - pad], [r.x + r.w + pad - a, r.y + r.h + pad - a], [r.x - pad, r.y + r.h + pad - a]]
+    corners.forEach((c, i) => { c.style.transform = `translate(${pts[i][0]}px, ${pts[i][1]}px)` })
+  }
+  const snap = (fn) => { vf.classList.add('instant'); fn(); vf.offsetWidth; vf.classList.remove('instant') }
+
+  const show = (item) => {
+    if (item === cur) return
+    const prev = cur
+    cur = item
+    group.querySelectorAll('[data-vf-hot]').forEach((n) => n.removeAttribute('data-vf-hot'))
+    item.setAttribute('data-vf-hot', '')
+    const r = rectOf(item)
+    const visible = vf.classList.contains('on') && prev
+    vf.classList.remove('press')
+    if (reduced()) { snap(() => place(r, k.pad)); vf.classList.add('on'); return }
+    if (visible) { vf.classList.remove('converge'); place(r, k.pad); return }
+    // Появление: уголки снаружи → сходятся к цели
+    vf.classList.remove('on')
+    snap(() => place(r, k.pad + k.from))
+    vf.classList.add('converge', 'on')
+    place(r, k.pad)
+  }
+  const hide = () => {
+    cur = null
+    group.querySelectorAll('[data-vf-hot]').forEach((n) => n.removeAttribute('data-vf-hot'))
+    vf.classList.remove('on')
+  }
+
+  group.querySelectorAll('[data-vf-item]').forEach((item) => {
+    item.addEventListener('pointerenter', (e) => { if (e.pointerType === 'mouse') show(item) })
+    item.addEventListener('focus', () => { if (item.matches(':focus-visible')) show(item) })
+    item.addEventListener('blur', () => { if (!group.matches(':hover')) hide() })
+    item.addEventListener('pointerdown', (e) => {
+      show(item)
+      pressing = true
+      const r = rectOf(item)
+      if (reduced()) { vf.animate([{ opacity: 1 }, { opacity: .4 }, { opacity: 1 }], { duration: 200 }); return }
+      vf.classList.add('press')
+      place(r, k.pad + k.press)
+      if ('ring' in group.dataset) ring(group, e)
+    })
+  })
+  const release = () => {
+    if (!pressing) return
+    pressing = false
+    if (cur) { vf.classList.remove('press'); place(rectOf(cur), k.pad) }
+  }
+  addEventListener('pointerup', release)
+  group.addEventListener('pointerleave', (e) => { if (e.pointerType === 'mouse' && !group.contains(document.activeElement)) hide() })
+  addEventListener('resize', () => { if (cur) snap(() => place(rectOf(cur), k.pad)) })
+
+  // Для главного фото: один «захват фокуса» издалека
+  group.lockOn = () => {
+    cur = null
+    const r = { x: 0, y: 0, w: group.clientWidth, h: group.clientHeight }
+    if (reduced()) { snap(() => place(r, k.pad)); vf.classList.add('on'); return }
+    vf.style.setProperty('--vf-in', '520ms')
+    vf.classList.remove('on')
+    snap(() => place(r, k.pad + k.from))
+    vf.classList.add('converge', 'on')
+    place(r, k.pad)
+  }
+}
+
+// Кружок фокуса с четырьмя рисками в точке нажатия
+function ring(group, e) {
+  const g = group.getBoundingClientRect()
+  const el = document.createElement('div')
+  el.className = 'vf-ring'
+  el.style.left = (e.clientX - g.left) + 'px'
+  el.style.top = (e.clientY - g.top) + 'px'
+  el.innerHTML = '<svg viewBox="0 0 28 28"><circle cx="14" cy="14" r="6"/><path d="M14 2v5M14 21v5M2 14h5M21 14h5"/></svg>'
+  group.append(el)
+  el.animate([
+    { transform: 'scale(2.2)', opacity: 0 },
+    { transform: 'scale(1)', opacity: 1, offset: .45 },
+    { transform: 'scale(1)', opacity: 0 },
+  ], { duration: 400, easing: 'cubic-bezier(.16,1,.3,1)' }).onfinish = () => el.remove()
+}
+
+document.querySelectorAll('[data-vf]').forEach(setup)
+
+// Э2: нажатие на альтернативу — она встаёт главной, большие уголки берут её в фокус
+const hero = document.querySelector('[data-vf="hero"]')
+const heroImg = document.getElementById('heroImg'), hud = document.getElementById('hud')
+let current = { car: 'haval-f7-70', model: 'Haval F7 II', price: '3&nbsp;800' }
+hero.lockOn()
+document.querySelectorAll('.more-car[data-car]').forEach((card) => {
+  card.addEventListener('click', () => {
+    const next = { car: card.dataset.car, model: card.dataset.model, price: card.dataset.price }
+    card.dataset.car = current.car; card.dataset.model = current.model; card.dataset.price = current.price
+    card.querySelector('.more-car-why').textContent = 'Была главной'
+    card.querySelector('.more-car-body .muted').innerHTML = `${current.price}&nbsp;₽ в&nbsp;сутки`
+    card.querySelector('img').src = `/concepts-hero/cars/tbank/${current.car}.webp`
+    card.querySelector('.more-car-model').textContent = current.model
+    current = next
+    heroImg.style.opacity = 0
+    hud.classList.remove('on')
+    setTimeout(() => {
+      heroImg.src = `/concepts-hero/cars/tbank/${next.car}.webp`
+      document.getElementById('curModel').textContent = next.model
+      heroImg.style.opacity = 1
+      hero.lockOn()
+      setTimeout(() => hud.classList.add('on'), reduced() ? 0 : 420)
+    }, reduced() ? 0 : 160)
+  })
+})
+
+</script>
+</body>
+</html>

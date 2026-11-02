@@ -2,7 +2,17 @@
   "detector": {
     "ignoreRules": [],
     "ignoreFiles": [],
-    "ignoreValues": []
+    "ignoreValues": [
+      {
+        "rule": "cramped-padding",
+        "value": "*",
+        "files": [
+          "project/previews/viewfinder/index.html"
+        ],
+        "createdAt": "2026-11-01T15:26:13.008Z",
+        "reason": "agent triage: .logo-stage (height 220px, place-items center) and .bar (height 72px, align-items center) center the logo vertically; detector reads fixed-height centering as zero inset"
+      }
+    ]
   },
   "buildPath": "code"
 }

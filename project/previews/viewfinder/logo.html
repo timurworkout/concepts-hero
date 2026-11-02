@@ -1,0 +1,82 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Лого ON MOVE</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;600;700&display=swap">
+<style>
+  :root {
+    --paper: #f9f6f6; --plate: #ffffff; --ink: #001f26; --muted: #4a5d62; --line: #d3dadb;
+    --r-card: 16px; --fs-sm: 14px; --fs-md: 16px; --fs-lg: 20px; --fs-xl: 28px;
+    --display: Manrope, system-ui, sans-serif;
+  }
+  * { box-sizing: border-box; }
+  body { margin: 0; background: var(--paper); color: var(--ink); font: 400 var(--fs-md)/1.5 var(--display); }
+  main { max-width: 960px; margin: 0 auto; padding: 40px 16px 80px; }
+  h1 { margin: 0 0 8px; font-size: var(--fs-xl); font-weight: 700; }
+  .lead { margin: 0 0 32px; color: var(--muted); max-width: 60ch; }
+  .grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 420px), 1fr)); gap: 16px; }
+  .card { display: grid; gap: 20px; padding: 24px; border: 1px solid var(--line); border-radius: var(--r-card); background: var(--plate); }
+  .card h2 { margin: 0; font-size: var(--fs-md); font-weight: 700; }
+  .card p { margin: 0; font-size: var(--fs-sm); color: var(--muted); }
+  .big { display: flex; justify-content: center; padding: 28px 0; font-size: 48px; }
+  .small { display: flex; align-items: center; justify-content: space-between; padding: 14px 16px; border: 1px solid var(--line); border-radius: 12px; font-size: var(--fs-lg); background: var(--paper); }
+  .small span.nav { font-size: var(--fs-sm); color: var(--muted); }
+
+  /* Общая сборка: ON и MOVE в рамке. Рамка чуть выше букв */
+  .logo { display: inline-flex; align-items: center; gap: .32em; font-weight: 700; letter-spacing: .04em; line-height: 1; white-space: nowrap; }
+  .mv { position: relative; padding: var(--py) var(--px); }
+  .mv i { position: absolute; width: var(--arm); height: var(--arm); border: 0 solid currentColor; }
+  .mv i:nth-child(1) { left: 0; top: 0; border-top-width: var(--sw); border-left-width: var(--sw); border-top-left-radius: var(--rad); }
+  .mv i:nth-child(2) { right: 0; top: 0; border-top-width: var(--sw); border-right-width: var(--sw); border-top-right-radius: var(--rad); }
+  .mv i:nth-child(3) { right: 0; bottom: 0; border-bottom-width: var(--sw); border-right-width: var(--sw); border-bottom-right-radius: var(--rad); }
+  .mv i:nth-child(4) { left: 0; bottom: 0; border-bottom-width: var(--sw); border-left-width: var(--sw); border-bottom-left-radius: var(--rad); }
+
+  /* A. Прямые углы: в тон угловатым капсам */
+  .a { --py: .14em; --px: .22em; --arm: .34em; --rad: 0; --sw: .07em; }
+  /* B. Капсы, лёгкое скругление: компромисс */
+  .b { --py: .14em; --px: .22em; --arm: .34em; --rad: .08em; --sw: .07em; }
+  /* C. Строчные, круглые буквы — круглые уголки как у видоискателя */
+  /* Строчные без выносных: над буквами пустое место под заглавные. Сдвигаем отступы,
+     чтобы рамка обнимала сами буквы, а «on» ставим на общую базовую линию */
+  .c { --py: .2em; --px: .22em; --arm: .38em; --rad: .2em; --sw: .07em; letter-spacing: 0; align-items: baseline; }
+  .c .mv { padding-top: .09em; padding-bottom: .31em; }
+  /* D. Капсы 600, шире трекинг, тонкая рамка: легче и спокойнее */
+  .d { --py: .16em; --px: .26em; --arm: .32em; --rad: .05em; --sw: .05em; font-weight: 600; letter-spacing: .1em; }
+</style>
+</head>
+<body>
+<main>
+  <h1>Лого ON MOVE</h1>
+  <p class="lead">Рамка видоискателя вокруг MOVE, чуть выше букв. Четыре варианта: крупно и в шапке.</p>
+  <div class="grid">
+    <section class="card">
+      <h2>A. Прямые углы</h2>
+      <div class="big"><span class="logo a">ON<span class="mv"><i></i><i></i><i></i><i></i>MOVE</span></span></div>
+      <div class="small"><span class="logo a">ON<span class="mv"><i></i><i></i><i></i><i></i>MOVE</span></span><span class="nav">Парк · Куда съездить</span></div>
+      <p>Углы без скругления, как у капсов Manrope. Строже и техничнее, ближе к рамке кадра в камере.</p>
+    </section>
+    <section class="card">
+      <h2>B. Лёгкое скругление</h2>
+      <div class="big"><span class="logo b">ON<span class="mv"><i></i><i></i><i></i><i></i>MOVE</span></span></div>
+      <div class="small"><span class="logo b">ON<span class="mv"><i></i><i></i><i></i><i></i>MOVE</span></span><span class="nav">Парк · Куда съездить</span></div>
+      <p>Скругление в толщину линии: не спорит с буквами, но не режет. Рекомендую.</p>
+    </section>
+    <section class="card">
+      <h2>C. Строчные</h2>
+      <div class="big"><span class="logo c"><span class="t">on</span><span class="mv"><i></i><i></i><i></i><i></i><span class="t">move</span></span></span></div>
+      <div class="small"><span class="logo c"><span class="t">on</span><span class="mv"><i></i><i></i><i></i><i></i><span class="t">move</span></span></span><span class="nav">Парк · Куда съездить</span></div>
+      <p>Круглые строчные o, n, e рифмуются со скруглёнными уголками. Мягче и дружелюбнее.</p>
+    </section>
+    <section class="card">
+      <h2>D. Легче, шире трекинг</h2>
+      <div class="big"><span class="logo d">ON<span class="mv"><i></i><i></i><i></i><i></i>MOVE</span></span></div>
+      <div class="small"><span class="logo d">ON<span class="mv"><i></i><i></i><i></i><i></i>MOVE</span></span><span class="nav">Парк · Куда съездить</span></div>
+      <p>Вес 600, разрядка и тонкая рамка. Спокойнее, ближе к подписи кадра.</p>
+    </section>
+  </div>
+</main>
+</body>
+</html>

@@ -211,7 +211,7 @@ export function Header({ dark, user, favs, onHome, onFavs, onLogin, onLogout, bo
   return (
     <header className={`header ${dark ? 'header-dark' : ''}`}>
       <button className="logo" onClick={onHome} aria-label="ON MOVE — на главную">
-        <span className="logo-on">ON</span>MOVE
+        <LogoMark />
       </button>
       <nav className="header-nav">
         <button ref={favHeart} className="header-btn" onClick={onFavs} aria-label={`Избранное: ${favs.length}`}>
@@ -358,6 +358,127 @@ export function Arrow({ dir = 'right', chevron = false }) {
 export function ActionIcon({ kind = 'open' }) {
   const d = { add: 'M10 3v14M3 10h14', open: 'M5 15 15 5M5 5h10v10', clear: 'M5 5l10 10M15 5 5 15' }[kind]
   return <svg className="arrival-icon" viewBox="0 0 20 20" aria-hidden="true"><path d={d} /></svg>
+}
+
+// Видоискатель: одна рамка из четырёх уголков на группу. Переезжает за курсором, как точка автофокуса;
+// при нажатии дожимается, в точке нажатия — кружок фокуса. Пункты группы — [data-vf-item],
+// рамка ложится на [data-vf-target] внутри пункта или на сам пункт. Только transform и opacity.
+const vfKinds = {
+  card: { pad: 6, from: 8, press: -4, arm: 18 },    // снаружи карточки
+  photo: { pad: -14, from: 8, press: -4, arm: 22 }, // внутри фото, светлая
+}
+
+function attachViewfinder(group, kind) {
+  const k = vfKinds[kind]
+  const vf = document.createElement('div')
+  vf.className = `vf vf-${kind}`
+  vf.setAttribute('aria-hidden', 'true')
+  vf.style.setProperty('--arm', `${k.arm}px`)
+  vf.innerHTML = '<i></i><i></i><i></i><i></i>'
+  group.append(vf)
+  const corners = [...vf.children]
+  let cur = null
+  let pressing = false
+
+  const rectOf = (item) => {
+    const g = group.getBoundingClientRect(), r = (item.querySelector('[data-vf-target]') ?? item).getBoundingClientRect()
+    return { x: r.left - g.left, y: r.top - g.top, w: r.width, h: r.height }
+  }
+  const place = (r, pad) => {
+    const a = k.arm, right = r.x + r.w + pad - a, bottom = r.y + r.h + pad - a
+    const pts = [[r.x - pad, r.y - pad], [right, r.y - pad], [right, bottom], [r.x - pad, bottom]]
+    corners.forEach((c, i) => { c.style.transform = `translate(${pts[i][0]}px, ${pts[i][1]}px)` })
+  }
+  const snap = (fn) => { vf.classList.add('vf-instant'); fn(); void vf.offsetWidth; vf.classList.remove('vf-instant') }
+  const hot = (item) => {
+    group.querySelectorAll('[data-vf-hot]').forEach((n) => n.removeAttribute('data-vf-hot'))
+    item?.setAttribute('data-vf-hot', '')
+  }
+
+  const show = (item) => {
+    if (item === cur) return
+    const visible = cur?.isConnected && vf.classList.contains('vf-on')
+    cur = item
+    hot(item)
+    vf.classList.remove('vf-press')
+    const r = rectOf(item)
+    if (reducedMotion()) { snap(() => place(r, k.pad)); vf.classList.add('vf-on'); return }
+    if (visible) { vf.classList.remove('vf-converge'); place(r, k.pad); return }
+    // Появление: уголки снаружи сходятся к цели
+    vf.classList.remove('vf-on')
+    snap(() => place(r, k.pad + k.from))
+    vf.classList.add('vf-converge', 'vf-on')
+    place(r, k.pad)
+  }
+  const hide = () => { cur = null; hot(null); vf.classList.remove('vf-on') }
+
+  const itemOf = (e) => { const item = e.target.closest?.('[data-vf-item]'); return item && group.contains(item) ? item : null }
+  const onOver = (e) => { const item = itemOf(e); if (item && e.pointerType === 'mouse') show(item) }
+  const onLeave = (e) => { if (e.pointerType === 'mouse' && !group.contains(document.activeElement)) hide() }
+  const onFocusIn = (e) => { const item = itemOf(e); if (item?.matches(':focus-visible')) show(item) }
+  const onFocusOut = (e) => { if (!group.contains(e.relatedTarget) && !group.matches(':hover')) hide() }
+  const onDown = (e) => {
+    const item = itemOf(e)
+    if (!item) return
+    show(item)
+    if (reducedMotion()) return
+    pressing = true
+    vf.classList.add('vf-press')
+    place(rectOf(item), k.pad + k.press)
+    ring(e)
+  }
+  const onUp = () => {
+    if (!pressing) return
+    pressing = false
+    vf.classList.remove('vf-press')
+    if (cur?.isConnected) place(rectOf(cur), k.pad)
+    else hide()
+  }
+  const onResize = () => { if (cur?.isConnected) snap(() => place(rectOf(cur), k.pad)) }
+  // Кружок фокуса с четырьмя рисками; переход по клику его не ждёт
+  const ring = (e) => {
+    const g = group.getBoundingClientRect()
+    const el = document.createElement('div')
+    el.className = `vf-ring vf-${kind}`
+    el.setAttribute('aria-hidden', 'true')
+    el.style.left = `${e.clientX - g.left}px`
+    el.style.top = `${e.clientY - g.top}px`
+    el.innerHTML = '<svg viewBox="0 0 28 28"><circle cx="14" cy="14" r="6"/><path d="M14 2v5M14 21v5M2 14h5M21 14h5"/></svg>'
+    group.append(el)
+    el.animate([{ transform: 'scale(2.2)', opacity: 0 }, { transform: 'scale(1)', opacity: 1, offset: .45 }, { transform: 'scale(1)', opacity: 0 }],
+      { duration: 400, easing: 'cubic-bezier(.16, 1, .3, 1)' }).onfinish = () => el.remove()
+  }
+
+  group.addEventListener('pointerover', onOver)
+  group.addEventListener('pointerleave', onLeave)
+  group.addEventListener('focusin', onFocusIn)
+  group.addEventListener('focusout', onFocusOut)
+  group.addEventListener('pointerdown', onDown)
+  window.addEventListener('pointerup', onUp)
+  window.addEventListener('resize', onResize)
+  return () => {
+    group.removeEventListener('pointerover', onOver)
+    group.removeEventListener('pointerleave', onLeave)
+    group.removeEventListener('focusin', onFocusIn)
+    group.removeEventListener('focusout', onFocusOut)
+    group.removeEventListener('pointerdown', onDown)
+    window.removeEventListener('pointerup', onUp)
+    window.removeEventListener('resize', onResize)
+    vf.remove()
+  }
+}
+
+const useViewfinder = (kind) => useCallback((group) => group ? attachViewfinder(group, kind) : undefined, [kind])
+
+// Строчные «on move», move в рамке видоискателя; на наведении уголки расходятся и сводятся
+export function LogoMark() {
+  return <><span className="logo-on">on</span><span className="logo-move"><i /><i /><i /><i />move</span></>
+}
+
+// Выбранная машина на Э2 берётся в фокус: большие уголки съезжаются издалека, загорается REC.
+// Ключ — id машины, поэтому сцена повторяется при каждой смене.
+function FocusLock() {
+  return <div className="vf-lock" aria-hidden="true"><i /><i /><i /><i /><span className="vf-rec">Rec</span></div>
 }
 
 // Ячейка поездки на Э2 и Э3: отдельный блок, иконка слева, справа «+» — пусто, «↗» — изменить
@@ -1361,7 +1482,7 @@ function StickySearch({ shown, query, onOpen }) {
   ]
   return (
     <div className={`sticky-search ${shown ? 'on' : ''}`} aria-hidden={!shown} inert={!shown}>
-      <button type="button" className="logo ss-logo" onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })} aria-label="Наверх"><span className="logo-on">ON</span>MOVE</button>
+      <button type="button" className="logo ss-logo" onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })} aria-label="Наверх"><LogoMark /></button>
       <div className="ss-bar">
         {segs.map(([id, label, value, ph]) => (
           <button key={id} type="button" className="ss-seg" onClick={() => onOpen(id)}>
@@ -1469,7 +1590,7 @@ function Landing({ query, setQuery, onSubmit }) {
 
       <footer className="footer">
         <button className="logo" onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })} aria-label="ON MOVE — наверх">
-          <span className="logo-on">ON</span>MOVE
+          <LogoMark />
         </button>
         <p>{nb('Учебный концепт сервиса аренды машин. Условия показаны как часть концепта.')}</p>
         <button className="back-top" onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}>Наверх<Arrow /></button>
@@ -1538,6 +1659,7 @@ const placeImage = (id) => (newPlacePhotos[id] ? `url("${newPlacePhotos[id][3]}"
 // Направления: город → места, где важны и направление, и машина под него. Машину не называем — её показывает подбор
 function Directions({ onPick }) {
   const drag = useDragScroll()
+  const vf = useViewfinder('photo')
   const [cityId, setCityId] = useState('sochi')
   const [active, setActive] = useState(0)
   const places = cityPlans(cityId).filter((p) => p.local).slice(0, 4)
@@ -1557,13 +1679,13 @@ function Directions({ onPick }) {
           <button key={id} type="button" role="tab" aria-selected={id === cityId} className={`dir-tab ${id === cityId ? 'on' : ''}`} onClick={() => city(id)}>{c.name}</button>
         ))}
       </div>
-      <div className="dir-places" key={cityId}>
+      <div className="dir-places" key={cityId} ref={vf}>
         {places.slice(0, 3).map((p, i) => {
           const price = fromPrice(p)
           return (
-            <button key={p.id} type="button" style={{ '--i': i }} className="dir-place"
+            <button key={p.id} type="button" style={{ '--i': i }} className="dir-place" data-vf-item
               onMouseEnter={() => setActive(i)} onFocus={() => setActive(i)} onClick={() => onPick(cityId, p)}>
-              <div className="dir-place-photo" style={{ backgroundImage: placeImage(p.id) }} />
+              <div className="dir-place-photo" data-vf-target style={{ backgroundImage: placeImage(p.id) }} />
               <div className="dir-caption">
                 <div>
               {goalLabel(p) && <small>{goalLabel(p)}</small>}
@@ -1716,6 +1838,8 @@ function Picking({ query, onDone }) {
         top.forEach((c, i) => place(tiles.current[c.id], x + (i % n) * (cw + g), H * (phone ? .35 : .31) + Math.floor(i / n) * (ch + g), scale))
       }, 2400)
       later(() => { setStage(3); top.forEach((c) => tiles.current[c.id]?.classList.add(c.id === car.id ? 'win' : 'dim')) }, 3500)
+      // Победитель сначала обводится, потом в нём проявляется главное фото — и уже с ним летит на Э2
+      later(() => tiles.current[car.id]?.classList.add('reveal'), 3950)
       later(() => {
         setFly(true)
         const el = tiles.current[car.id], rect = document.querySelector('.pick-photo')?.getBoundingClientRect()
@@ -1734,7 +1858,10 @@ function Picking({ query, onDone }) {
         <strong>{stage < 2 ? pool.length : stage === 3 ? Number(Boolean(car)) : count}</strong>
         <div className="picking-caption" key={stage}><span>{caps[stage][0]}</span><small>{caps[stage][1]}</small></div>
       </div>
-      {pool.map((c) => <div key={c.id} ref={(el) => { tiles.current[c.id] = el }} className="pickgrid-tile photo-car" style={carPhoto(c, c.id === car?.id ? 'lg' : 'sm')} />)}
+      {/* Все плитки — студийные кадры: победителя не видно заранее */}
+      {pool.map((c) => <div key={c.id} ref={(el) => { tiles.current[c.id] = el }} className="pickgrid-tile photo-car" style={carPhoto(c)}>
+        {c.id === car?.id && <span className="pickgrid-hero" style={carPhoto(c, 'lg')} />}
+      </div>)}
       <button type="button" className="pickgrid-skip" onClick={(e) => { e.stopPropagation(); onDone() }}>Пропустить <small>Esc</small></button>
     </div>, document.body,
   )
@@ -1755,6 +1882,7 @@ function PickGallery({ car, prev, fav }) {
     <div className="pick-gallery">
       <div className="pick-photo photo-car" style={{ backgroundImage: `url(${import.meta.env.BASE_URL}${photos[active]})`, aspectRatio: car.gallery.length ? '1372 / 960' : '1092 / 552' }}>
         {prev && prev.id !== car.id && <div key={`prev-${car.id}`} className="pick-photo-prev photo-car" style={carPhoto(prev, 'lg')} />}
+        <FocusLock key={car.id} />
         <button type="button" className="pick-photo-open" onClick={() => setExpanded(true)} aria-label={`Увеличить фото ${car.model}`} />
         <FavToggle id={car.id} fav={fav} />
       </div>
@@ -1774,14 +1902,15 @@ function PickGallery({ car, prev, fav }) {
 
 // «Ещё варианты под поездку»: три альтернативы и «Подобрать ещё» — куда идти, если эта машина не та
 function MoreCars({ car, query, items, onPick, onMore }) {
+  const vf = useViewfinder('card')
   if (!items.length) return null
   return (
     <section className="more-cars">
       <h2>Ещё варианты под поездку</h2>
       <p className="muted">{nb(`Те же даты и цель. Нажми — сравним с ${car.model}.`)}</p>
-      <div className="more-cars-grid">
+      <div className="more-cars-grid" ref={vf}>
         {items.map(({ car: c, label }) => (
-          <button key={c.id} type="button" className="more-car" onClick={() => onPick(c.id)}>
+          <button key={c.id} type="button" className="more-car" data-vf-item onClick={() => onPick(c.id)}>
             <img src={`${import.meta.env.BASE_URL}${c.image}`} alt="" loading="lazy" />
             <span className="more-car-body">
               {label && <span className="more-car-why">{label[0].toUpperCase() + label.slice(1)}</span>}
@@ -1791,7 +1920,7 @@ function MoreCars({ car, query, items, onPick, onMore }) {
             </span>
           </button>
         ))}
-        <button type="button" className="more-car more-car-ask" onClick={onMore}>
+        <button type="button" className="more-car more-car-ask" data-vf-item onClick={onMore}>
           <ActionIcon kind="add" />
           <span className="more-car-model">Подобрать ещё</span>
           <span className="muted">{nb('Поменяй цель, с кем едешь или что важно в машине')}</span>

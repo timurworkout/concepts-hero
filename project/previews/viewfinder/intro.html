@@ -1,0 +1,248 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Заставка с видоискателем</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;600;700&display=swap">
+<style>
+  /* Токены Севера из src/styles.css */
+  :root {
+    --paper: #f9f6f6; --plate: #ffffff; --ink: #001f26; --muted: #4a5d62; --line: #d3dadb; --rec: #fde910;
+    --on: #d9532b; /* терракота ближе к оранжевому: кандидат в токен */
+    --r-card: 16px; --r-ctl: 12px;
+    --fs-xs: 12px; --fs-sm: 14px; --fs-md: 16px; --fs-lg: 20px; --fs-hero: clamp(36px, 6vw, 72px);
+    --lh-snug: 1.1; --ls-caps: .08em; --ls-head: -0.02em;
+    --display: Manrope, system-ui, sans-serif;
+    --vf-stroke-photo: 2px;
+  }
+  * { box-sizing: border-box; }
+  html, body { margin: 0; height: 100%; }
+  body { background: var(--paper); color: var(--ink); font: 400 var(--fs-md)/1.5 var(--display); overflow: hidden; }
+  button { font: inherit; color: inherit; cursor: pointer; }
+
+  /* Макет хиро под заставкой */
+  .header { display: flex; align-items: center; justify-content: space-between; padding: 24px max(16px, 4vw); }
+  .nav { display: flex; gap: 24px; font-size: var(--fs-sm); color: var(--muted); }
+  .hero { padding: 10vh max(16px, 4vw) 0; }
+  .hero h1 { margin: 0; font-size: var(--fs-hero); line-height: var(--lh-snug); letter-spacing: var(--ls-head); font-weight: 700; }
+  .hero h1 span { display: block; }
+  .wizard { margin-top: 40px; max-width: 720px; height: 72px; border: 1px solid var(--line); border-radius: var(--r-card); background: var(--plate); }
+  .replay { position: fixed; left: 50%; bottom: 24px; transform: translateX(-50%); border: 1px solid var(--line); border-radius: var(--r-ctl); padding: 10px 18px; background: var(--plate); font-size: var(--fs-sm); }
+
+  /* Лого с уголками, как в коде */
+  .logo { display: inline-flex; align-items: center; gap: .36em; font-size: var(--fs-lg); font-weight: 700; letter-spacing: .04em; line-height: 1; white-space: nowrap; }
+  #move-txt { display: inline-block; }
+  /* Лого: строчные, рамка видоискателя вокруг move, отцентрована по самим буквам */
+  .logo { align-items: baseline; letter-spacing: 0; }
+  .logo .on { color: var(--on); }
+  .logo-move { position: relative; padding: .09em .22em .31em; }
+  .logo-move i { position: absolute; width: .38em; height: .38em; border: 0 solid currentColor; --sw: .07em; --rad: .2em; }
+  .logo-move i:nth-child(1) { left: 0; top: 0; border-top-width: var(--sw); border-left-width: var(--sw); border-top-left-radius: var(--rad); }
+  .logo-move i:nth-child(2) { right: 0; top: 0; border-top-width: var(--sw); border-right-width: var(--sw); border-top-right-radius: var(--rad); }
+  .logo-move i:nth-child(3) { right: 0; bottom: 0; border-bottom-width: var(--sw); border-right-width: var(--sw); border-bottom-right-radius: var(--rad); }
+  .logo-move i:nth-child(4) { left: 0; bottom: 0; border-bottom-width: var(--sw); border-left-width: var(--sw); border-bottom-left-radius: var(--rad); }
+
+  /* Заставка */
+  .intro { position: fixed; inset: 0; z-index: 10; overflow: hidden; }
+  .intro[hidden] { display: none; }
+  .intro-backdrop { position: absolute; inset: 0; background: var(--paper); }
+  .tile { position: absolute; left: 0; top: 0; border-radius: var(--r-card); overflow: hidden; background: var(--plate); opacity: 0; }
+  .tile img { display: block; width: 100%; height: 100%; object-fit: contain; }
+  .veil { position: absolute; inset: 0; pointer-events: none; background: radial-gradient(ellipse at center, var(--paper) 0%, rgb(249 246 246 / .94) 14%, rgb(249 246 246 / .2) 55%, rgb(249 246 246 / .45) 100%); }
+  .intro-logo { position: absolute; top: 50%; left: 50%; opacity: 0; transform-origin: center; }
+  .skip { position: absolute; top: 28px; right: max(28px, 4vw); border: 1px solid var(--line); border-radius: var(--r-ctl); padding: 10px 16px; background: var(--plate); font-size: var(--fs-sm); }
+
+  /* Видоискатель над сеткой: рамка над вуалью, чтобы её было видно */
+  .vf { position: absolute; left: 0; top: 0; z-index: 2; pointer-events: none; }
+  @property --w { syntax: '<length>'; inherits: false; initial-value: 2px; }
+  @property --vr { syntax: '<length>'; inherits: false; initial-value: 12px; }
+  @property --arm { syntax: '<length>'; inherits: false; initial-value: 22px; }
+  .vf i { position: absolute; left: 0; top: 0; width: var(--arm); height: var(--arm); border: 0 solid var(--ink); opacity: 0; }
+  .vf i:nth-child(1) { border-top-width: var(--w); border-left-width: var(--w); border-top-left-radius: var(--vr); }
+  .vf i:nth-child(2) { border-top-width: var(--w); border-right-width: var(--w); border-top-right-radius: var(--vr); }
+  .vf i:nth-child(3) { border-bottom-width: var(--w); border-right-width: var(--w); border-bottom-right-radius: var(--vr); }
+  .vf i:nth-child(4) { border-bottom-width: var(--w); border-left-width: var(--w); border-bottom-left-radius: var(--vr); }
+</style>
+</head>
+<body>
+  <header class="header">
+    <div class="logo" id="target-logo"><span class="on">on</span><span class="logo-move"><i></i><i></i><i></i><i></i>move</span></div>
+    <nav class="nav" id="nav"><span>Парк</span><span>Куда съездить</span></nav>
+  </header>
+  <section class="hero">
+    <h1><span class="line">Машина ждёт тебя,</span><span class="line">а время поездки</span><span class="line">остаётся на&nbsp;места</span></h1>
+    <div class="wizard" id="wizard"></div>
+  </section>
+  <button type="button" class="replay" id="replay">Повторить заставку</button>
+
+  <div class="intro" id="intro" hidden>
+    <div class="intro-backdrop"></div>
+    <div id="grid"></div>
+    <div class="veil"></div>
+    <div class="vf" id="vf"><i></i><i></i><i></i><i></i></div>
+    <div class="logo intro-logo" id="logo"><span class="on">on</span><span class="logo-move" id="move-box"><i></i><i></i><i></i><i></i><span id="move-txt">move</span></span></div>
+    <button type="button" class="skip" id="skip">Пропустить</button>
+  </div>
+
+<script>
+const files = ["baic-u5-plus-36.webp","belgee-s50-174.webp","jetta-va3-186.webp","belgee-x50-103.webp","belgee-x50-352.webp","bmw-x3-200.webp","changan-alsvin-4.webp","changan-cs35plus-new-6.webp","changan-eadoplus-1.webp","changan-uni-s-50.webp","changan-uni-t-3.webp","changan-uni-v-12.webp","geely-atlas-102.webp","geely-cityray-105.webp","geely-coolray-347.webp","geely-monjaro-75.webp","geely-okavango-100.webp","haval-dargo-16.webp","haval-f7-70.webp","haval-h3-256.webp","haval-jolion-255.webp","haval-m6-14.webp","hyundai-elantra-353.webp","jaecoo-j6-240.webp","jaecoo-j7-189.webp","jeland-j6-292.webp","jeland-j7-294.webp","jetour-dashing-24.webp","jetour-t2-49.webp","jetour-x70-plus-35.webp"];
+// В артефакте фото лежат рядом, на дев-сервере — в public/cars/tbank
+const base = location.pathname.includes('/concepts-hero/') ? '/concepts-hero/cars/tbank/' : 'cars/';
+const $ = (id) => document.getElementById(id);
+const intro = $('intro'), grid = $('grid'), logo = $('logo'), vf = $('vf');
+const corners = [...vf.children];
+const targetLogo = $('target-logo'), nav = $('nav'), wizard = $('wizard'), lines = [...document.querySelectorAll('.line')];
+const focusEase = 'cubic-bezier(.16, 1, .3, 1)';
+grid.innerHTML = files.map((f) => `<div class="tile"><img src="${base}${f}" alt=""></div>`).join('');
+const tiles = [...grid.children];
+
+let anims = [], timers = [];
+const play = (el, kf, opt) => { const a = el.animate(kf, { fill: 'both', ...opt }); anims.push(a); return a; };
+const later = (fn, ms) => timers.push(setTimeout(fn, ms));
+const stop = () => { timers.forEach(clearTimeout); timers = []; anims.forEach((a) => a.cancel()); anims = []; };
+
+// Позиции четырёх уголков вокруг прямоугольника с отступом pad
+let arm = 22;
+const cornerSpots = (r, pad) => [
+  [r.x - pad, r.y - pad], [r.x + r.w + pad - arm, r.y - pad],
+  [r.x + r.w + pad - arm, r.y + r.h + pad - arm], [r.x - pad, r.y + r.h + pad - arm],
+];
+const tr = ([x, y]) => `translate(${x}px, ${y}px)`;
+let vfAt = null;
+// Рамка переезжает к прямоугольнику; from — откуда стартует (для первого появления)
+const moveVf = (rect, pad, dur, delay = 0, from) => {
+  const to = cornerSpots(rect, pad);
+  const start = from || vfAt;
+  corners.forEach((c, i) => play(c, { transform: [tr(start[i]), tr(to[i])] }, { duration: dur, delay, easing: focusEase }));
+  vfAt = to;
+};
+
+function run() {
+  stop();
+  arm = 22;
+  intro.hidden = false;
+  [...lines, wizard, nav, targetLogo].forEach((el) => el.style.opacity = '0');
+  logo.style.opacity = '0';
+  const W = innerWidth, H = innerHeight;
+
+  // Лого в центре; уголки ON разведены и наводятся на буквы, пока лого проявляется
+  const scale = Math.min(3.5, W * .62 / logo.offsetWidth);
+  const centered = `translate(-50%, -50%) scale(${scale})`;
+  logo.style.transform = centered;
+  // Лого в начале не показываем: сразу сетка и поиск. Вуаль нужна только под лого
+  play(intro.querySelector('.veil'), { opacity: [0, 0] }, { duration: 1, fill: 'forwards' });
+
+  // Сетка, как в коде
+  const mobile = W < 744, cols = mobile ? 4 : 10, count = mobile ? 24 : 30;
+  const rows = Math.ceil(count / cols), gap = mobile ? 6 : 12, ratio = 1.5;
+  const w = Math.min((W * .92 - gap * (cols - 1)) / cols, (H * .64 - gap * (rows - 1)) / rows * ratio);
+  const h = w / ratio;
+  const ox = (W - cols * w - (cols - 1) * gap) / 2, oy = (H - rows * h - (rows - 1) * gap) / 2;
+  const rectOf = (i) => ({ x: ox + (i % cols) * (w + gap), y: oy + Math.floor(i / cols) * (h + gap), w, h });
+  tiles.forEach((tile, i) => {
+    tile.hidden = i >= count;
+    if (tile.hidden) return;
+    tile.style.width = `${w}px`; tile.style.height = `${h}px`;
+    const r = rectOf(i);
+    const from = `translate(${(W - w) / 2}px, ${(H - h) / 2}px) scale(.5)`;
+    play(tile, { opacity: [0, .4], transform: [from, `translate(${r.x}px, ${r.y}px) scale(1)`] },
+      { duration: 1050, delay: 100 + (i * 7 % 11) * 40, easing: 'ease-in-out' });
+  });
+
+  // Видоискатель ищет кадр: на каждой машине примеряется к фокусу, но не берёт;
+  // третья — в фокус. Медленно, чтобы зритель успел ждать, на какой остановится
+  const path = mobile ? [8, 22, 1] : [12, 23, 7];
+  const pad = mobile ? 4 : 6, loose = pad + 12;
+  const first = rectOf(path[0]), target = rectOf(path[2]);
+  const wide = { x: first.x - 60, y: first.y - 60, w: first.w + 120, h: first.h + 120 };
+  later(() => {
+    corners.forEach((c) => play(c, { opacity: [0, 1] }, { duration: 300 }));
+    moveVf(first, loose, 700, 0, cornerSpots(wide, 0));
+  }, 1200);
+  later(() => moveVf(first, pad + 4, 450), 1900);
+  later(() => moveVf(rectOf(path[1]), loose, 700), 2500);
+  later(() => moveVf(rectOf(path[1]), pad + 4, 450), 3200);
+  later(() => moveVf(target, loose, 800), 3800);
+  later(() => moveVf(target, pad, 700), 4600);
+  // Взял в фокус: уголки дожимаются, машина проявляется полностью
+  later(() => {
+    moveVf(target, pad - 4, 120);
+    play(tiles[path[2]], { opacity: [.4, 1] }, { duration: 500, easing: 'ease-out' });
+  }, 5300);
+  later(() => moveVf(target, pad, 200), 5420);
+
+  // После захвата — по шагу за раз, без наложений: каждый этап успевает прочитаться
+  const moveTxt = $('move-txt'), moveBox = $('move-box'), moveCorners = [...moveBox.querySelectorAll('i')], car = tiles[path[2]];
+  moveCorners.forEach((c) => play(c, { opacity: [0, 0] }, { duration: 1, fill: 'forwards' }));
+  let slot;
+  // 1. Остальные машины гаснут, пойманная остаётся одна в рамке
+  later(() => {
+    tiles.slice(0, count).forEach((t, i) => { if (i !== path[2]) play(t, { opacity: [.4, 0] }, { duration: 600, easing: 'ease-in-out', fill: 'forwards' }); });
+    play(car, { backgroundColor: ['#fff', 'rgb(255 255 255 / 0)'] }, { duration: 600, fill: 'forwards' });
+    play(moveTxt, { opacity: [1, 0] }, { duration: 1, fill: 'forwards' });
+  }, 6000);
+  // 2. Машина с рамкой встаёт в центр экрана; рамка уже размером с будущую рамку move
+  let box, k, logoArm, carAt;
+  const carTo = (cx, cy) => `translate(${cx - w / 2}px, ${cy - h / 2}px) scale(${k})`;
+  later(() => {
+    box = moveBox.getBoundingClientRect();
+    // У фото в плитке поля сверху и снизу: машина занимает примерно 60% высоты плитки
+    k = Math.min(box.width * .8 / w, box.height * .78 / (h * .6));
+    carAt = carTo(W / 2, H / 2);
+    play(car, { transform: [`translate(${target.x}px, ${target.y}px) scale(1)`, carAt] }, { duration: 1100, easing: focusEase, fill: 'forwards' });
+    // Уголки поиска по дороге становятся уголками лого: размер, толщина, скругление
+    const em = parseFloat(getComputedStyle(moveBox).fontSize) * scale;
+    logoArm = .38 * em;
+    corners.forEach((c) => play(c, { '--arm': ['22px', `${logoArm}px`], '--w': ['2px', `${.07 * em}px`], '--vr': ['12px', `${.2 * em}px`] },
+      { duration: 1100, easing: focusEase, fill: 'forwards' }));
+    arm = logoArm;
+    moveVf({ x: W / 2 - box.width / 2, y: H / 2 - box.height / 2, w: box.width, h: box.height }, 0, 1100);
+  }, 6800);
+  // 3. Пауза, потом машина отъезжает на своё место в лого
+  later(() => {
+    const slot = carTo(box.left + box.width / 2, box.top + box.height / 2);
+    play(car, { transform: [carAt, slot] }, { duration: 800, easing: focusEase, fill: 'forwards' });
+    moveVf({ x: box.left, y: box.top, w: box.width, h: box.height }, 0, 800);
+  }, 8500);
+  // 4. Включается on — как лампа: короткое мерцание и ровный свет
+  later(() => play(logo, { opacity: [0, .7, .15, 1] , offset: [0, .3, .5, 1] }, { duration: 500, easing: 'linear', fill: 'forwards' }), 9600);
+  // 5. Машина уходит, затем в рамке появляется move — по очереди, без наплыва
+  later(() => play(car, { opacity: [1, 0] }, { duration: 300, easing: 'ease-in', fill: 'forwards' }), 10700);
+  later(() => play(moveTxt, { opacity: [0, 1] }, { duration: 400, easing: 'ease-out', fill: 'forwards' }), 11050);
+  // Рамка видоискателя остаётся рамкой лого вокруг move
+  later(() => {
+    arm = 22;
+    corners.forEach((c) => play(c, { opacity: [1, 0] }, { duration: 1, fill: 'forwards' }));
+    moveCorners.forEach((c) => play(c, { opacity: [0, 1] }, { duration: 1, fill: 'forwards' }));
+  }, 11500);
+
+  // Перелёт лого и хиро — как в коде, со сдвигом
+  const fly = 12100;
+  later(() => {
+    const t = targetLogo.getBoundingClientRect();
+    play(logo, { transform: [centered, `translate(${t.left - W / 2}px, ${t.top - H / 2}px) scale(1)`] }, { duration: 800, easing: 'ease-in-out' });
+  }, fly);
+  play(intro.querySelector('.intro-backdrop'), { opacity: [1, 0] }, { duration: 800, delay: fly, easing: 'ease-in-out' });
+  later(() => play(intro.querySelector('.veil'), { opacity: [1, 0] }, { duration: 800, easing: 'ease-in-out', fill: 'forwards' }), fly);
+  later(() => { logo.style.opacity = '0'; anims.filter((a) => a.effect.target === logo).forEach((a) => a.cancel()); targetLogo.style.opacity = '1'; }, fly + 800);
+  lines.forEach((l, i) => play(l, { opacity: [0, 1], transform: ['translateY(10px)', 'none'] }, { duration: 450, delay: fly + 700 + i * 120 }));
+  play(wizard, { opacity: [0, 1], transform: ['translateY(16px)', 'none'] }, { duration: 550, delay: fly + 1100 });
+  play(nav, { opacity: [0, 1] }, { duration: 400, delay: fly + 800 });
+  later(finish, fly + 1650);
+}
+
+function finish() {
+  stop();
+  intro.hidden = true;
+  [...lines, wizard, nav, targetLogo].forEach((el) => el.style.opacity = '');
+}
+
+$('skip').onclick = finish;
+$('replay').onclick = run;
+addEventListener('keydown', (e) => { if (e.key === 'Escape') finish(); });
+if (!matchMedia('(prefers-reduced-motion: reduce)').matches) (document.fonts ? document.fonts.ready : Promise.resolve()).then(run);
+</script>
+</body>
+</html>

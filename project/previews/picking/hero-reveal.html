@@ -1,0 +1,76 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Подбор: проявление победителя</title>
+<link rel="stylesheet" href="../../../public/fonts/fonts.css">
+<style>
+  /* Токены Севера из src/styles.css */
+  :root { --paper: #f9f6f6; --plate: #ffffff; --ink: #001f26; --muted: #4a5d62; --line: #d3dadb;
+    --r-card: 16px; --r-ctl: 12px; --fs-sm: 14px; --fs-lg: 20px; --fs-hero: clamp(38px, 4.6vw, 64px);
+    --display: Manrope, system-ui, sans-serif; --ease: cubic-bezier(.22,1,.36,1); }
+  * { box-sizing: border-box; }
+  body { margin: 0; background: var(--paper); color: var(--ink); font: 16px/1.5 var(--display); overflow: hidden; }
+  .bar { position: fixed; z-index: 5; left: 16px; bottom: 16px; display: flex; gap: 8px; align-items: center; font-size: var(--fs-sm); color: var(--muted); }
+  .bar button { font: 600 14px var(--display); border: 1px solid var(--ink); background: var(--plate); color: var(--ink); border-radius: var(--r-ctl); padding: 8px 14px; cursor: pointer; }
+  .head { position: absolute; left: 0; right: 0; top: 6vh; text-align: center; display: grid; gap: 6px; transition: opacity .2s; }
+  .head strong { font-size: var(--fs-hero); font-weight: 700; letter-spacing: -0.035em; font-variant-numeric: tabular-nums; line-height: 1.05; }
+  .head span { font-size: var(--fs-lg); font-weight: 600; }
+  .head small { font-size: var(--fs-sm); color: var(--muted); }
+  .grid { position: absolute; left: 72px; right: 72px; top: 30vh; display: grid; grid-template-columns: repeat(10, 1fr); gap: 8px; }
+  .tile { position: relative; aspect-ratio: 1.45; border-radius: var(--r-ctl); background: var(--plate); overflow: hidden; transition: opacity .8s ease-out, filter .8s ease-out, box-shadow .3s; }
+  .tile .studio, .tile .hero { position: absolute; inset: 0; background-repeat: no-repeat; background-position: center; }
+  .tile .studio { background-size: 84% auto; }
+  .tile .hero { background-size: cover; opacity: 0; transition: opacity .35s ease-out; }
+  .tile.dim { opacity: .3; filter: grayscale(1); }
+  .tile.gone { opacity: 0; }
+  /* Шаг 1: выбор — плитка обводится чернилами; шаг 2: студийный кадр сменяется главным фото */
+  .tile.win { box-shadow: 0 0 0 2px var(--ink); z-index: 2; }
+  .tile.win.reveal .hero { opacity: 1; }
+  .fly { position: fixed; z-index: 4; border-radius: var(--r-ctl); background-size: cover; background-position: center; transition: all .85s var(--ease); }
+  .e2 { position: fixed; inset: 0; padding: 40px 72px; opacity: 0; transition: opacity .4s; }
+  .e2 h1 { margin: 24px 0 8px; font-size: 64px; letter-spacing: -0.035em; line-height: 1.05; }
+  .e2 p { margin: 0; color: var(--muted); }
+  .e2.on { opacity: 1; }
+</style>
+</head>
+<body>
+<div class="head" id="head"><strong id="count">34</strong><span id="cap">Смотрим машины для поездки</span><small id="sub">Смотрим, что есть в Сочи</small></div>
+<div class="grid" id="grid"></div>
+<div class="e2" id="e2"><small>← На главную</small><h1>Toyota RAV4 V</h1><p>Полный привод · мест: 5 · багажник 580 л</p></div>
+<div class="bar"><button id="play">Проиграть</button><span>Все плитки — студийные кадры. Победитель обводится, затем проявляется его фото, плитка улетает на Э2.</span></div>
+<script>
+const imgs = ["tank-300-69","geely-monjaro-75","mazda-cx-5-184","jetour-t2-49","toyota-rav4-195","haval-dargo-16","geely-atlas-102","geely-cityray-105","bmw-x3-200","tank-400-161","omoda-c7-155","haval-f7-70","changan-uni-t-3","geely-coolray-347","volkswagen-t-roc-295","changan-uni-v-12","lada-niva-legend-342","lada-niva-travel-97","lada-niva-travel-181","lada-niva-legend-bronto-153","belgee-s50-174","jetta-va3-186","changan-alsvin-4","lada-niva-legend-sport-346","moskvich-3-32","omoda-c5-239","tenet-t4-170","belgee-x50-352","haval-m6-14","haval-jolion-255"]
+const HERO = '../../../public/cars/tbank/details/toyota-rav4/01-exterior.webp'
+const WIN = 4
+const grid = document.getElementById('grid'), count = document.getElementById('count'), cap = document.getElementById('cap'), sub = document.getElementById('sub'), e2 = document.getElementById('e2'), head = document.getElementById('head')
+const wait = (ms) => new Promise((r) => setTimeout(r, ms))
+function build() {
+  grid.innerHTML = imgs.map((n, i) => `<div class="tile" data-i="${i}"><div class="studio" style="background-image:url(../../../public/cars/tbank/${n}.webp)"></div>${i === WIN ? `<div class="hero" style="background-image:url(${HERO})"></div>` : ''}</div>`).join('')
+  document.querySelectorAll('.fly').forEach((f) => f.remove()); e2.classList.remove('on'); head.style.opacity = 1
+  count.textContent = 34; cap.textContent = 'Смотрим машины для поездки'; sub.textContent = 'Смотрим, что есть в Сочи'
+}
+async function play() {
+  build(); await wait(900)
+  const tiles = [...grid.children]
+  cap.textContent = 'Сверяем характеристики'; sub.textContent = 'С учётом параметров подходят 27 из 34'
+  tiles.filter((t, i) => i % 4 === 1 && i !== WIN).forEach((t) => t.classList.add('dim')); count.textContent = 27; await wait(1100)
+  cap.textContent = 'Под твою поездку'; sub.textContent = 'Оставляем лучшую'
+  tiles.forEach((t, i) => i !== WIN && t.classList.add('gone')); count.textContent = 1; await wait(700)
+  const w = tiles[WIN]
+  w.classList.add('win'); await wait(450)        // шаг 1: выбор
+  w.classList.add('reveal'); await wait(450)     // шаг 2: проявляется фото
+  const r = w.getBoundingClientRect()
+  const fly = Object.assign(document.createElement('div'), { className: 'fly' })
+  Object.assign(fly.style, { left: r.left + 'px', top: r.top + 'px', width: r.width + 'px', height: r.height + 'px', backgroundImage: `url(${HERO})` })
+  document.body.appendChild(fly); w.style.opacity = 0; head.style.opacity = 0
+  await wait(30)
+  Object.assign(fly.style, { left: '72px', top: '280px', width: (innerWidth - 144) + 'px', height: (innerHeight - 300) + 'px', borderRadius: '16px' })
+  await wait(500); e2.classList.add('on')
+}
+document.getElementById('play').onclick = play
+play()
+</script>
+</body>
+</html>
