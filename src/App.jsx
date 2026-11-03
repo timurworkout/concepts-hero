@@ -1024,7 +1024,7 @@ export function ParamsPicker({ query, onApply, onClose }) {
       </div>
       <div className="dates-foot">
         <button type="button" className="btn-secondary" onClick={() => { setPlanIds([]); setCompanion(''); setPrefs([]) }}>Сбросить</button>
-        <button type="button" className="btn-primary btn-accent" onClick={() => onApply({ planIds, companion, prefs })}>Готово</button>
+        <button type="button" className="btn-primary" onClick={() => onApply({ planIds, companion, prefs })}>Готово</button>
       </div>
     </Sheet>
   )
@@ -1062,7 +1062,7 @@ export function ReturnPicker({ query, onApply, onClose }) {
       </div>
       <div className="dates-foot">
         <button type="button" className="btn-secondary" onClick={onClose}>Отмена</button>
-        <button type="button" className="btn-primary btn-accent" onClick={() => onApply({ returnMode: mode, returnId: mode === 'point' ? id : '' })}>Готово</button>
+        <button type="button" className="btn-primary" onClick={() => onApply({ returnMode: mode, returnId: mode === 'point' ? id : '' })}>Готово</button>
       </div>
     </Sheet>
   )
@@ -1094,7 +1094,7 @@ export function HoursPicker({ query, location, onApply, onClose }) {
       </div>
       <div className="dates-foot">
         <button type="button" className="btn-secondary" onClick={onClose}>Отмена</button>
-        <button type="button" className="btn-primary btn-accent" onClick={() => onApply({ start, hours })}>Готово</button>
+        <button type="button" className="btn-primary" onClick={() => onApply({ start, hours })}>Готово</button>
       </div>
     </Sheet>
   )
@@ -1177,7 +1177,7 @@ export function DatePicker({ query, onApply, onClose }) {
       </div>
       <div className="dates-foot">
         <button type="button" className="btn-secondary" onClick={onClose}>Отмена</button>
-        <button type="button" className="btn-primary btn-accent" disabled={!days}
+        <button type="button" className="btn-primary" disabled={!days}
           onClick={() => onApply({ dateFrom: from, dateTo: to, timeFrom, timeTo })}>
           {days ? `Готово · ${days} ${plural(days, 'сутки', 'суток', 'суток')}` : 'Выбери возврат'}
         </button>
@@ -1357,7 +1357,7 @@ function ParamsPanel({ query, set, onSubmit }) {
       <div className="chips-label">Важно</div>
       <div className="chips">{prefOptions.map((o) => chip(query.prefs.includes(o.id), o.label, () => set({ prefs: query.prefs.includes(o.id) ? query.prefs.filter((x) => x !== o.id) : [...query.prefs, o.id] })))}</div>
       <div className="wz-foot"><span className="muted">Можно пропустить. Но если скажешь «в горы с детьми», подберём точнее</span>
-        <button type="button" className="btn-primary btn-accent" onClick={onSubmit}>Подобрать машину</button></div>
+        <button type="button" className="btn-primary" onClick={onSubmit}>Подобрать машину</button></div>
     </>
   )
 }
