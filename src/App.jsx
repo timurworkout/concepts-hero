@@ -1274,7 +1274,6 @@ function PlacePanel({ query, isReturn, text = '', type, onClearType, onPick, onR
   }
   return (
     <>
-      <div className="wz-cap">Куда едешь</div>
       {Object.entries(cities).map(([id, c]) => (
         <button key={id} type="button" className="wz-item" onClick={() => onCity(id)}>
           <span className="wz-ico"><PlaceIcon type="Город" /></span><span><b>{c.name}</b><small>{cityHints[id]}</small></span>

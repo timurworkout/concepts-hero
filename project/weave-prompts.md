@@ -104,3 +104,6 @@ Keep this exact landscape, composition and viewpoint: [PLACE]. Only change the p
 | `spb-karelia-v1.jpg` | `public/places/spb-karelia.webp` (raw GitHub) + реф `sochi-ritsa-v2` | стилизация «match the color grading» | утверждено, на сайте |
 | `spb-vyborg-v1.jpg` | новый исходник: Wikimedia `Vyborg_06-2012_Castle_06.jpg` (A.Savin) → `src/spb-vyborg.jpg` + реф `sochi-ritsa-v2` | то же | утверждено, на сайте |
 | `spb-ladoga-v1.jpg` | Unsplash из `newPlacePhotos` (w=2000) + реф `sochi-ritsa-v2` | то же | утверждено, на сайте |
+| `msk-ring-v1.jpg` | новый: Wikimedia `Suzdal._Kamenka_River_P7140082_2350.jpg` (Alexxx1979) → `src/msk-ring.jpg` + реф `sochi-ritsa-v2` | стилизация «match the color grading» | утверждено, на сайте |
+| `msk-yakhroma-v1.jpg` | новый: Wikimedia `Sorochany_ski_resort_21.jpg` (Bigdoc81) → `src/msk-yakhroma.jpg` + реф | то же, «keep the snow», зимнее солнце | утверждено, на сайте |
+| `msk-ikea-v1.jpg` | новый: Wikimedia `Private_russian_"dacha"_house_-_panoramio.jpg` (andreyss) → `src/msk-ikea.jpg` + реф | то же; карточка переименована в «На дачу на выходные» | утверждено, на сайте |

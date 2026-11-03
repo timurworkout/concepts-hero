@@ -155,7 +155,7 @@ export const plans = [
     test: (c) => c.fuelUse > 0 && c.fuelUse <= 8 && isAutomatic(c) },
   { id: 'msk-yakhroma', city: 'msk', local: true, label: 'Горнолыжка в Яхроме', hint: 'Бокс и крепление для лыж, клиренс от 180 мм', level: 2,
     test: (c) => c.clearance >= 180 && c.kind !== 'Фургон', extraIds: ['box', 'ski-rack'] },
-  { id: 'msk-ikea', city: 'msk', local: true, label: 'Дача, рассада и IKEA', hint: 'Универсал или фургон — багажник от 560 л', level: 2,
+  { id: 'msk-ikea', city: 'msk', local: true, label: 'На дачу на выходные', hint: 'Универсал или фургон — багажник от 560 л', level: 2,
     test: (c) => c.trunk >= 560 },
   { id: 'kgd-spit', goal: 'sea', city: 'kgd', local: true, label: 'Куршская коса', hint: 'Экосбор оплатим заранее — на КПП просто проедешь', level: 1, test: cityCar },
   { id: 'kgd-castles', city: 'kgd', local: true, label: 'Замки Пруссии', hint: 'Грунтовки к руинам — клиренс от 190 мм', level: 2,
