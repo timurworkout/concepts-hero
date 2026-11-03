@@ -213,6 +213,15 @@ h2 { font-family: var(--display); font-size: var(--fs-lg); font-weight: 600; let
 .hero { position: relative; isolation: isolate; margin: 0; color: var(--paper);
   /* Лазурь слева на ширину текста держит заголовок и подсказки, справа фото открыто; лёгкая сверху — под шапку */
   background: linear-gradient(180deg, rgb(0 31 38 / .35) 0%, rgb(0 31 38 / 0) 20%), linear-gradient(90deg, rgb(0 31 38 / .85) 0%, rgb(0 31 38 / .55) 40%, rgb(0 31 38 / 0) 65%), var(--hero-photo, url(/hero/elbrus.jpg)) center 25% / cover no-repeat, var(--ink); }
+/* Ролик под теми же затемнениями: фон секции уходит под видео, поэтому градиенты повторены поверх */
+.hero-video { position: absolute; inset: 0; z-index: -1; width: 100%; height: 100%; object-fit: cover; object-position: center 25%; }
+/* На широком экране низ ролика (20%) за краем: к концу машина уезжает под него и обратно не возвращается */
+@media (min-width: 1024px) {
+  .hero--video { overflow: clip; }
+  .hero-video { inset: auto 0 -13.3vw; height: auto; aspect-ratio: 1764 / 1172; }
+}
+.hero--video::after { content: ''; position: absolute; inset: 0; z-index: -1; pointer-events: none;
+  background: linear-gradient(180deg, rgb(0 31 38 / .35) 0%, rgb(0 31 38 / 0) 20%), linear-gradient(90deg, rgb(0 31 38 / .85) 0%, rgb(0 31 38 / .55) 40%, rgb(0 31 38 / 0) 65%); }
 .hero-inner { position: relative; width: 100%; min-height: calc(100svh - 72px - 72px); padding: 24px var(--gutter) 48px; display: grid; align-content: start; gap: 24px; text-align: left; }
 .hero-inner > form { width: 100%; }
 /* Подзаголовок справа от заголовка: так визард стоит выше и панели раскрываются целиком */

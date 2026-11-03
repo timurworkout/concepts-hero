@@ -195,7 +195,7 @@ export default function App() {
       openPicker={(g) => setSheet({ picker: g })} />
   )
   else page = (
-    <Landing query={query} setQuery={setQuery} onSubmit={() => { setScreen('e2'); setPicking(true) }} />
+    <Landing introDone={!entryIntro} query={query} setQuery={setQuery} onSubmit={() => { setScreen('e2'); setPicking(true) }} />
   )
 
   return (
@@ -1588,8 +1588,11 @@ const heroPhoto = (cityId) => {
   return img ? { '--hero-photo': `${img})` } : undefined
 }
 
-function Landing({ query, setQuery, onSubmit }) {
+function Landing({ introDone, query, setQuery, onSubmit }) {
   const formRef = useRef(null)
+  const videoRef = useRef(null)
+  // Ролик стартует после интро, иначе машина уедет, пока его не видно
+  useEffect(() => { if (introDone) videoRef.current?.play().catch(() => {}) }, [introDone, query.cityId])
   const [formVisible, setFormVisible] = useState(true)
   const [step, setStep] = useState(null) // открытый шаг визарда
   const [placeType, setPlaceType] = useState(null) // фильтр места с плитки «Машина там, где ты»
@@ -1627,7 +1630,9 @@ function Landing({ query, setQuery, onSubmit }) {
 
   return (
     <main className="landing">
-      <section className="hero" style={heroPhoto(query.cityId)}>
+      <section className={query.cityId ? 'hero' : 'hero hero--video'} style={heroPhoto(query.cityId)}>
+        {/* Без города — ролик Эльбруса: играет один раз и замирает на последнем кадре */}
+        {!query.cityId && <video ref={videoRef} className="hero-video" src={`${import.meta.env.BASE_URL}hero/elbrus.mp4`} poster={`${import.meta.env.BASE_URL}hero/elbrus.jpg`} muted playsInline preload="auto" />}
         <div className="hero-inner">
           <div className="hero-copy">
             <h1 className="hero-title">
