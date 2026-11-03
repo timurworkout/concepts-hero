@@ -28,6 +28,7 @@
 |---|---|---|
 | Палитры на 4 блоках: подбор, интро, календарь, направления | `palettes.html` | https://claude.ai/artifact/Lzyh6KswFP5wocqxXsHzLw |
 | Видоискатель: финальное превью 01.11 | `viewfinder/index.html` | https://claude.ai/artifact/RgRTMAfsS5KHxXpzjMkLx8 |
+| Видоискатель в сценах: подбор, смена машины, допы 03.11 | `viewfinder/scenes.html` | https://claude.ai/artifact/D7cXoiePAZdcZM6z6HfmV7 |
 | Заставка с видоискателем 01.11 | `viewfinder/intro.html` | https://claude.ai/artifact/Bjqx9h9Y2P8ecvQthiexEj |
 | Лого on [move]: варианты 01.11 | `viewfinder/logo.html` | https://claude.ai/artifact/294CP5gmUoDX5YCf48MUm8 |
 | Видоискатель: ховер-фокус и лого (первый набросок) | `focus.html` | https://claude.ai/artifact/SMK74o9s52jxsorefQTRyR |

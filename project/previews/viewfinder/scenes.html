@@ -1,0 +1,355 @@
+<title>Видоискатель: три сцены</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;600;700&display=swap">
+<style>
+/* Экран подбора Э2 в палитре «Север»; сверху — пульт сцен. Токены — из src/styles.css */
+:root {
+  --paper: #f9f6f6; --plate: #ffffff; --ink: #001f26; --muted: #4a5d62; --line: #d3dadb; --rec: #fde910; --surface-strong: #e9eeee;
+  --r-card: 16px; --r-ctl: 12px; --shadow: 0 18px 40px -16px rgb(0 31 38 / .25);
+  --fs-xs: 12px; --fs-sm: 14px; --fs-md: 16px; --fs-lg: 20px; --fs-xl: 28px; --fs-hero: clamp(38px, 4.6vw, 64px);
+  --lh-tight: 1.05; --lh-snug: 1.25; --lh-body: 1.5; --ls-display: -0.035em; --ls-caps: .08em;
+  --ease-focus: cubic-bezier(.16, 1, .3, 1);
+  --font: Manrope, 'Golos Text', system-ui, sans-serif;
+  color-scheme: light;
+}
+body { background: var(--paper); color: var(--ink); font-family: var(--font); font-size: var(--fs-md); line-height: var(--lh-body);
+  padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px)); padding-block: 0 48px; }
+button { font: inherit; color: inherit; cursor: pointer; }
+.panel { position: sticky; top: env(safe-area-inset-top, 0px); z-index: 30; display: flex; flex-wrap: wrap; gap: 8px; align-items: center; padding-block: 12px; background: var(--paper); border-bottom: 1px solid var(--line); max-width: 1180px; margin: 0 auto; }
+.panel strong { margin-right: auto; font-size: var(--fs-sm); }
+.panel button { border: 1px solid var(--line); background: var(--plate); border-radius: var(--r-ctl); padding: 8px 14px; font-size: var(--fs-sm); font-weight: 600; }
+.panel button:focus-visible, .btn:focus-visible, .more-car:focus-visible { outline: 2px solid var(--ink); outline-offset: 2px; }
+.note { max-width: 1180px; margin: 12px auto 0; font-size: var(--fs-sm); color: var(--muted); }
+.note p { margin: 0 0 4px; max-width: 80ch; }
+
+.e2 { max-width: 1180px; margin: 24px auto 0; display: grid; grid-template-columns: minmax(0, 1fr) 320px; gap: 32px; align-items: start; }
+.e2-main { display: grid; gap: 20px; min-width: 0; }
+h1 { margin: 0; font-size: var(--fs-hero); line-height: var(--lh-tight); letter-spacing: var(--ls-display); font-weight: 700; }
+.photo { position: relative; aspect-ratio: 1372 / 960; max-width: 100%; border-radius: var(--r-card); background: var(--surface-strong) center / cover no-repeat; overflow: hidden; }
+.rec { position: absolute; left: 20px; top: 16px; display: flex; gap: 8px; align-items: center; color: var(--paper); font-size: var(--fs-xs); font-weight: 600; letter-spacing: var(--ls-caps); text-transform: uppercase; opacity: 0; transition: opacity .2s; }
+.rec::before { content: ''; width: 8px; height: 8px; border-radius: 50%; background: var(--rec); }
+.rec.on { opacity: 1; }
+.caption { position: absolute; left: 16px; right: 16px; bottom: 16px; display: grid; gap: 2px; padding: 12px 16px; border-radius: var(--r-ctl); background: var(--plate); box-shadow: var(--shadow); opacity: 0; transition: opacity .2s; }
+.caption.on { opacity: 1; }
+.caption span { color: var(--muted); font-size: var(--fs-sm); }
+.thumbs { display: flex; gap: 8px; }
+.thumbs i { width: 72px; aspect-ratio: 4 / 3; border-radius: var(--r-ctl); background: var(--surface-strong) center / cover; }
+h2 { margin: 24px 0 0; font-size: var(--fs-xl); line-height: var(--lh-snug); }
+.story { margin: 0; max-width: 48ch; font-size: var(--fs-lg); font-weight: 600; line-height: var(--lh-snug); }
+.figs { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 16px; }
+.fig b { display: block; font-size: var(--fs-hero); line-height: var(--lh-tight); letter-spacing: var(--ls-display); font-variant-numeric: tabular-nums; }
+.fig b small { font-size: var(--fs-md); margin-left: 4px; letter-spacing: 0; }
+.fig p { margin: 4px 0 0; font-size: var(--fs-sm); color: var(--muted); }
+.more { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 16px; }
+.more-car { display: grid; gap: 8px; text-align: left; border: 0; background: none; padding: 0; }
+.more-car span:first-child { aspect-ratio: 4 / 3; border-radius: var(--r-card); background: var(--plate) center / 84% auto no-repeat; border: 1px solid var(--line); }
+.more-car b { font-size: var(--fs-md); }
+.more-car em { font-style: normal; color: var(--muted); font-size: var(--fs-sm); }
+aside { position: sticky; top: 80px; display: grid; gap: 12px; }
+.tile { display: flex; gap: 12px; align-items: center; border: 1px solid var(--line); border-radius: var(--r-card); background: var(--plate); padding: 12px 14px; font-size: var(--fs-sm); }
+.tile small { display: block; color: var(--muted); }
+.book { display: grid; gap: 12px; border-radius: var(--r-card); background: var(--plate); box-shadow: var(--shadow); padding: 20px; }
+.price { font-size: var(--fs-xl); font-weight: 700; font-variant-numeric: tabular-nums; }
+.btn { border: 0; border-radius: var(--r-ctl); background: var(--ink); color: var(--paper); padding: 16px; font-weight: 700; transition: transform .1s; }
+.btn:active { transform: scale(.97); }
+
+/* Э3 — экран допов */
+.e3 { max-width: 1180px; margin: 24px auto 0; display: grid; grid-template-columns: 320px minmax(0, 1fr); gap: 32px; align-items: start; }
+.e3[hidden] { display: none; }
+.car-tile img, .car-tile .thumb { width: 64px; height: 48px; border-radius: var(--r-ctl); background: var(--surface-strong) center / cover; flex: none; }
+.extras { display: grid; gap: 12px; }
+.extra { display: flex; justify-content: space-between; gap: 16px; border: 1px solid var(--line); border-radius: var(--r-card); background: var(--plate); padding: 16px 20px; }
+.extra span { color: var(--muted); font-size: var(--fs-sm); }
+
+/* Сцены */
+.stage { position: fixed; inset: 0; z-index: 40; pointer-events: none; }
+.veil { position: fixed; inset: 0; z-index: 35; background: var(--paper); opacity: 0; pointer-events: none; }
+.tile-fly { position: fixed; left: 0; top: 0; transform-origin: 0 0; border-radius: var(--r-card); overflow: hidden; background: var(--surface-strong) center / cover no-repeat; will-change: transform; }
+.grid-tile { position: fixed; left: 0; top: 0; transform-origin: 0 0; border-radius: var(--r-ctl); background: var(--plate) center / 84% auto no-repeat; }
+.grid-head { position: fixed; left: 16px; right: 16px; top: 9vh; text-align: center; display: grid; gap: 4px; }
+.grid-head strong { font-size: var(--fs-hero); line-height: var(--lh-tight); letter-spacing: var(--ls-display); font-variant-numeric: tabular-nums; }
+.grid-head span { font-weight: 600; font-size: var(--fs-lg); }
+.grid-head small { color: var(--muted); font-size: var(--fs-sm); }
+/* Уголки: один набор на весь экран, как у видоискателя на Э2 */
+.vf { position: fixed; inset: 0; z-index: 50; pointer-events: none; }
+.vf i { position: fixed; left: 0; top: 0; width: 28px; height: 28px; border: 0 solid var(--c, var(--ink)); opacity: 0; }
+.vf i:nth-child(1) { border-top-width: 2px; border-left-width: 2px; border-top-left-radius: var(--r-ctl); }
+.vf i:nth-child(2) { border-top-width: 2px; border-right-width: 2px; border-top-right-radius: var(--r-ctl); }
+.vf i:nth-child(3) { border-bottom-width: 2px; border-right-width: 2px; border-bottom-right-radius: var(--r-ctl); }
+.vf i:nth-child(4) { border-bottom-width: 2px; border-left-width: 2px; border-bottom-left-radius: var(--r-ctl); }
+
+@media (max-width: 860px) {
+  .e2, .e3 { grid-template-columns: minmax(0, 1fr); }
+  aside { position: static; }
+  .figs { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .more { grid-template-columns: minmax(0, 1fr); }
+}
+</style>
+
+<div class="panel" role="toolbar" aria-label="Сцены">
+  <strong>Видоискатель на Э2</strong>
+  <button id="play-pick" type="button">1. Подбор Э1 → Э2</button>
+  <button id="play-swap" type="button">2. Смена машины</button>
+  <button id="play-extras" type="button">3. Дальше — допы</button>
+  <button id="reset" type="button">Сбросить</button>
+</div>
+<div class="note">
+  <p><b>1.</b> Сетка как в заставке. Рамка ищет: неплотно на двух машинах, сходится и дожимается на третьей. С рамкой перелетает на фото Э2 — это и есть фокус Э2, второй раз он не играет.</p>
+  <p><b>2.</b> Нажми карточку внизу. Рамка дожимает карточку, фото летит наверх, проверка идёт прямо на главном фото, затем меняются история и цифры.</p>
+  <p><b>3.</b> Всё вокруг фото гаснет, фото встаёт в центр со скруглениями, рамка дожимает, фото уменьшается в «Твою машину» на Э3.</p>
+</div>
+
+<main class="e2" id="e2">
+  <div class="e2-main">
+    <h1 id="title">TANK 300</h1>
+    <div class="photo" id="photo"><span class="rec" id="rec">Rec</span><div class="caption" id="caption"><strong id="cap-a"></strong><span id="cap-b"></span></div></div>
+    <div class="thumbs" id="thumbs"><i></i><i></i><i></i><i></i></div>
+    <h2 id="why">Почему именно эта машина</h2>
+    <p class="story" id="story">В горы под Кисловодском — по грунтовке к Медовым водопадам, вчетвером и с рюкзаками.</p>
+    <div class="figs" id="figs"></div>
+    <h2>Ещё варианты под поездку</h2>
+    <div class="more" id="more"></div>
+  </div>
+  <aside id="aside">
+    <div class="tile"><div><small>Где заберёшь</small>Минводы, аэропорт</div></div>
+    <div class="tile"><div><small>Когда</small>12–16 ноября</div></div>
+    <div class="book"><div class="price" id="price">38 400 ₽</div><span style="color:var(--muted);font-size:var(--fs-sm)">за 4 суток</span><button class="btn" id="go" type="button">Дальше — допы</button></div>
+  </aside>
+</main>
+
+<main class="e3" id="e3" hidden>
+  <aside>
+    <div class="tile car-tile"><span class="thumb" id="e3-thumb"></span><div><small>Твоя машина</small><span id="e3-model">TANK 300</span></div></div>
+    <div class="tile"><div><small>Цель поездки</small>Горы</div></div>
+  </aside>
+  <div class="extras" id="extras">
+    <h1 style="font-size:var(--fs-xl)">Всё для поездки в горы</h1>
+    <div class="extra"><b>Багажник на крышу</b><span>600 ₽ / сутки</span></div>
+    <div class="extra"><b>Детское кресло</b><span>бесплатно</span></div>
+    <div class="extra"><b>Цепи на колёса</b><span>900 ₽ за аренду</span></div>
+  </div>
+</main>
+
+<div class="vf" id="vf" aria-hidden="true"><i></i><i></i><i></i><i></i></div>
+
+<script>
+const CARS = {
+  tank: { model: 'TANK 300', photo: 'cars/tbank/details/tank-300/02-exterior.webp', tile: 'cars/tbank/tank-300-69.webp', price: 38400,
+    story: 'В горы под Кисловодском — по грунтовке к Медовым водопадам, вчетвером и с рюкзаками.',
+    figs: [['4×4', '', 'Полный привод — грунтовка не страшна'], [224, 'мм', 'Клиренс — бордюры и ямы проедешь'], [400, 'л', 'Багажник — влезут чемоданы'], [5, 'мест', 'Места хватит всем']],
+    check: [['Смотрим, подойдёт ли для гор', 'TANK 300'], ['Проверяем полный привод', 'Полный привод'], ['Сверяем клиренс', '224 мм · для гор нужно от 180 мм']] },
+  monjaro: { model: 'Geely Monjaro', photo: 'cars/tbank/geely-monjaro-75.webp', tile: 'cars/tbank/geely-monjaro-75.webp', price: 31200, label: 'Дешевле на 7 200 ₽',
+    story: 'В горы под Кисловодском — по асфальту до Домбая и обратно, мягко и тихо.',
+    figs: [['4×4', '', 'Полный привод — грунтовка не страшна'], [196, 'мм', 'Клиренс — бордюры и ямы проедешь'], [362, 'л', 'Багажник — влезут чемоданы'], [238, 'л.с.', 'Мощность — обгон без нервов']],
+    check: [['Смотрим, подойдёт ли для гор', 'Geely Monjaro'], ['Проверяем полный привод', 'Полный привод'], ['Сверяем клиренс', '196 мм · для гор нужно от 180 мм']] },
+  mazda: { model: 'Mazda CX-5', photo: 'cars/tbank/mazda-cx-5-184.webp', tile: 'cars/tbank/mazda-cx-5-184.webp', price: 29600, label: 'Расход меньше' },
+  jetour: { model: 'Jetour T2', photo: 'cars/tbank/jetour-t2-49.webp', tile: 'cars/tbank/jetour-t2-49.webp', price: 41000, label: 'Багажник больше' },
+}
+const $ = (s) => document.querySelector(s)
+const url = (p) => `url("${p}")`
+const sleep = (ms) => new Promise((r) => setTimeout(r, ms))
+const reduce = matchMedia('(prefers-reduced-motion: reduce)').matches
+const ease = 'cubic-bezier(.16, 1, .3, 1)'
+const fmt = (n) => typeof n === 'number' ? n.toLocaleString('ru-RU') : n
+let current = 'tank', run = 0
+
+function render(id) {
+  const c = CARS[id]
+  $('#title').textContent = c.model
+  $('#photo').style.backgroundImage = url(c.photo)
+  $('#thumbs').querySelectorAll('i').forEach((t) => { t.style.backgroundImage = url(c.photo) })
+  $('#story').textContent = c.story
+  $('#figs').innerHTML = c.figs.map(([n, u, w]) => `<div class="fig"><b data-n="${n}">${fmt(n)}${u ? `<small>${u}</small>` : ''}</b><p>${w}</p></div>`).join('')
+  $('#price').textContent = `${fmt(c.price)} ₽`
+  const alts = id === 'tank' ? ['monjaro', 'mazda', 'jetour'] : ['tank', 'mazda', 'jetour']
+  $('#more').innerHTML = alts.map((a) => `<button type="button" class="more-car" data-id="${a}"><span style="background-image:${url(CARS[a].tile)}"></span><b>${CARS[a].label || 'Подходит лучше'} — ${CARS[a].model}</b><em>${fmt(CARS[a].price)} ₽ за 4 суток</em></button>`).join('')
+  $('#e3-model').textContent = c.model
+  $('#e3-thumb').style.backgroundImage = url(c.photo)
+}
+
+/* Уголки: frame(rect, {pad, arm}) — сводим к прямоугольнику; pad > 0 — неплотно */
+const corners = [...$('#vf').children]
+function frame(r, { pad = 0, arm = 28, ms = 200, color } = {}) {
+  const pts = [[r.left - pad, r.top - pad], [r.right + pad - arm, r.top - pad], [r.right + pad - arm, r.bottom + pad - arm], [r.left - pad, r.bottom + pad - arm]]
+  corners.forEach((c, i) => {
+    if (color) c.style.setProperty('--c', color)
+    c.style.width = c.style.height = `${arm}px`
+    c.animate([{ transform: `translate(${pts[i][0]}px, ${pts[i][1]}px)`, opacity: 1 }], { duration: reduce ? 0 : ms, easing: ease, fill: 'forwards' })
+  })
+}
+const press = async (r, o) => { frame(r, { ...o, pad: -6, ms: 100 }); await sleep(100); frame(r, { ...o, pad: 0, ms: 100 }); await sleep(100) }
+const hideFrame = (ms = 120) => corners.forEach((c) => c.animate([{ opacity: 0 }], { duration: ms, fill: 'forwards' }))
+const rec = (on) => $('#rec').classList.toggle('on', on)
+const rectOf = (el) => el.getBoundingClientRect()
+const fly = (el, from, to, ms, easing = ease) => el.animate([
+  { transform: `translate(${from.left}px, ${from.top}px) scale(${from.width / el.offsetWidth}, ${from.height / el.offsetHeight})` },
+  { transform: `translate(${to.left}px, ${to.top}px) scale(${to.width / el.offsetWidth}, ${to.height / el.offsetHeight})` }], { duration: ms, easing, fill: 'forwards' }).finished
+/* Фото летит со скруглениями: радиус держим в пикселях итогового размера */
+function photoClone(src, r) {
+  const el = document.createElement('div')
+  el.className = 'tile-fly'
+  Object.assign(el.style, { width: `${r.width}px`, height: `${r.height}px`, backgroundImage: url(src), zIndex: 45 })
+  document.body.appendChild(el)
+  return el
+}
+const textIn = (els, gap = 60) => els.forEach((el, i) => el.animate([{ opacity: 0, transform: 'translateY(10px)' }, { opacity: 1, transform: 'none' }], { duration: 400, delay: i * gap, easing: 'ease-out', fill: 'backwards' }))
+function countUp() {
+  $('#figs').querySelectorAll('b[data-n]').forEach((b) => {
+    const n = Number(b.dataset.n); if (!n) return
+    const t0 = performance.now(), small = b.querySelector('small')?.outerHTML ?? ''
+    const step = (t) => { const k = Math.min(1, (t - t0) / 400), v = Math.round(n * (1 - (1 - k) ** 3)); b.innerHTML = fmt(v) + small; if (k < 1) requestAnimationFrame(step) }
+    requestAnimationFrame(step)
+  })
+}
+
+function reset() {
+  run++
+  document.querySelectorAll('.tile-fly, .grid-tile, .grid-head, .veil').forEach((n) => n.remove())
+  corners.forEach((c) => { c.getAnimations().forEach((a) => a.cancel()) })
+  document.querySelectorAll('#e2 *, #e2, #e3 *').forEach((n) => n.getAnimations().forEach((a) => a.cancel()))
+  $('#e2').hidden = false; $('#e3').hidden = true
+  $('#caption').classList.remove('on'); $('#why').textContent = 'Почему именно эта машина'
+  current = 'tank'; render(current); rec(true)
+  window.scrollTo({ top: 0, behavior: 'instant' })
+}
+
+/* 1. Подбор: сетка как в заставке, рамка ищет и берёт */
+async function playPick() {
+  reset(); const my = run; rec(false)
+  window.scrollTo({ top: 0, behavior: 'instant' })
+  const veil = document.createElement('div'); veil.className = 'veil'; veil.style.opacity = 1; veil.style.pointerEvents = 'auto'; document.body.appendChild(veil)
+  const head = document.createElement('div'); head.className = 'grid-head'; head.style.zIndex = 46; document.body.appendChild(head)
+  const say = (n, a, b) => { head.innerHTML = `<strong>${n}</strong><span>${a}</span><small>${b}</small>`; head.animate([{ opacity: 0 }, { opacity: 1 }], { duration: 250 }) }
+  say(48, 'Смотрим машины для поездки', 'Минводы, аэропорт')
+  const W = innerWidth, H = innerHeight, cols = W < 744 ? 6 : 8, rows = 4, gap = 8
+  const tw = Math.min((W * .86 - gap * (cols - 1)) / cols, 150), th = tw * .75, ox = (W - (cols * tw + (cols - 1) * gap)) / 2, oy = H * .34
+  const pool = ['tank', 'monjaro', 'mazda', 'jetour']
+  const tiles = []
+  for (let i = 0; i < cols * rows; i++) {
+    const t = document.createElement('div'); t.className = 'grid-tile'
+    const id = i === cols + 3 ? 'tank' : pool[(i * 7) % 4 === 0 && i !== 2 ? 1 : (i % 3) + 1]
+    Object.assign(t.style, { width: `${tw}px`, height: `${th}px`, backgroundImage: url(CARS[id].tile), zIndex: 44 })
+    const x = ox + (i % cols) * (tw + gap), y = oy + Math.floor(i / cols) * (th + gap)
+    t._r = new DOMRect(x, y, tw, th)
+    document.body.appendChild(t)
+    t.animate([{ transform: `translate(${W / 2 - tw / 2}px, ${oy + th}px) scale(.6)`, opacity: 0 }, { transform: `translate(${x}px, ${y}px)`, opacity: .4 }], { duration: 900, delay: (Math.abs(i % cols - cols / 2) + Math.floor(i / cols)) * 40, easing: ease, fill: 'forwards' })
+    tiles.push(t)
+  }
+  if (reduce) { await sleep(200); return land() }
+  await sleep(1100); if (my !== run) return
+  // Поиск: заходит издалека, неплотно на двух
+  frame(new DOMRect(-200, -200, 40, 40), { ms: 0, color: 'var(--ink)' })
+  const win = tiles[cols + 3]
+  frame(tiles[2]._r, { pad: 14, ms: 700 }); say(31, 'Горы: нужен полный привод', 'Клиренс от 180 мм'); await sleep(1100); if (my !== run) return
+  frame(tiles[cols * 2 + 5]._r, { pad: 10, ms: 600 }); say(12, 'Сверяем характеристики', 'Подходят 12 из 48'); await sleep(1000); if (my !== run) return
+  frame(win._r, { pad: 8, ms: 500 }); await sleep(600)
+  frame(win._r, { pad: 0, ms: 160 }); await sleep(200); await press(win._r)
+  say(1, 'Нашли. Вот она', 'TANK 300 — полный привод, 224 мм')
+  win.animate([{ opacity: 1 }], { duration: 300, fill: 'forwards' })
+  tiles.filter((t) => t !== win).forEach((t, i) => t.animate([{ opacity: 0 }], { duration: 500, delay: (i % 8) * 30, fill: 'forwards' }))
+  await sleep(700); if (my !== run) return
+  // Перелёт с рамкой; в конце рамка = фокус Э2, проявляется фото Э2
+  head.animate([{ opacity: 0 }], { duration: 200, fill: 'forwards' })
+  const to = rectOf($('#photo'))
+  const clone = photoClone(CARS.tank.photo, win._r); clone.style.opacity = 0
+  clone.animate([{ opacity: 1 }], { duration: 300, fill: 'forwards' })
+  win.remove()
+  fly(clone, win._r, win._r, 0)
+  frame(to, { pad: 0, ms: 850, color: 'var(--paper)' })
+  veil.animate([{ opacity: 0 }], { duration: 700, delay: 150, fill: 'forwards' })
+  await fly(clone, win._r, to, 850)
+  return land()
+  async function land() {
+    document.querySelectorAll('.tile-fly, .grid-tile, .grid-head, .veil').forEach((n) => n.remove())
+    hideFrame(1); rec(true)
+    textIn([$('#title'), $('#thumbs'), $('#story'), $('#figs')], 100); countUp()
+  }
+}
+
+/* 2. Смена машины из «Ещё вариантов» */
+async function playSwap(card) {
+  const my = ++run, id = card.dataset.id, c = CARS[id]
+  if (!c.check) c.check = [['Смотрим, подойдёт ли для гор', c.model], ['Проверяем полный привод', 'Полный привод'], ['Сверяем клиренс', 'для гор нужно от 180 мм']]
+  if (!c.story) Object.assign(c, { story: `В горы под Кисловодском — ${c.label.toLowerCase()}, без компромиссов по дороге.`, figs: CARS.tank.figs })
+  const img = card.firstElementChild
+  // Рамка уже на карточке (ховер) — дожим
+  frame(rectOf(img), { pad: 6, ms: 0, color: 'var(--ink)' }); await press(rectOf(img))
+  const from = rectOf(img)
+  const clone = photoClone(c.tile, from); clone.style.backgroundSize = '84% auto'; clone.style.backgroundColor = 'var(--plate)'
+  fly(clone, from, from, 0); hideFrame(100)
+  // Скролл наверх и перелёт одновременно: замеряем цель после скролла
+  const photoTop = rectOf($('#photo')).top + scrollY - 90
+  window.scrollTo({ top: Math.max(0, photoTop - 0), behavior: reduce ? 'instant' : 'smooth' })
+  rec(false)
+  await sleep(reduce ? 0 : 380); if (my !== run) return
+  const to = rectOf($('#photo'))
+  await fly(clone, from, to, reduce ? 0 : 600)
+  clone.animate([{ backgroundSize: '84% auto' }, { backgroundSize: 'cover' }], { duration: 1, fill: 'forwards' })
+  $('#photo').style.backgroundImage = url(c.photo); clone.remove()
+  current = id
+  if (!reduce) {
+    // Проверка на главном фото: уголки неплотно, подписи — плашкой внизу фото
+    const r = rectOf($('#photo')), cap = $('#caption')
+    frame(r, { pad: -40, ms: 0, color: 'var(--paper)' }); frame(r, { pad: -24, ms: 400 })
+    cap.classList.add('on')
+    for (let i = 0; i < 3; i++) {
+      $('#cap-a').textContent = c.check[i][0]; $('#cap-b').textContent = c.check[i][1]
+      cap.animate([{ opacity: 0, transform: 'translateY(6px)' }, { opacity: 1, transform: 'none' }], { duration: 250 })
+      frame(rectOf($('#photo')), { pad: -24 + i * 6, ms: 600 })
+      await sleep(700); if (my !== run) return
+    }
+    cap.classList.remove('on')
+    const rr = rectOf($('#photo')); frame(rr, { pad: -12, ms: 160 }); await sleep(160); await press(rr, { pad: -12 })
+    hideFrame(300)
+  }
+  rec(true)
+  // Тексты меняются после захвата
+  const old = [$('#title'), $('#why'), $('#story'), $('#figs')]
+  await Promise.all(old.map((el) => el.animate([{ opacity: 0, transform: 'translateY(-6px)' }], { duration: 150, fill: 'forwards' }).finished))
+  render(id); old.forEach((el) => el.getAnimations().forEach((a) => a.cancel()))
+  // Машину выбрал сам — друг не объясняет свой совет, а одобряет выбор
+  $('#why').textContent = 'Хороший выбор, и вот почему'
+  textIn([$('#title'), $('#thumbs'), $('#why'), $('#story'), ...$('#figs').children], 60); countUp()
+}
+
+/* 3. Дальше — допы: захват в кадр и перелёт в «Твою машину» */
+async function playExtras() {
+  const my = ++run
+  window.scrollTo({ top: 0, behavior: 'instant' })
+  const photo = $('#photo'), from = rectOf(photo)
+  const veil = document.createElement('div'); veil.className = 'veil'; document.body.appendChild(veil)
+  const clone = photoClone(CARS[current].photo, from); fly(clone, from, from, 0)
+  photo.style.visibility = 'hidden'; rec(false)
+  if (reduce) { veil.style.opacity = 1; return show() }
+  // Гасим всё вокруг фото
+  veil.animate([{ opacity: 0 }, { opacity: 1 }], { duration: 150, fill: 'forwards' })
+  await sleep(150); if (my !== run) return
+  // Фото — в центр, рамка сходится и дожимает
+  const w = Math.min(innerWidth * .7, 760), h = w * from.height / from.width
+  const mid = new DOMRect((innerWidth - w) / 2, (innerHeight - h) / 2, w, h)
+  frame(new DOMRect(mid.x - 40, mid.y - 40, w + 80, h + 80), { ms: 0, color: 'var(--ink)', arm: 36 })
+  fly(clone, from, mid, 400); frame(mid, { pad: 10, ms: 400, arm: 36 })
+  await sleep(420); if (my !== run) return
+  await press(mid, { arm: 36 })
+  // Э3 под вуалью; фото уменьшается в «Твою машину»
+  $('#e2').hidden = true; $('#e3').hidden = false
+  const thumb = $('#e3-thumb'); thumb.style.visibility = 'hidden'
+  const to = rectOf(thumb)
+  hideFrame(120)
+  veil.animate([{ opacity: 1 }, { opacity: 0 }], { duration: 450, delay: 150, fill: 'forwards' })
+  clone.animate([{ borderRadius: '16px' }, { borderRadius: `${12 * clone.offsetWidth / to.width}px` }], { duration: 550, fill: 'forwards' })
+  textIn([...$('#extras').children], 60)
+  await fly(clone, mid, to, 550)
+  thumb.style.visibility = ''
+  return show()
+  function show() { clone.remove(); veil.remove(); photo.style.visibility = ''; $('#e2').hidden = true; $('#e3').hidden = false }
+}
+
+$('#play-pick').onclick = playPick
+$('#play-swap').onclick = () => { reset(); $('#more').scrollIntoView({ behavior: 'smooth', block: 'center' }) }
+$('#play-extras').onclick = () => { reset(); playExtras() }
+$('#reset').onclick = reset
+$('#go').onclick = playExtras
+$('#more').addEventListener('click', (e) => { const b = e.target.closest('.more-car'); if (b) playSwap(b) })
+render(current); rec(true)
+</script>

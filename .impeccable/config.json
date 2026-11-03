@@ -20,6 +20,15 @@
         ],
         "createdAt": "2026-11-02T17:29:53.685Z",
         "reason": "project design system: --lh-snug 1.25 / --lh-tight are the required tokens for large display text and captions (CLAUDE.md, src/styles.css)"
+      },
+      {
+        "rule": "tight-leading",
+        "value": "*",
+        "files": [
+          "project/previews/viewfinder/scenes.html"
+        ],
+        "createdAt": "2026-11-03T05:35:13.803Z",
+        "reason": "agent: --lh-tight 1.05 is the project token for display headings and big figures (src/styles.css), not body text"
       }
     ]
   },

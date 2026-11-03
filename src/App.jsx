@@ -54,38 +54,41 @@ export default function App() {
   const bookingInProgress = useRef(false)
   const transitionSource = useRef(null)
 
-  useEffect(() => { window.scrollTo(0, 0) }, [screen, pickedCarId])
+  // instant: у html плавный скролл, и недоехавший скролл сдвигает фото, на которое садится перелёт
+  useEffect(() => { window.scrollTo({ top: 0, behavior: 'instant' }) }, [screen, pickedCarId])
 
   useLayoutEffect(() => {
     const from = transitionSource.current
     if (!from) return
     transitionSource.current = null
+    window.scrollTo({ top: 0, behavior: 'instant' })
     const target = screen === 'e3'
       ? [...document.querySelectorAll('.e3 .book-tile-car img')].find((el) => el.getClientRects().length > 0)
       : screen === 'e2' ? document.querySelector('.e2 .pick-photo') : null
-    if (!target) return
+    const drop = () => { from.fly?.el.remove(); from.veil?.remove(); from.frame?.remove() }
+    if (!target) { drop(); return }
     const to = target.getBoundingClientRect()
     const chosen = cars.find((car) => car.id === from.carId)
     const differentCar = screen === 'e2' && chosen && ![chosen.heroImage, chosen.image, ...chosen.gallery].filter(Boolean).some((path) => target.style.backgroundImage.includes(path))
     if (reducedMotion() || differentCar || !from.rect.width || !to.width) {
+      drop()
       const fade = target.animate([{ opacity: 0 }, { opacity: 1 }], { duration: 200 })
       return () => fade.cancel()
     }
-    const clone = document.createElement('div')
-    clone.className = 'extras-flying'
-    Object.assign(clone.style, { left: `${from.rect.left}px`, top: `${from.rect.top}px`, width: `${from.rect.width}px`, height: `${from.rect.height}px`, backgroundImage: from.image })
-    document.body.appendChild(clone)
+    // Э2 → Э3: фото уже взято в кадр по центру (captureToExtras) — уменьшаем его в «Твою машину», вуаль уходит
+    const fly = from.fly ?? flyPhoto(from.rect, from.image)
+    from.fly = fly // drop() убирает и копию, созданную здесь, — иначе она остаётся поверх Э2
     const previousVisibility = target.style.visibility
     target.style.visibility = 'hidden'
-    const move = clone.animate([
-      { transform: 'translate(0,0) scale(1,1)' },
-      { transform: `translate(${to.left - from.rect.left}px,${to.top - from.rect.top}px) scale(${to.width / from.rect.width},${to.height / from.rect.height})` },
-    ], { duration: screen === 'e3' ? 700 : 500, easing: 'cubic-bezier(.22,1,.36,1)', fill: 'forwards' })
-    const content = screen === 'e3' ? document.querySelector('.e3 .e3-main') : null
+    const toE3 = screen === 'e3'
+    from.frame?.hide()
+    from.veil?.animate([{ opacity: 1 }, { opacity: 0 }], { duration: 450, delay: 150, easing: 'ease-out', fill: 'forwards' }).finished.then(() => from.veil.remove(), () => {})
+    const move = fly.move(from.rect, to, toE3 ? 550 : 350, 16, toE3 ? 12 : 16)
+    const content = toE3 ? document.querySelector('.e3 .e3-main') : null
     const reveal = content?.animate([{ opacity: 0, transform: 'translateY(10px)' }, { opacity: 1, transform: 'translateY(0)' }], { duration: 450, delay: 180, easing: 'ease-out' })
-    const cleanup = () => { target.style.visibility = previousVisibility; clone.remove() }
-    move.finished.then(cleanup, cleanup)
-    return () => { reveal?.cancel(); move.cancel(); cleanup() }
+    const cleanup = () => { target.style.visibility = previousVisibility; drop() }
+    move.then(cleanup, cleanup)
+    return () => { reveal?.cancel(); cleanup() }
   }, [screen])
 
   // Избранное — в браузере, после входа — ещё и в аккаунте
@@ -120,8 +123,33 @@ export default function App() {
     const image = source.tagName === 'IMG' ? `url("${source.currentSrc || source.src}")` : getComputedStyle(source).backgroundImage
     transitionSource.current = { rect, image, carId }
   }
-  const openCar = (id, from) => {
-    if (from === 'e2' && screen === 'e2') captureTransition('e3', id)
+  // «Дальше — допы»: всё вокруг фото гаснет, фото встаёт в центр и берётся в кадр, потом уходит на Э3
+  const capturing = useRef(false)
+  const captureToExtras = async (carId) => {
+    window.scrollTo({ top: 0, behavior: 'instant' })
+    document.querySelectorAll('.extras-flying, .capture-veil, .vf-fly').forEach((n) => n.remove())
+    const photo = document.querySelector('.e2 .pick-photo')
+    if (!photo || reducedMotion()) return captureTransition('e3', carId)
+    const rect = photo.getBoundingClientRect()
+    const veil = document.createElement('div')
+    veil.className = 'capture-veil'
+    document.body.appendChild(veil)
+    const fly = flyPhoto(rect, getComputedStyle(photo).backgroundImage)
+    photo.style.visibility = 'hidden'
+    await veil.animate([{ opacity: 0 }, { opacity: 1 }], { duration: 150, fill: 'forwards' }).finished
+    const w = Math.min(innerWidth - 32, 760), h = w * rect.height / rect.width
+    const mid = new DOMRect((innerWidth - w) / 2, (innerHeight - h) / 2, w, h)
+    const frame = flyFrame('photo', 32)
+    frame.to(lockRect(photo), 0, 0)
+    const lock = new DOMRect(mid.left + w * .08, mid.top + h * .12, w * .84, h * .76)
+    await Promise.all([fly.move(rect, mid, 400, 16, 16, 'cubic-bezier(.16, 1, .3, 1)'), frame.to(lock, 0, 400)])
+    await frame.press(lock)
+    photo.style.visibility = ''
+    transitionSource.current = { rect: mid, fly, veil, frame, carId }
+  }
+  const openCar = async (id, from) => {
+    if (capturing.current) return // повторное нажатие во время захвата
+    if (from === 'e2' && screen === 'e2') { capturing.current = true; await captureToExtras(id); capturing.current = false }
     else transitionSource.current = null
     bookingInProgress.current = false; setPickedCarId(id); setCameFrom(from); setScreen('e3'); setSheet(null)
   }
@@ -468,6 +496,58 @@ function attachViewfinder(group, kind) {
   }
 }
 
+// Рамка для сцен-перелётов: те же уголки, но поверх всего экрана и на WAAPI, чтобы лететь за фото.
+// to() сводит рамку к прямоугольнику экрана, pad > 0 — неплотно; press() — дожим.
+function flyFrame(kind, armSize = vfKinds[kind].arm) {
+  let arm = armSize
+  const vf = document.createElement('div')
+  vf.className = `vf vf-${kind} vf-fly vf-on`
+  vf.setAttribute('aria-hidden', 'true')
+  vf.style.setProperty('--arm', `${arm}px`)
+  vf.innerHTML = '<i></i><i></i><i></i><i></i>'
+  document.body.append(vf)
+  const corners = [...vf.children]
+  const at = (r, pad) => {
+    const right = r.right + pad - arm, bottom = r.bottom + pad - arm
+    return [[r.left - pad, r.top - pad], [right, r.top - pad], [right, bottom], [r.left - pad, bottom]]
+  }
+  const to = (r, pad = 0, ms = 200, easing = 'cubic-bezier(.16, 1, .3, 1)') => Promise.all(at(r, pad).map((p, i) =>
+    corners[i].animate([{ transform: `translate(${p[0]}px, ${p[1]}px)` }], { duration: reducedMotion() ? 0 : ms, easing, fill: 'forwards' }).finished))
+  const wait = (ms) => new Promise((done) => setTimeout(done, ms))
+  return {
+    to,
+    press: async (r, pad = 0) => { await to(r, pad - 4, 100); await to(r, pad, 100) },
+    hide: async (ms = 120) => { await vf.animate([{ opacity: 0 }], { duration: ms, fill: 'forwards' }).finished; vf.remove() },
+    remove: () => vf.remove(),
+    wait,
+    // Рамка поиска на подборе становится рамкой фокуса на фото: светлая, крупнее
+    retarget: (next, size = vfKinds[next].arm) => { vf.classList.replace(`vf-${kind}`, `vf-${next}`); kind = next; arm = size; vf.style.setProperty('--arm', `${size}px`) },
+  }
+}
+
+// Уголки FocusLock стоят на inset 12% 8% фото — рамка сцены садится ровно туда
+const lockRect = (photo) => {
+  const r = photo.getBoundingClientRect(), x = r.width * .08, y = r.height * .12
+  return new DOMRect(r.left + x, r.top + y, r.width - 2 * x, r.height - 2 * y)
+}
+
+// Летящая копия фото. Скругление держим в пикселях экрана: при scale радиус делим на масштаб по каждой оси
+function flyPhoto(rect, image, { contain = false } = {}) {
+  const el = document.createElement('div')
+  el.className = `extras-flying ${contain ? 'is-contain' : ''}`
+  Object.assign(el.style, { left: `${rect.left}px`, top: `${rect.top}px`, width: `${rect.width}px`, height: `${rect.height}px`, backgroundImage: image })
+  document.body.appendChild(el)
+  const frame = (r, radius) => {
+    const sx = r.width / rect.width, sy = r.height / rect.height
+    return { transform: `translate(${r.left - rect.left}px, ${r.top - rect.top}px) scale(${sx}, ${sy})`, borderRadius: `${radius / sx}px / ${radius / sy}px` }
+  }
+  return {
+    el,
+    move: (from, to, ms, r0 = 16, r1 = 16, easing = 'cubic-bezier(.22,1,.36,1)') =>
+      el.animate([frame(from, r0), frame(to, r1)], { duration: reducedMotion() ? 0 : ms, easing, fill: 'forwards' }).finished,
+  }
+}
+
 const useViewfinder = (kind) => useCallback((group) => group ? attachViewfinder(group, kind) : undefined, [kind])
 
 // Строчные «on move», move в рамке видоискателя; на наведении уголки расходятся и сводятся
@@ -477,8 +557,9 @@ export function LogoMark() {
 
 // Выбранная машина на Э2 берётся в фокус: большие уголки съезжаются издалека, загорается REC.
 // Ключ — id машины, поэтому сцена повторяется при каждой смене.
-function FocusLock() {
-  return <div className="vf-lock" aria-hidden="true"><i /><i /><i /><i /><span className="vf-rec">Rec</span></div>
+// still — рамку уже привела сцена (подбор, смена машины): уголки стоят, REC мигает сразу
+function FocusLock({ still }) {
+  return <div className={`vf-lock ${still ? 'is-still' : ''}`} aria-hidden="true"><i /><i /><i /><i /><span className="vf-rec">Rec</span></div>
 }
 
 // Ячейка поездки на Э2 и Э3: отдельный блок, иконка слева, справа «+» — пусто, «↗» — изменить
@@ -1818,11 +1899,18 @@ function Picking({ query, onDone }) {
     })
     const timers = []
     const later = (fn, ms) => timers.push(setTimeout(fn, ms))
+    let frame = null
+    const aim = (id, pad, ms) => { const el = tiles.current[id]; if (el && frame) frame.to(el.getBoundingClientRect(), pad, ms) }
     const onKey = (event) => { if (event.key === 'Escape') onDone() }
     window.addEventListener('keydown', onKey)
     if (reducedMotion()) later(onDone, 200)
     else if (!car) { later(() => setStage(3), 700); later(onDone, 1800) }
     else {
+      // Поиск как в заставке: рамка заходит издалека и неплотно наводится на пару машин, но не берёт
+      const others = pool.filter((c) => c.id !== car.id)
+      const decoys = [others[Math.floor(others.length * .3)], others[Math.floor(others.length * .7)]].filter(Boolean)
+      later(() => { frame = flyFrame('card'); frame.to(new DOMRect(-80, -80, 40, 40), 0, 0); decoys[0] && aim(decoys[0].id, 14, 700) }, 500)
+      later(() => decoys[1] && aim(decoys[1].id, 10, 600), 1300)
       later(() => {
         setStage(1)
         pool.filter((c) => !top.some((item) => item.id === c.id)).forEach((c, i) => {
@@ -1837,7 +1925,12 @@ function Picking({ query, onDone }) {
         const cw = tw * scale, ch = th * scale, x = (W - (n * cw + (n - 1) * g)) / 2
         top.forEach((c, i) => place(tiles.current[c.id], x + (i % n) * (cw + g), H * (phone ? .35 : .31) + Math.floor(i / n) * (ch + g), scale))
       }, 2400)
-      later(() => { setStage(3); top.forEach((c) => tiles.current[c.id]?.classList.add(c.id === car.id ? 'win' : 'dim')) }, 3500)
+      later(() => aim(car.id, 8, 400), 3300)
+      later(() => {
+        setStage(3); top.forEach((c) => tiles.current[c.id]?.classList.add(c.id === car.id ? 'win' : 'dim'))
+        const r = tiles.current[car.id]?.getBoundingClientRect()
+        if (r && frame) frame.to(r, 0, 160).then(() => frame.press(r))
+      }, 3500)
       // Победитель сначала обводится, потом в нём проявляется главное фото — и уже с ним летит на Э2
       later(() => tiles.current[car.id]?.classList.add('reveal'), 3950)
       later(() => {
@@ -1845,10 +1938,13 @@ function Picking({ query, onDone }) {
         const el = tiles.current[car.id], rect = document.querySelector('.pick-photo')?.getBoundingClientRect()
         top.filter((c) => c.id !== car.id).forEach((c) => tiles.current[c.id]?.classList.add('gone'))
         if (el && rect) place(el, rect.left, rect.top, rect.width / tw)
+        // Рамка летит с машиной и садится в фокус главного фото Э2
+        const photo = document.querySelector('.e2 .pick-photo')
+        if (photo && frame) { frame.retarget('photo', 32); frame.to(lockRect(photo), 0, 850, 'cubic-bezier(.22,1,.36,1)') }
       }, 4400)
       later(onDone, 5300)
     }
-    return () => { timers.forEach(clearTimeout); window.removeEventListener('keydown', onKey) }
+    return () => { timers.forEach(clearTimeout); frame?.remove(); window.removeEventListener('keydown', onKey) }
   }, [])
 
   return createPortal(
@@ -1888,7 +1984,7 @@ function tradeoff(base, c, q) {
   return { head, text, price: d ? `${d > 0 ? '+' : '−'}${rub(Math.abs(d))} за\u00a0поездку` : 'Та же цена за\u00a0поездку' }
 }
 
-function PickGallery({ car, prev, fav }) {
+function PickGallery({ car, prev, fav, lock }) {
   const photos = car.gallery.length ? car.gallery : [car.heroImage || car.image]
   const [active, setActive] = useState(0)
   const [expanded, setExpanded] = useState(false)
@@ -1897,7 +1993,7 @@ function PickGallery({ car, prev, fav }) {
     <div className="pick-gallery">
       <div className="pick-photo photo-car" style={{ backgroundImage: `url(${import.meta.env.BASE_URL}${photos[active]})`, aspectRatio: car.gallery.length ? '1372 / 960' : '1092 / 552' }}>
         {prev && prev.id !== car.id && <div key={`prev-${car.id}`} className="pick-photo-prev photo-car" style={carPhoto(prev, 'lg')} />}
-        <FocusLock key={car.id} />
+        {lock !== 'off' && <FocusLock key={car.id} still={lock === 'still'} />}
         <button type="button" className="pick-photo-open" onClick={() => setExpanded(true)} aria-label={`Увеличить фото ${car.model}`} />
         <FavToggle id={car.id} fav={fav} />
       </div>
@@ -1925,7 +2021,7 @@ function MoreCars({ car, query, items, onPick, onMore }) {
       <p className="muted">{nb(`Те же даты и цель. Нажми — сравним с ${car.model}.`)}</p>
       <div className="more-cars-grid" ref={vf}>
         {items.map(({ car: c }) => { const t = tradeoff(car, c, query); return (
-          <button key={c.id} type="button" className="more-car" data-vf-item onClick={() => onPick(c.id)}>
+          <button key={c.id} type="button" className="more-car" data-car={c.id} data-vf-item onClick={() => onPick(c.id)}>
             <span className="more-car-photo" data-vf-target><img src={`${import.meta.env.BASE_URL}${c.image}`} alt="" loading="lazy" /></span>
             <span className="more-car-body">
               <span className="more-car-model">{t.head} — {c.model}</span>
@@ -1972,7 +2068,7 @@ function carStory(car, { goal, companion, city, place }) {
   return [kindLines[car.kind] ?? `${car.model} — машина для дороги.`, goalLines[goal?.id], people, pickup].filter(Boolean).join(' ')
 }
 
-function PickSpecs({ car, query, story }) {
+function PickSpecs({ car, query, story, chosen, counting }) {
   const d = carDetails[car.id]
   const month = new Date(query.dateFrom || Date.now()).getMonth() + 1
   // Четыре главных цифры крупно, под каждой — что это даёт в поездке
@@ -1992,46 +2088,92 @@ function PickSpecs({ car, query, story }) {
   ].filter(([, value]) => value != null && value !== '' && value !== false)
   return (
     <section className="pick-details">
-      <h2>Почему именно эта машина</h2>
+      <h2>{chosen ? nb('Хороший выбор, и вот почему') : 'Почему именно эта машина'}</h2>
       {story && <p className="pick-story">{nb(story)}</p>}
-      <div className="pick-figures">{hero.map((h) => <div key={h.why}><span className="pick-figure">{h.num}{h.unit && <small>{h.unit}</small>}</span><p>{nb(h.why)}</p></div>)}</div>
+      <div className="pick-figures">{hero.map((h) => <div key={h.why}><span className="pick-figure">{typeof h.num === 'number' ? <CountText key={`${car.id}-${counting}`} text={String(h.num)} /> : h.num}{h.unit && <small>{h.unit}</small>}</span><p>{nb(h.why)}</p></div>)}</div>
       <dl className="pick-details-list">{rows.map(([label, value]) => <div key={label}><dt>{label}</dt><dd>{value}</dd></div>)}</dl>
     </section>
   )
 }
 
-function CarAssessment({ car, goal, onComplete, onDismiss }) {
-  const [phase, setPhase] = useState(0)
-  const [exiting, setExiting] = useState(false)
-  const completed = useRef(false)
-  const skipRef = useRef(null)
-  const completeRef = useRef(onComplete)
-  completeRef.current = onComplete
+// Смена машины из «Ещё вариантов»: рамка берёт карточку, фон гаснет, машина выходит в центр,
+// там проверяем её под цель, потом она встаёт на место прежней. Пропуск — клик или Esc.
+function CarCheck({ car, goal, onSwap, onDone }) {
+  const [step, setStep] = useState(-1)
+  const [plate, setPlate] = useState(null)
+  const done = useRef({ onSwap, onDone })
+  done.current = { onSwap, onDone }
   useEffect(() => {
-    const root = document.getElementById('root'), wasInert = root?.inert
+    let alive = true, swapped = false, fly = null, veil = null, photo = null
+    const frame = flyFrame('card', 28)
     const overflow = document.body.style.overflow
-    if (root) root.inert = true
-    document.body.style.overflow = 'hidden'
-    skipRef.current?.focus({ preventScroll: true })
-    let finishTimer
-    const finish = () => {
-      if (completed.current) return
-      completed.current = true
-      completeRef.current()
-      setExiting(true)
-      finishTimer = setTimeout(onDismiss, 400)
-    }
-    const onKey = (event) => { if (event.key === 'Escape') finish() }
-    const timers = [setTimeout(() => setPhase(1), 900), setTimeout(() => setPhase(2), 1800), setTimeout(finish, 2800)]
-    window.addEventListener('keydown', onKey)
-    skipRef.current?.addEventListener('click', finish)
-    return () => {
-      timers.forEach(clearTimeout); clearTimeout(finishTimer)
-      window.removeEventListener('keydown', onKey)
-      skipRef.current?.removeEventListener('click', finish)
-      if (root) root.inert = wasInert
+    const swap = () => { if (!swapped) { swapped = true; done.current.onSwap() } }
+    const cleanup = () => {
+      alive = false
+      frame.remove(); fly?.el.remove(); veil?.remove()
+      if (photo) photo.style.visibility = ''
       document.body.style.overflow = overflow
+      window.removeEventListener('keydown', onKey)
+      window.removeEventListener('pointerdown', skip, true)
     }
+    const skip = () => { if (!alive) return; cleanup(); swap(); window.scrollTo({ top: 0, behavior: 'instant' }); done.current.onDone() }
+    const onKey = (event) => { if (event.key === 'Escape') skip() }
+    const next = () => new Promise((resolve) => requestAnimationFrame(() => requestAnimationFrame(resolve)))
+    window.addEventListener('keydown', onKey)
+    setTimeout(() => alive && window.addEventListener('pointerdown', skip, true))
+    ;(async () => {
+      const card = document.querySelector(`.more-car[data-car="${car.id}"] [data-vf-target]`)
+      if (!card) return skip()
+      // 1. Захват карточки
+      const from = card.getBoundingClientRect()
+      await frame.to(from, 10, 0)
+      await frame.to(from, 6, 160)
+      await frame.press(from, 6)
+      if (!alive) return
+      // 2. Фон гаснет, машина выходит в центр
+      fly = flyPhoto(from, `url("${import.meta.env.BASE_URL}${car.image}")`, { contain: true })
+      veil = document.createElement('div')
+      veil.className = 'capture-veil'
+      document.body.appendChild(veil)
+      document.body.style.overflow = 'hidden'
+      await veil.animate([{ opacity: 0 }, { opacity: 1 }], { duration: 150, fill: 'forwards' }).finished
+      window.scrollTo({ top: 0, behavior: 'instant' })
+      const w = Math.min(innerWidth - 32, 640), h = w * 9 / 16
+      const mid = new DOMRect((innerWidth - w) / 2, Math.max(24, (innerHeight - h) / 2 - 48), w, h)
+      await Promise.all([fly.move(from, mid, 450, 16, 16, 'cubic-bezier(.16, 1, .3, 1)'), frame.to(mid, 24, 450)])
+      if (!alive) return
+      // 3. Проверка под цель: рамка наводится неплотно и сходится
+      setPlate({ left: mid.left, width: mid.width, top: mid.bottom + 16 })
+      for (const [i, pad] of [[0, 16], [1, 10], [2, 4]]) {
+        setStep(i)
+        await Promise.all([frame.to(mid, pad, 600), frame.wait(750)])
+        if (!alive) return
+      }
+      setStep(3)
+      await frame.to(mid, 0, 160)
+      await frame.press(mid)
+      if (!alive) return
+      // 4. Машина встаёт на место прежней, рамка садится в фокус главного фото
+      swap()
+      await next()
+      photo = document.querySelector('.e2 .pick-photo')
+      if (!photo || !alive) return skip()
+      photo.style.visibility = 'hidden'
+      const to = photo.getBoundingClientRect()
+      const hero = getComputedStyle(photo).backgroundImage
+      const shot = flyPhoto(mid, hero)
+      shot.el.style.opacity = 0
+      shot.move(mid, mid, 0)
+      await shot.el.animate([{ opacity: 0 }, { opacity: 1 }], { duration: 200, fill: 'forwards' }).finished
+      fly.el.remove(); fly = shot
+      frame.retarget('photo', 32)
+      veil.animate([{ opacity: 1 }, { opacity: 0 }], { duration: 450, delay: 100, easing: 'ease-out', fill: 'forwards' })
+      await Promise.all([fly.move(mid, to, 550), frame.to(lockRect(photo), 0, 550, 'cubic-bezier(.22,1,.36,1)')])
+      if (!alive) return
+      cleanup()
+      done.current.onDone()
+    })()
+    return cleanup
   }, [])
   const mountain = goal?.id === 'mountains'
   const captions = mountain ? [
@@ -2043,14 +2185,11 @@ function CarAssessment({ car, goal, onComplete, onDismiss }) {
     [goal ? `Учитываем: ${goal.label.toLowerCase()}` : 'Сверяем характеристики', goal?.hint || carSummary(car)],
     ['Сверяем параметры', carSummary(car)],
   ]
+  if (!plate || step < 0 || step > 2) return null
   return createPortal(
-    <div className={`swap-assessment ${exiting ? 'is-exiting' : ''}`} role="dialog" aria-modal="true" aria-label="Проверяем машину">
-      <button type="button" ref={skipRef} className="swap-skip">Пропустить <small>Esc</small></button>
-      <div className="swap-assessment-content">
-        <div className="swap-caption" key={phase} aria-live="polite"><strong>{captions[phase][0]}</strong><span>{captions[phase][1]}</span></div>
-        <div className="swap-vehicle" style={carPhoto(car, 'lg')} />
-        <div className="swap-steps" aria-hidden="true"><i className={phase >= 0 ? 'active' : ''} /><i className={phase >= 1 ? 'active' : ''} /><i className={phase >= 2 ? 'active' : ''} /></div>
-      </div>
+    <div className="car-check" style={plate} role="status" aria-live="polite">
+      <div className="car-check-caption" key={step}><strong>{nb(captions[step][0])}</strong><span>{nb(captions[step][1])}</span></div>
+      <span className="car-check-skip">Пропустить <small>Esc</small></span>
     </div>, document.body,
   )
 }
@@ -2061,7 +2200,8 @@ export function E2({ query, setQuery, fav, onBack, onPick, openPicker }) {
   const [datesOpen, setDatesOpen] = useState(false)
   const [placeOpen, setPlaceOpen] = useState(false)
   const [continueToExtras, setContinueToExtras] = useState(false)
-  const [assessmentId, setAssessmentId] = useState(null)
+  const [check, setCheck] = useState(null) // id машины, которую проверяем на главном фото
+  const [stillId, setStillId] = useState(null) // рамку фокуса привела сцена — без повторного захвата
   const res = pickCar(query)
   const { goal, places, companion, active, fit } = res
   const car = fit.find((c) => c.id === pickedId) ?? res.car
@@ -2077,7 +2217,7 @@ export function E2({ query, setQuery, fav, onBack, onPick, openPicker }) {
   const chooseNow = (id) => { setPrev(car); setPickedId(id); window.scrollTo({ top: 0, behavior: reducedMotion() ? 'auto' : 'smooth' }) }
   const choose = (id) => {
     if (reducedMotion()) chooseNow(id)
-    else setAssessmentId(id)
+    else setCheck(id)
   }
   const togglePref = (id) => change({ prefs: query.prefs.includes(id) ? query.prefs.filter((x) => x !== id) : [...query.prefs, id] })
 
@@ -2107,7 +2247,7 @@ export function E2({ query, setQuery, fav, onBack, onPick, openPicker }) {
   )
 
   return (
-    <main className="e2">
+    <main className={`e2 ${check ? 'is-checking' : ''}`}>
       <button className="link-back" onClick={onBack}><Arrow dir="left" />На главную</button>
 
       <div className="e2-layout">
@@ -2118,8 +2258,8 @@ export function E2({ query, setQuery, fav, onBack, onPick, openPicker }) {
                 <h1 className="pick-title swap-in" key={car.id}>{car.model}</h1>
                 {skipped.length > 0 && <div className="pick-reason">{skipped.map((item) => <div className="pick-route-note" key={item.id}>Не удалось учесть: {item.label.toLowerCase()}</div>)}</div>}
               </div>
-              <PickGallery key={car.id} car={car} prev={prev} fav={fav} />
-              <PickSpecs car={car} query={query} story={carStory(car, { goal, companion, city: cities[location?.city ?? query.cityId], place: places.find((p) => p.test(car)) })} />
+              <PickGallery key={car.id} car={car} prev={prev} fav={fav} lock={check ? 'off' : stillId === car.id ? 'still' : 'on'} />
+              <PickSpecs car={car} query={query} chosen={car.id === pickedId} counting={!check} story={carStory(car, { goal, companion, city: cities[location?.city ?? query.cityId], place: places.find((p) => p.test(car)) })} />
               <MoreCars car={car} query={query} items={moreCars} onPick={choose} onMore={() => setParamsOpen(true)} />
             </div>
           ) : (
@@ -2155,8 +2295,8 @@ export function E2({ query, setQuery, fav, onBack, onPick, openPicker }) {
         </aside>
       </div>
 
-      {assessmentId && <CarAssessment key={assessmentId} car={cars.find((item) => item.id === assessmentId)} goal={goal}
-        onComplete={() => chooseNow(assessmentId)} onDismiss={() => setAssessmentId(null)} />}
+      {check && <CarCheck key={check} car={cars.find((item) => item.id === check)} goal={goal}
+        onSwap={() => { setPrev(car); setPickedId(check) }} onDone={() => { setStillId(check); setCheck(null) }} />}
       {paramsOpen && <ParamsPicker query={query} onApply={(patch) => { change(patch); setParamsOpen(false) }} onClose={() => setParamsOpen(false)} />}
       {placeOpen && <PlacePicker query={query} group="all" onClose={() => { setPlaceOpen(false); setContinueToExtras(false) }}
         onPick={(place, address = '') => { const next = { ...query, locationId: place.id, cityId: place.city, address }; setQuery(next); setPlaceOpen(false); if (continueToExtras) continueWith(next) }} />}
