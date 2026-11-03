@@ -1015,6 +1015,7 @@ label.wz-seg, .wz-seg-btn { display: flex; flex-direction: column; align-items: 
 .pick-photo .badge, .pick-photo .fav-toggle { z-index: 1; }
 @keyframes fadeOut { to { opacity: 0; } }
 .swap-in { animation: fade var(--dur-medium) var(--ease-out); }
+.time-btn .swap-in { display: inline-block; }
 
 /* Демо подбора в манифесте */
 @keyframes blink { 50% { opacity: 0; } }

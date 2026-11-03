@@ -1115,7 +1115,7 @@ function TimeSelect({ label, value, onChange }) {
     <div className="dates-time" ref={ref}>
       <button type="button" className="time-btn" aria-expanded={open} onClick={() => setOpen(!open)}>
         <span>{label}</span>
-        <b>{value}<svg className="city-chevron" viewBox="0 0 12 12" aria-hidden="true"><path d="M2 4.5l4 4 4-4" /></svg></b>
+        <b><span key={value} className="swap-in">{value}</span><svg className="city-chevron" viewBox="0 0 12 12" aria-hidden="true"><path d="M2 4.5l4 4 4-4" /></svg></b>
       </button>
       {open && (
         <div className="time-pop" role="listbox">
@@ -1496,7 +1496,7 @@ export function Wizard({ ref, query, setQuery, step, setStep, placeType, setPlac
               readOnly={mobile} onFocus={() => !mobile && step !== 'city' && setStep('city')}
               onClick={() => mobile && setStep('city')}
               onChange={(e) => { setText(e.target.value); if (city) set({ cityId: '', locationId: '', address: '' }) }} />
-            {!cityValue && (step === 'city' ? <span className="drum">Город или аэропорт</span> : <CityDrum />)}
+            {!cityValue && (step === 'city' ? <span className="drum"><span className="drum-word">Город или аэропорт</span></span> : <CityDrum />)}
             {city
               ? <button type="button" className="wz-clear" aria-label="Стереть город" onClick={() => { set({ cityId: '', locationId: '', address: '', returnId: '' }); go('city') }}>{clearIcon}</button>
               : <span className="wz-act"><ActionIcon kind="add" /></span>}
@@ -1505,8 +1505,8 @@ export function Wizard({ ref, query, setQuery, step, setStep, placeType, setPlac
             <div key={id} data-seg={id} data-i={segs.indexOf(id)} className={`wz-seg wz-seg-${id} ${values[id] ? 'filled' : ''} ${step === id ? 'active' : ''}`}>
               <button type="button" className="wz-seg-btn" onClick={() => setStep(step === id ? null : id)}>
                 <PlaceIcon type={icons[id]} />
-                <b>{labels[id]}</b>
-                <span className={`wz-val ${values[id] ? 'filled' : ''}`}>{values[id] || placeholders[id]}</span>
+                <b key={labels[id]} className="swap-in">{labels[id]}</b>
+                <span key={values[id] || ''} className={`wz-val swap-in ${values[id] ? 'filled' : ''}`}>{values[id] || placeholders[id]}</span>
               </button>
               {values[id] && clears[id]
                 ? <button type="button" className="wz-clear" aria-label="Стереть" onClick={() => { set(clears[id]); setStep(id) }}>{clearIcon}</button>
@@ -2088,7 +2088,7 @@ function PickSpecs({ car, query, story, chosen, counting }) {
   ].filter(([, value]) => value != null && value !== '' && value !== false)
   return (
     <section className="pick-details">
-      <h2>{chosen ? nb('Хороший выбор, и вот почему') : 'Почему именно эта машина'}</h2>
+      <h2 key={chosen ? 'chosen' : 'why'} className="swap-in">{chosen ? nb('Хороший выбор, и вот почему') : 'Почему именно эта машина'}</h2>
       {story && <p className="pick-story">{nb(story)}</p>}
       <div className="pick-figures">{hero.map((h) => <div key={h.why}><span className="pick-figure">{typeof h.num === 'number' ? <CountText key={`${car.id}-${counting}`} text={String(h.num)} /> : h.num}{h.unit && <small>{h.unit}</small>}</span><p>{nb(h.why)}</p></div>)}</div>
       <dl className="pick-details-list">{rows.map(([label, value]) => <div key={label}><dt>{label}</dt><dd>{value}</dd></div>)}</dl>
