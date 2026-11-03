@@ -1,4 +1,4 @@
-import { Arrow } from './App.jsx'
+import { Arrow, ActionIcon } from './App.jsx'
 import { promises, faq } from './data.js'
 
 /** Блоки лендинга, собранные из компонентов: обещания, доставка, FAQ. */
@@ -49,7 +49,7 @@ export const Вопросы = () => (
       <div className="faq-list">
         {faq.slice(0, 4).map((f, i) => (
           <details key={f.q} open={i === 0}>
-            <summary>{f.q}</summary>
+            <summary>{f.q}<ActionIcon kind="add" /></summary>
             <p>{f.a}</p>
           </details>
         ))}

@@ -1663,7 +1663,7 @@ function Landing({ query, setQuery, onSubmit }) {
           </div>
           <div className="faq-list">
             {faq.map((f) => (
-              <details key={f.q}><summary>{f.q}</summary><p>{f.a}</p></details>
+              <details key={f.q}><summary>{f.q}<ActionIcon kind="add" /></summary><p>{f.a}</p></details>
             ))}
           </div>
         </div>
@@ -2316,7 +2316,6 @@ export function E3({ query, setQuery, carId, cameFrom, fav, onBack, onPickOther,
   const city = cities[location?.city ?? query.cityId]
   const widgetRef = useRef(null)
   const [edit, setEdit] = useState(null) // 'when' | 'return' | 'goal'
-  const [moreExtras, setMoreExtras] = useState(false)
   const [showBill, setShowBill] = useState(false)
   // Цель поездки: если машину открыли с главной, её ещё нет — предлагаем только цели под эту машину
   const goal = plans.find((p) => !p.local && query.planIds.includes(p.id))
@@ -2366,7 +2365,10 @@ export function E3({ query, setQuery, carId, cameFrom, fav, onBack, onPickOther,
     <dt>Аренда, {unitsText(query)}</dt><dd>{rub(rentPrice(car, query))}</dd>
     {chosen.map((x) => <Fragment key={x.id}><dt>{x.name}</dt><dd>{rub(extraCost(x, query))}</dd></Fragment>)}
     <dt>Подача и возврат</dt><dd className="bill-inc">включено</dd>
-    <dt className="muted">Залог заморозим, разморозим после возврата</dt><dd className="muted">{rub(d.deposit)}</dd>
+    <div className="bill-rule" />
+    <dt>Залог, разморозим после возврата</dt><dd>{rub(d.deposit)}</dd>
+    <div className="bill-rule" />
+    <dt className="bill-sum">Всего с залогом</dt><dd className="bill-sum">{rub(total + d.deposit)}</dd>
   </dl>
 
   return (
@@ -2386,17 +2388,18 @@ export function E3({ query, setQuery, carId, cameFrom, fav, onBack, onPickOther,
             </div>
             <div className="kit-grid">{suggested.map((x) => extraControl(x, true))}</div>
           </section>}
-          <section className="e3-section e3-more-extras">
-            <div className="extras-section-head"><div><h2>{suggested.length ? 'Дополнить поездку' : 'Допы для поездки'}</h2><p className="muted">Что ещё пригодится в дороге</p></div>
-              {suggested.length > 0 && <button type="button" className="link" aria-expanded={moreExtras} onClick={() => setMoreExtras(!moreExtras)}>{moreExtras ? 'Свернуть' : 'Посмотреть все'} {moreExtras ? '−' : '+'}</button>}
-            </div>
-            {(moreExtras || !suggested.length) && <div className="extras">{otherExtras.map((x) => extraControl(x))}</div>}
+          <section className="e3-section e3-more-extras acc">
+            <div className="extras-section-head"><div><h2>{suggested.length ? 'Дополнить поездку' : 'Допы для поездки'}</h2><p className="muted">Что ещё пригодится в дороге</p></div></div>
+            {[['car', 'Для машины'], ['trip', 'Для поездки']].map(([g, title]) => {
+              const items = otherExtras.filter((x) => x.group === g)
+              return items.length > 0 && <details key={g} open><summary>{title}<ActionIcon kind="add" /></summary><div className="extras">{items.map((x) => extraControl(x))}</div></details>
+            })}
           </section>
-          <section className="e3-section e3-terms">
+          <section className="e3-section e3-terms acc">
             <h2>Как всё устроено</h2>
-            <details><summary>Как заберёшь машину</summary><p>{location ? `${location.name}: ${location.meet}` : 'Выбери место получения'}. Встречает сотрудник — 10 минут. Вместе осматриваем машину, показываем допы и отдаём ключи.</p></details>
-            <details><summary>Как вернуть и получить залог</summary><p>{city?.dropoff}. {rentTerms.fuel}. Залог {rub(d.deposit)} — размораживаем на карте после осмотра.</p></details>
-            <details><summary>Условия поездки</summary><p>{query.extraIds.includes('unlimited') ? 'Пробег без ограничений' : rentTerms.mileage}. Водитель: {rentTerms.driver}. {city?.regions}. {rentTerms.insurance}</p></details>
+            <details><summary>Как заберёшь машину<ActionIcon kind="add" /></summary><p>{location ? `${location.name}: ${location.meet}` : 'Выбери место получения'}. Встречает сотрудник — 10 минут. Вместе осматриваем машину, показываем допы и отдаём ключи.</p></details>
+            <details><summary>Как вернуть и получить залог<ActionIcon kind="add" /></summary><p>{city?.dropoff}. {rentTerms.fuel}. Залог {rub(d.deposit)} — размораживаем на карте после осмотра.</p></details>
+            <details><summary>Условия поездки<ActionIcon kind="add" /></summary><p>{query.extraIds.includes('unlimited') ? 'Пробег без ограничений' : rentTerms.mileage}. Водитель: {rentTerms.driver}. {city?.regions}. {rentTerms.insurance}</p></details>
           </section>
         </div>
 
@@ -2418,8 +2421,8 @@ export function E3({ query, setQuery, carId, cameFrom, fav, onBack, onPickOther,
           {ready && <div className="book-sum-tile">
           {status === 'ok' && (
             <>
-              <div className="price-big">{rub(total)}</div>
-              <div className="muted">за {unitsText(query)}{chosen.length ? ', с допами' : ''}</div>
+              <div className="price-head"><div className="price-big">{rub(total)}</div>
+              <div className="muted">за {unitsText(query)}{chosen.length ? ', с допами' : ''}</div></div>
               {bill}
             </>
           )}
