@@ -4,6 +4,9 @@ export default {
   addons: ['@storybook/addon-docs', '@storybook/addon-a11y'],
   // Шрифты нужны и оболочке (manager-head.html), не только историям
   staticDirs: [{ from: '../public/fonts', to: '/fonts' }],
+  // Без штатных плашок «Get started» и «What's new» — на показе они лишние
+  core: { disableWhatsNewNotifications: true },
+  features: { sidebarOnboardingChecklist: false },
   framework: { name: '@storybook/react-vite', options: {} },
   // Локально Storybook живёт в корне, на Pages — в /concepts-hero/storybook/.
   // Без своего base шрифты и ассеты не находятся: у приложения base другой.

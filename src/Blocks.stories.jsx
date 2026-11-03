@@ -1,59 +1,13 @@
-import { Arrow, ActionIcon } from './App.jsx'
-import { promises, faq } from './data.js'
+import { Directions, WhereYouAre, Promises, Faq } from './App.jsx'
 
-/** Блоки лендинга, собранные из компонентов: обещания, доставка, FAQ. */
+/** Блоки лендинга — те же компоненты, что на сайте, в том же порядке. */
 export default { title: 'Блоки/Лендинг' }
 
-const Shell = ({ title, children }) => (
-  <div style={{ background: 'var(--paper)', color: 'var(--ink)', padding: 32, minHeight: '100vh' }}>
-    {children}
-  </div>
-)
+const noop = () => {}
+const Page = ({ children }) => <div style={{ background: 'var(--canvas)', minHeight: '100vh' }}>{children}</div>
 
-export const Обещания = () => (
-  <Shell title="Без сюрпризов">
-    <div className="promises">
-      {promises.map((p) => (
-        <div key={p.title} className="promise">
-          <div className="promise-value">{p.value}</div>
-          <b>{p.title}</b>
-          <p>{p.text}</p>
-        </div>
-      ))}
-    </div>
-  </Shell>
-)
-
-export const Доставка = () => (
-  <Shell title="Доставка">
-    <div className="delivery-plate" style={{ position: 'relative', left: 'auto', bottom: 'auto', width: '100%', maxWidth: 460 }}>
-      <h2>Машина там,<br />где ты</h2>
-      <p>Привезём к аэропорту, вокзалу или к дверям отеля.</p>
-      <ul className="delivery-list">
-        {['Встретим в аэропорту', 'Привезём к отелю', 'Подъедем по твоему адресу', 'Ждём у вокзала'].map((t) => (
-          <li key={t}>
-            <button type="button">
-              <span>{t}</span>
-              <Arrow />
-            </button>
-          </li>
-        ))}
-      </ul>
-    </div>
-  </Shell>
-)
-
-export const Вопросы = () => (
-  <Shell title="Вопросы">
-    <div className="faq" style={{ padding: 0 }}>
-      <div className="faq-list">
-        {faq.slice(0, 4).map((f, i) => (
-          <details key={f.q} open={i === 0}>
-            <summary>{f.q}<ActionIcon kind="add" /></summary>
-            <p>{f.a}</p>
-          </details>
-        ))}
-      </div>
-    </div>
-  </Shell>
-)
+export const Направления = () => <Page><Directions onPick={noop} /></Page>
+export const ГдеТы = () => <Page><WhereYouAre onPick={noop} /></Page>
+ГдеТы.storyName = 'Машина там, где ты'
+export const Обещания = () => <Page><Promises /></Page>
+export const Вопросы = () => <Page><Faq /></Page>

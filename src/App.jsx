@@ -563,7 +563,7 @@ function FocusLock({ still }) {
 }
 
 // Ячейка поездки на Э2 и Э3: отдельный блок, иконка слева, справа «+» — пусто, «↗» — изменить
-function TripTile({ icon, img, label, value, empty, warn, onClick }) {
+export function TripTile({ icon, img, label, value, empty, warn, onClick }) {
   return (
     <button type="button" className={`book-tile ${img ? 'book-tile-car' : ''} ${warn ? 'book-tile-warn' : ''}`} onClick={onClick}>
       {img ? <img src={img} alt="" /> : <PlaceIcon type={icon} />}
@@ -1643,31 +1643,8 @@ function Landing({ query, setQuery, onSubmit }) {
       <Directions onPick={(cityId, p) => { setQuery((q) => changeCity(q, cityId)); pickPlan(p) }} />
       <WhereYouAre onPick={pickPlaceType} />
 
-      <section className="section" id="promises">
-        <h2>{nb('Сюрпризы пусть будут в поездке')}</h2>
-        <div className="promises">
-          {promises.map((p) => (
-            <div key={p.title} className="promise">
-              <div className="promise-value">{p.value}</div>
-              <b>{p.title}</b>
-              <p>{p.text}</p>
-            </div>
-          ))}
-        </div>
-      </section>
-
-      <section className="section faq" id="faq">
-        <div className="faq-grid">
-          <div>
-            <h2>{nb('Что обычно спрашивают')}</h2>
-          </div>
-          <div className="faq-list">
-            {faq.map((f) => (
-              <details key={f.q}><summary>{f.q}<ActionIcon kind="add" /></summary><p>{f.a}</p></details>
-            ))}
-          </div>
-        </div>
-      </section>
+      <Promises />
+      <Faq />
 
       <footer className="footer">
         <button className="logo" onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })} aria-label="ON MOVE — наверх">
@@ -1738,7 +1715,41 @@ const newPlacePhotos = {
 const placeImage = (id) => (newPlacePhotos[id] ? `url("${newPlacePhotos[id][3]}"), ` : placePhoto[id] ? `url(${import.meta.env.BASE_URL}places/${id}.webp), ` : '') + placeGradient(id)
 
 // Направления: город → места, где важны и направление, и машина под него. Машину не называем — её показывает подбор
-function Directions({ onPick }) {
+export function Promises() {
+  return (
+    <section className="section" id="promises">
+      <h2>{nb('Сюрпризы пусть будут в поездке')}</h2>
+      <div className="promises">
+        {promises.map((p) => (
+          <div key={p.title} className="promise">
+            <div className="promise-value">{p.value}</div>
+            <b>{p.title}</b>
+            <p>{p.text}</p>
+          </div>
+        ))}
+      </div>
+    </section>
+  )
+}
+
+export function Faq() {
+  return (
+    <section className="section faq" id="faq">
+      <div className="faq-grid">
+        <div>
+          <h2>{nb('Что обычно спрашивают')}</h2>
+        </div>
+        <div className="faq-list">
+          {faq.map((f) => (
+            <details key={f.q}><summary>{f.q}<ActionIcon kind="add" /></summary><p>{f.a}</p></details>
+          ))}
+        </div>
+      </div>
+    </section>
+  )
+}
+
+export function Directions({ onPick }) {
   const drag = useDragScroll()
   const vf = useViewfinder('photo')
   const [cityId, setCityId] = useState('sochi')
@@ -1832,7 +1843,7 @@ const deliveryCopy = {
 }
 
 // Доставка: пять равных точек старта — свобода выбрать, откуда начать. Клик уводит в визард с нужным типом места
-function WhereYouAre({ onPick }) {
+export function WhereYouAre({ onPick }) {
   const order = ['Аэропорт', 'Вокзал', 'Отель', 'Адрес', 'Парковка']
   return (
     <section className="delivery" id="delivery">
@@ -1984,7 +1995,7 @@ function tradeoff(base, c, q) {
   return { head, text, price: d ? `${d > 0 ? '+' : '−'}${rub(Math.abs(d))} за\u00a0поездку` : 'Та же цена за\u00a0поездку' }
 }
 
-function PickGallery({ car, prev, fav, lock }) {
+export function PickGallery({ car, prev, fav, lock }) {
   const photos = car.gallery.length ? car.gallery : [car.heroImage || car.image]
   const [active, setActive] = useState(0)
   const [expanded, setExpanded] = useState(false)
@@ -2012,7 +2023,7 @@ function PickGallery({ car, prev, fav, lock }) {
 }
 
 // «Ещё варианты под поездку»: три альтернативы и «Подобрать ещё» — куда идти, если эта машина не та
-function MoreCars({ car, query, items, onPick, onMore }) {
+export function MoreCars({ car, query, items, onPick, onMore }) {
   const vf = useViewfinder('card')
   if (!items.length) return null
   return (
@@ -2057,7 +2068,7 @@ const goalLines = {
   business: 'К встрече приедешь в чистой машине без оклейки.',
   highway: 'На трассе хватит мощности, чтобы спокойно обогнать фуру.',
 }
-function carStory(car, { goal, companion, city, place }) {
+export function carStory(car, { goal, companion, city, place }) {
   const people = {
     family: 'Сзади хватит места детскому креслу, а в багажник влезут чемоданы и коляска.',
     friends: `Сядут ${car.seats}, и сумки поместятся.`,
@@ -2068,7 +2079,7 @@ function carStory(car, { goal, companion, city, place }) {
   return [kindLines[car.kind] ?? `${car.model} — машина для дороги.`, goalLines[goal?.id], people, pickup].filter(Boolean).join(' ')
 }
 
-function PickSpecs({ car, query, story, chosen, counting }) {
+export function PickSpecs({ car, query, story, chosen, counting }) {
   const d = carDetails[car.id]
   const month = new Date(query.dateFrom || Date.now()).getMonth() + 1
   // Четыре главных цифры крупно, под каждой — что это даёт в поездке
@@ -2098,7 +2109,7 @@ function PickSpecs({ car, query, story, chosen, counting }) {
 
 // Смена машины из «Ещё вариантов»: рамка берёт карточку, фон гаснет, машина выходит в центр,
 // там проверяем её под цель, потом она встаёт на место прежней. Пропуск — клик или Esc.
-function CarCheck({ car, goal, onSwap, onDone }) {
+export function CarCheck({ car, goal, onSwap, onDone }) {
   const [step, setStep] = useState(-1)
   const [plate, setPlate] = useState(null)
   const done = useRef({ onSwap, onDone })

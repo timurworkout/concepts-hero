@@ -2,7 +2,7 @@ import { useState } from 'react'
 import { ActionIcon, Header, FavToggle } from './App.jsx'
 import { cars } from './data.js'
 
-/** Базовые компоненты: кнопки, вкладки, иконки, шапка, избранное. Рендерят настоящие классы и компоненты приложения. */
+/** Базовые компоненты: кнопки, выбор, шапка, избранное. Рендерят настоящие классы и компоненты приложения. */
 export default { title: 'Компоненты/Базовые' }
 
 const Shell = ({ title, children }) => (
@@ -11,55 +11,63 @@ const Shell = ({ title, children }) => (
   </div>
 )
 
+// Ряд образцов с подписью размера: одна строка — один вид контрола
+const Row = ({ label, children }) => (
+  <div style={{ display: 'grid', gridTemplateColumns: '200px 1fr', gap: 24, alignItems: 'center', padding: '16px 0', borderTop: '1px solid var(--line)' }}>
+    <span style={{ fontSize: 'var(--fs-sm)', color: 'var(--muted)' }}>{label}</span>
+    <div style={{ display: 'flex', gap: 16, flexWrap: 'wrap', alignItems: 'center' }}>{children}</div>
+  </div>
+)
+
 export const Кнопки = () => (
-  <Shell title="Контролы">
-    <h2 style={{ marginBottom: 20 }}>Кнопки</h2>
-    <div style={{ display: 'flex', gap: 16, flexWrap: 'wrap', alignItems: 'center', marginBottom: 28 }}>
-      <button type="button" className="btn-primary">Основная</button>
+  <Shell title="Кнопки">
+    <Row label="Главная L 56 · .btn-accent — главное действие экрана">
       <button type="button" className="btn-primary btn-accent">Подобрать машину</button>
-      <button type="button" className="btn-secondary">Вторичная</button>
-      <button type="button" className="filter">Фильтр</button>
-      <button type="button" className="filter active">Фильтр включён</button>
-      <span className="chip">Чип</span>
-      <span className="badge">Бейдж</span>
-    </div>
-    <p style={{ fontFamily: 'var(--text)', fontSize: 14, color: 'var(--body)', maxWidth: 520 }}>
-      Панели и рамки — угловатые, контролы — круглые. Сброс кнопок обнуляет border и background,
-      иначе строки-кнопки получают браузерную заливку.
-    </p>
-  </Shell>
-)
-
-export const ВкладкиГородов = () => (
-  <Shell title="Направления">
-    <div className="dir-tabs" role="tablist">
-      {['Сочи', 'Петербург', 'Москва', 'Калининград', 'Мурманск', 'Казань'].map((c, i) => (
-        <button key={c} type="button" role="tab" aria-selected={i === 0} className={'dir-tab' + (i === 0 ? ' on' : '')}>{c}</button>
-      ))}
-    </div>
-  </Shell>
-)
-
-export const АкцентныеКнопки = () => (
-  <Shell title="Акцентные кнопки">
-    <div style={{ display: 'flex', flexWrap: 'wrap', gap: 16, alignItems: 'center' }}>
-      <button type="button" className="btn-primary btn-accent">Подобрать машину</button>
-      <button type="button" className="btn-primary btn-accent btn-with-icon">Открыть <ActionIcon /></button>
       <button type="button" className="btn-primary btn-accent btn-with-icon">Добавить <ActionIcon kind="add" /></button>
       <button type="button" className="btn-primary btn-accent" disabled>Подобрать машину</button>
-    </div>
+    </Row>
+    <Row label="Главная M 48 — действие в модалке и шаге визарда">
+      <button type="button" className="btn-primary">Готово</button>
+      <button type="button" className="btn-primary" disabled>Готово</button>
+    </Row>
+    <Row label="Вторичная M 48">
+      <button type="button" className="btn-secondary">Выбрать другую</button>
+    </Row>
+    <Row label="S 36 · .btn-sm — в строках списков">
+      <button type="button" className="btn-primary btn-sm">Где машина</button>
+      <button type="button" className="btn-secondary btn-sm">Повторить поездку</button>
+    </Row>
+    <Row label="Иконка-кнопка 40">
+      <button type="button" className="icon-btn" aria-label="Закрыть">×</button>
+    </Row>
   </Shell>
 )
 
-export const ИконкиДействий = () => (
-  <Shell title="Иконки действий · единая толщина 1,5 px">
-    <div style={{ display: 'flex', flexWrap: 'wrap', gap: 16 }}>
-      <button type="button" className="pick-suggestion"><span>Открыть направление</span><ActionIcon /></button>
-      <button type="button" className="pick-suggestion"><span>Добавить параметр</span><ActionIcon kind="add" /></button>
-    </div>
-    <p style={{ marginTop: 24 }}>Стрелка вверх-вправо — переход или новое окно. Плюс — добавление параметра или выбор опции.</p>
-  </Shell>
-)
+export const Выбор = () => {
+  const [on, setOn] = useState(['sea'])
+  const toggle = (id) => setOn((list) => (list.includes(id) ? list.filter((x) => x !== id) : [...list, id]))
+  return (
+    <Shell title="Выбор · клик переключает">
+      <Row label="Чип — цели и попутчики в визарде">
+        <div className="chips">
+          {[['sea', 'Море'], ['mountains', 'Горы'], ['city', 'Город']].map(([id, label]) => (
+            <button key={id} type="button" className={`chip ${on.includes(id) ? 'active' : ''}`} onClick={() => toggle(id)}>{label}</button>
+          ))}
+        </div>
+      </Row>
+      <Row label="Фильтр — переключатели на подборе">
+        <button type="button" className="filter">Автомат</button>
+        <button type="button" className="filter active">Полный привод</button>
+      </Row>
+      <Row label="Бейдж — метка на фото">
+        <span className="badge">Хит в Сочи</span>
+      </Row>
+      <p style={{ fontSize: 'var(--fs-sm)', color: 'var(--body)', maxWidth: 520, marginTop: 16 }}>
+        Все контролы на --r-ctl 12. Выбранное — лазурью, второго акцента нет.
+      </p>
+    </Shell>
+  )
+}
 
 const noop = () => {}
 export const ШапкаГость = () => (
