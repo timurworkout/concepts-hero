@@ -1693,9 +1693,9 @@ const placePhoto = {
   'kzn-sviyazhsk': ['A.Savin', 'FAL', 'File:View_of_Makaryevsky_Monastery_from_Sviyazhsk_Island_08-2016.jpg'],
   'mmk-khibiny': ['Ninara', 'CC BY 2.0', 'File:Kirovsk,_Russia_(21990875622).jpg'],
   'mmk-teriberka': ['Андрей Сачков', 'CC BY-SA 4.0', 'File:DJI_0200_Андрей_Сачков.jpg'],
-  'msk-ikea': ['Velga', 'CC BY-SA 3.0', 'File:Всадник_на_дороге_к_храму..jpg'],
-  'msk-ring': ['Ludvig14', 'CC BY-SA 4.0', 'File:Banner_Suzdal_191_1296.jpg'],
-  'msk-yakhroma': ['Alexey V. Kurochkin', 'CC BY-SA 4.0', 'File:Hot_air_balloons_near_Yakhroma_(Russia,_Moscow_Oblast)_IMGP0548a1.jpg'],
+  'msk-ikea': ['andreyss', 'CC BY 3.0', 'File:Private_russian_"dacha"_house_-_panoramio.jpg'],
+  'msk-ring': ['Alexxx1979', 'CC BY-SA 4.0', 'File:Suzdal._Kamenka_River_P7140082_2350.jpg'],
+  'msk-yakhroma': ['Bigdoc81', 'CC BY-SA 4.0', 'File:Sorochany_ski_resort_21.jpg'],
   'sochi-imereti': ['SKas', 'CC BY-SA 4.0', 'File:Sunset_in_Sochi.jpg'],
   'sochi-lagonaki': ['Alexxx1979', 'CC BY-SA 4.0', 'File:Krasnodar_Krai._Apsheronsky_District._Lago-Naki_P6111675_2575.jpg'],
   'sochi-ritsa': ['Alexxx1979', 'CC BY-SA 4.0', 'File:Abkhazia._Lake_Ritsa_P9100178_2600.jpg'],
@@ -1706,7 +1706,6 @@ const placePhoto = {
 }
 const newPlacePhotos = {
   'mmk-teriberka': ['andreibas', 'Фотодженика', 'https://gorbilet.ru/blog/puteshestvija/beautiful-roads', `${import.meta.env.BASE_URL}places/mmk-teriberka.webp`],
-  'msk-ring': ['Aleksandr Artiushenko', 'Unsplash', 'https://unsplash.com/photos/a-snowy-landscape-with-a-church-in-the-distance-XGMZxXfY5hQ', 'https://images.unsplash.com/photo-1715252752412-6e39089fe66e?auto=format&rect=120,300,13772,8800&fit=crop&w=1400&q=80'],
   'sochi-ski': ['Ilnur Kalimullin', 'Unsplash', 'https://unsplash.com/photos/white-snow-covered-mountain-under-white-cloudy-sky-during-daytime-VMrNha7YKGc', `${import.meta.env.BASE_URL}places/sochi-ski.webp`],
   'mmk-khibiny': ['Slava Auchynnikau', 'Unsplash', 'https://unsplash.com/photos/the-sun-is-setting-over-a-snowy-landscape-gy6V59JqqSU', `${import.meta.env.BASE_URL}places/mmk-khibiny.webp`],
   'spb-ladoga': ['Michail Dementiev', 'Unsplash', 'https://unsplash.com/photos/an-aerial-view-of-islands-G_0vKsIdxyU', `${import.meta.env.BASE_URL}places/spb-ladoga.webp`],
@@ -1754,13 +1753,12 @@ export function Faq() {
 
 export function Directions({ onPick }) {
   const drag = useDragScroll()
-  const vf = useViewfinder('photo')
+  const vf = useViewfinder('card')
   const [cityId, setCityId] = useState('sochi')
-  const [active, setActive] = useState(0)
   const places = cityPlans(cityId).filter((p) => p.local).slice(0, 4)
   const fromPrice = (p) => Math.min(...cars.filter((c) => inCity(c, cityId) && p.test(c)).map((c) => cityPrice(c, cityId)))
   const goalLabel = (p) => plans.find((g) => g.id === p.goal)?.label
-  const city = (id) => { setCityId(id); setActive(0) }
+  const city = (id) => setCityId(id)
   return (
     <section className="dir" id="directions">
       <div className="section-top">
@@ -1778,30 +1776,17 @@ export function Directions({ onPick }) {
         {places.slice(0, 3).map((p, i) => {
           const price = fromPrice(p)
           return (
-            <button key={p.id} type="button" style={{ '--i': i }} className="dir-place" data-vf-item
-              onMouseEnter={() => setActive(i)} onFocus={() => setActive(i)} onClick={() => onPick(cityId, p)}>
-              <div className="dir-place-photo" data-vf-target style={{ backgroundImage: placeImage(p.id) }} />
-              <div className="dir-caption">
-                <div>
-              {goalLabel(p) && <small>{goalLabel(p)}</small>}
-              <b>{p.label}</b>
-              <span className="dir-hint">{p.hint}</span>
-              {Number.isFinite(price) && <span className="dir-price">от {rub(price)} в{' '}сутки</span>}
-                </div>
-                <Arrow />
-              </div>
+            <button key={p.id} type="button" style={{ '--i': i }} className="dir-place" data-vf-item onClick={() => onPick(cityId, p)}>
+              <span className="dir-place-photo" data-vf-target style={{ backgroundImage: placeImage(p.id) }} />
+              <span className="dir-caption">
+                {goalLabel(p) && <small>{goalLabel(p)}</small>}
+                <b>{p.label}</b>
+                <span className="dir-hint">{p.hint}</span>
+                {Number.isFinite(price) && <span className="dir-price">от {rub(price)} в{' '}сутки</span>}
+              </span>
             </button>
           )
         })}
-      </div>
-      <div className="dir-tail">
-        <span>{nb(`Куда съездить ${cities[cityId].from}`)}</span>
-        {(newPlacePhotos[places[active]?.id] || placePhoto[places[active]?.id]) ? (() => {
-          const photo = newPlacePhotos[places[active].id] || placePhoto[places[active].id]
-          const [author, license, file] = photo
-          const href = newPlacePhotos[places[active].id] ? file : `https://commons.wikimedia.org/wiki/${file}`
-          return <a className="dir-credit" href={href} target="_blank" rel="noreferrer">Фото: {author} · {license}</a>
-        })() : <span>Выбери место — подберём машину<Arrow /></span>}
       </div>
     </section>
   )

@@ -330,31 +330,24 @@ h2 { font-family: var(--display); font-size: var(--fs-lg); font-weight: 600; let
 /* Шапка: пояснение под заголовком, а не висит справа */
 .dir .section-top { display: block; }
 .dir .section-top > p { margin-top: 16px; max-width: 46ch; }
-.dir-places { display: grid; grid-template-columns: repeat(3, 1fr); gap: 14px; }
+.dir-places { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 40px 16px; }
 /* Кадр места: фото и подпись под ним */
 .dir-place {
-  display: grid; align-content: start; border-radius: var(--r-card); text-align: left; padding: 0; overflow: hidden;
-  background: var(--plate); border: 1px solid var(--line); color: var(--ink);
+  display: grid; align-content: start; gap: 16px; text-align: left; padding: 0;
+  background: none; border: 0; color: var(--ink);
   animation: cardIn var(--dur-slow) var(--ease-spring) both; animation-delay: calc(var(--i) * 70ms);
   transition: border-color var(--dur-base), transform var(--dur-base);
 }
-.dir-place-photo { margin: 0; overflow: hidden; background-color: var(--surface-strong); background-size: cover; background-position: center; height: clamp(220px, 21vw, 300px); filter: saturate(.9); transition: transform .5s var(--ease-out); }
-.dir-place:hover .dir-place-photo { transform: scale(1.04); }
-.dir-caption { display: flex; justify-content: space-between; align-items: center; gap: 16px; padding: 18px 20px 20px; }
+.dir-place-photo { display: block; margin: 0; border-radius: var(--r-card); background-color: var(--surface-strong); background-size: cover; background-position: center; height: clamp(220px, 21vw, 300px); filter: saturate(.9); transition: transform .5s var(--ease-out); }
+.dir-caption { display: grid; gap: 8px; }
 .dir-place small { display: block; font-family: var(--display); font-size: var(--fs-xs); letter-spacing: var(--ls-caps); text-transform: uppercase; color: var(--muted); margin-bottom: 8px; }
 .dir-place b { font-family: var(--display); font-size: var(--fs-lg); font-weight: 600; line-height: var(--lh-snug); }
-.dir-hint { display: block; font-size: var(--fs-sm); color: var(--muted); margin-top: 6px; line-height: var(--lh-body); }
-.dir-price { display: block; margin-top: 10px; font-size: var(--fs-sm); font-weight: 600; }
+.dir-hint { color: var(--body); line-height: var(--lh-snug); }
+.dir-price { font-size: var(--fs-sm); color: var(--muted); }
 /* Хвост секции: откуда едем и подсказка про подбор */
-.dir-tail { display: flex; justify-content: space-between; gap: 24px; margin-top: 22px; font-size: var(--fs-sm); color: var(--muted); }
-.dir-tail span { display: inline-flex; align-items: center; gap: 8px; }
-.dir-credit { display: inline-flex; align-items: center; font-size: var(--fs-xs); color: var(--muted); text-decoration: none; }
-.dir-credit:hover { color: var(--ink); text-decoration: underline; }
 @media (max-width: 743px) {
-  .dir-places { grid-template-columns: 1fr; gap: 12px; }
+  .dir-places { grid-template-columns: 1fr; }
   .dir-place-photo { height: 220px; }
-  .dir-tail { display: block; }
-  .dir-tail span + span, .dir-tail .dir-credit { display: flex; margin-top: 10px; }
 }
 @media (prefers-reduced-motion: reduce) { .wz-seg { animation: none !important; } .dir-place { animation: fadeIn var(--dur-base) both; } .dir-place-photo { transition: none; } }
 
@@ -1244,14 +1237,14 @@ label.wz-seg, .wz-seg-btn { display: flex; flex-direction: column; align-items: 
 }
 
 /* Arrival: переход к направлению или месту получения */
-.dir-caption > .arrow-icon, .delivery-list .arrow-icon {
+.delivery-list .arrow-icon {
   transform: rotate(-45deg);
   stroke-width: var(--icon-stroke); vector-effect: non-scaling-stroke;
   stroke-linecap: square;
   stroke-linejoin: miter;
 }
 
-.arrival-icon path, .dir-caption > .arrow-icon path, .delivery-list .arrow-icon path { vector-effect: non-scaling-stroke; }
+.arrival-icon path, .delivery-list .arrow-icon path { vector-effect: non-scaling-stroke; }
 .btn-with-icon { display: inline-flex; align-items: center; justify-content: center; gap: 12px; }
 
 /* Э2: «Ещё варианты под поездку» — три альтернативы и «Подобрать ещё» */
