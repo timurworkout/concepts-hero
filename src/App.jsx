@@ -1243,8 +1243,7 @@ function PlacePanel({ query, isReturn, text = '', type, onClearType, onPick, onR
     )
     return (
       <>
-        <div className="wz-cap">Где вернёшь · {cities[cityId].name} · без доплаты</div>
-        {servicePoints(cityId).filter((l) => l.id !== query.locationId).map((l) => row(l, l.name, l.meet, () => onReturn({ returnMode: 'point', returnId: l.id })))}
+        {servicePoints(cityId).filter((l) => l.id !== query.locationId).map((l) => row(l, l.name, `${l.meet} · без доплаты`, () => onReturn({ returnMode: 'point', returnId: l.id })))}
         {opt('later', 'Решу по дороге', 'Точку возврата можно выбрать позже', () => onReturn({ returnMode: 'point', returnId: '' }), query.returnMode === 'point' && !query.returnId)}
         {opt('free', 'Где удобно', 'Как в каршеринге: на любой парковке в зоне города', () => onReturn({ returnMode: 'free', returnId: '' }), query.returnMode === 'free')}
       </>
@@ -1263,7 +1262,6 @@ function PlacePanel({ query, isReturn, text = '', type, onClearType, onPick, onR
   if (!onCity && cityId) {
     return (
       <>
-        <div className="wz-cap">Где заберёшь · {cities[cityId].name}</div>
         {locationGroups.flatMap((g) => locations.filter((l) => l.city === cityId && l.type === g.type)).map((l) => row(l))}
         {/* Место не обязательно: подбор идёт и без него, точку выберут на Э2 */}
         <button type="button" className="wz-item" onClick={onLater}>
