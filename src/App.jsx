@@ -1681,9 +1681,9 @@ const placeGradient = (id) => `linear-gradient(160deg, ${placeBg[id] ?? '#2b3446
 
 // Фото мест — Wikimedia Commons: автор, лицензия, страница файла. Без фото остаётся градиент
 const placePhoto = {
-  'kgd-castles': ['Ruth Leiserowitz', 'CC BY-SA 4.0', 'File:Burgruine_in_Balga,_1995.jpg'],
-  'kgd-coast': ['Alexander Grebenkov', 'CC BY 3.0', 'File:Yantarny,_Kaliningrad_Oblast_-_Colorful_sea_and_sky_at_the_beach.jpg'],
-  'kgd-spit': ['Alexander Grebenkov', 'CC BY 3.0', 'File:Curonian_Spit_-_Dunes_view_from_Epha_Berg_5.jpg'],
+  'kgd-castles': ['ИМгорь', 'CC BY-SA 3.0', 'File:Замок_Прейсищ-Эйлау_(Багратионовск).jpg'],
+  'kgd-coast': ['A.Savin', 'FAL', 'File:SvetlogorskRauschen_05-2017_img07_cableway.jpg'],
+  'kgd-spit': ['A.Savin', 'FAL', 'File:Curonian_Spit_NP_05-2017_img04_aerial_view_at_Muellers_Height.jpg'],
   'kgd-yantarny': ['Alexander Grebenkov', 'CC BY 3.0', 'File:Yantarny,_Kaliningrad_Oblast_-_Sun_shines_through_clouds_on_the_beach.jpg'],
   'kzn-bolgar': ['Alexxx1979', 'CC BY-SA 4.0', 'File:Bolgar._Volga_River_P5181971_2200.jpg'],
   'kzn-raifa': ['Alexxx1979', 'CC BY-SA 4.0', 'File:Raifa_Bogoroditsky_Monastery._Raifskoye_Lake_P6200612_2410.jpg'],
@@ -1706,8 +1706,6 @@ const newPlacePhotos = {
   'sochi-ski': ['Ilnur Kalimullin', 'Unsplash', 'https://unsplash.com/photos/white-snow-covered-mountain-under-white-cloudy-sky-during-daytime-VMrNha7YKGc', `${import.meta.env.BASE_URL}places/sochi-ski.webp`],
   'mmk-khibiny': ['Slava Auchynnikau', 'Unsplash', 'https://unsplash.com/photos/the-sun-is-setting-over-a-snowy-landscape-gy6V59JqqSU', `${import.meta.env.BASE_URL}places/mmk-khibiny.webp`],
   'spb-ladoga': ['Michail Dementiev', 'Unsplash', 'https://unsplash.com/photos/an-aerial-view-of-islands-G_0vKsIdxyU', `${import.meta.env.BASE_URL}places/spb-ladoga.webp`],
-  'kgd-castles': ['Ronin', 'Unsplash', 'https://unsplash.com/photos/an-arch-in-a-brick-wall-with-a-forest-in-the-background-BVLsGAXVoQ0', 'https://images.unsplash.com/photo-1678742576371-c7e2f5d38fd7?auto=format&fit=crop&w=1400&q=80'],
-  'kgd-coast': ['Юрий Баринов', 'Unsplash', 'https://unsplash.com/photos/a-view-of-the-ocean-from-a-beach-M1w9EclohO4', 'https://images.unsplash.com/photo-1702823446106-eb859af6b7ab?auto=format&fit=crop&w=1400&q=80'],
   'mmk-aurora': ['Slava Auchynnikau', 'Unsplash', 'https://unsplash.com/photos/a-bright-green-aurora-bore-in-the-night-sky--p6KUnXkRIo', `${import.meta.env.BASE_URL}places/mmk-aurora.webp`],
   'kzn-bolgar': ['Mike1979 Russia', 'CC BY-SA 3.0', 'https://commons.wikimedia.org/wiki/File:Bolghar_White_Mosque_2024-07-12_1203.jpg', `${import.meta.env.BASE_URL}places/kzn-bolgar.webp`],
 }

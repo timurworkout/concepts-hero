@@ -107,3 +107,6 @@ Keep this exact landscape, composition and viewpoint: [PLACE]. Only change the p
 | `msk-ring-v1.jpg` | новый: Wikimedia `Suzdal._Kamenka_River_P7140082_2350.jpg` (Alexxx1979) → `src/msk-ring.jpg` + реф `sochi-ritsa-v2` | стилизация «match the color grading» | утверждено, на сайте |
 | `msk-yakhroma-v1.jpg` | новый: Wikimedia `Sorochany_ski_resort_21.jpg` (Bigdoc81) → `src/msk-yakhroma.jpg` + реф | то же, «keep the snow», зимнее солнце | утверждено, на сайте |
 | `msk-ikea-v1.jpg` | новый: Wikimedia `Private_russian_"dacha"_house_-_panoramio.jpg` (andreyss) → `src/msk-ikea.jpg` + реф | то же; карточка переименована в «На дачу на выходные» | утверждено, на сайте |
+| `kgd-spit-v1.jpg` | новый: Wikimedia `Curonian_Spit_NP_05-2017_img04_aerial_view_at_Muellers_Height.jpg` (A.Savin) → `src/kgd-spit.jpg` + реф `sochi-ritsa-v2` | стилизация «match the color grading» | утверждено, на сайте |
+| `kgd-castles-v1.jpg` | новый: Wikimedia `Замок_Прейсищ-Эйлау_(Багратионовск).jpg` (ИМгорь) → `src/kgd-castles.jpg` + реф | осенний исходник → «warm late summer afternoon, trees in leaf» | утверждено, на сайте |
+| `kgd-coast-v1.jpg` | новый: Wikimedia `SvetlogorskRauschen_05-2017_img07_cableway.jpg` (A.Savin) → `src/kgd-coast.jpg` + реф | стилизация | утверждено, на сайте |
