@@ -1583,7 +1583,9 @@ function StickySearch({ shown, query, onOpen }) {
 
 
 // Фон интро: до выбора города — Эльбрус, после — кадр города (пока первое фото его «Направлений», потом общий набор, plan.md §5)
+const roadPhotos = { sochi: 'road-sochi.webp' }
 const heroPhoto = (cityId) => {
+  if (roadPhotos[cityId]) return { '--hero-photo': `url(${import.meta.env.BASE_URL}places/${roadPhotos[cityId]})` }
   const first = cityId && cityPlans(cityId).find((p) => p.local)
   const img = first && placeImage(first.id).split('), ')[0]
   return img ? { '--hero-photo': `${img})` } : undefined
@@ -1705,7 +1707,7 @@ const placePhoto = {
 const newPlacePhotos = {
   'mmk-teriberka': ['andreibas', 'Фотодженика', 'https://gorbilet.ru/blog/puteshestvija/beautiful-roads', `${import.meta.env.BASE_URL}places/mmk-kola.webp`],
   'msk-ring': ['Aleksandr Artiushenko', 'Unsplash', 'https://unsplash.com/photos/a-snowy-landscape-with-a-church-in-the-distance-XGMZxXfY5hQ', 'https://images.unsplash.com/photo-1715252752412-6e39089fe66e?auto=format&rect=120,300,13772,8800&fit=crop&w=1400&q=80'],
-  'sochi-ski': ['Ilnur Kalimullin', 'Unsplash', 'https://unsplash.com/photos/white-snow-covered-mountain-under-white-cloudy-sky-during-daytime-VMrNha7YKGc', 'https://images.unsplash.com/photo-1627109921568-52b5be2a14ab?auto=format&fit=crop&w=1400&q=80'],
+  'sochi-ski': ['Ilnur Kalimullin', 'Unsplash', 'https://unsplash.com/photos/white-snow-covered-mountain-under-white-cloudy-sky-during-daytime-VMrNha7YKGc', `${import.meta.env.BASE_URL}places/sochi-ski.webp`],
   'mmk-khibiny': ['Slava Auchynnikau', 'Unsplash', 'https://unsplash.com/photos/the-sun-is-setting-over-a-snowy-landscape-gy6V59JqqSU', 'https://images.unsplash.com/photo-1711631139867-199196f6d7e8?auto=format&fit=crop&w=1400&q=80'],
   'spb-ladoga': ['Michail Dementiev', 'Unsplash', 'https://unsplash.com/photos/an-aerial-view-of-islands-G_0vKsIdxyU', 'https://images.unsplash.com/photo-1662804118977-481122aa1d10?auto=format&fit=crop&w=1400&q=80'],
   'kgd-castles': ['Ronin', 'Unsplash', 'https://unsplash.com/photos/an-arch-in-a-brick-wall-with-a-forest-in-the-background-BVLsGAXVoQ0', 'https://images.unsplash.com/photo-1678742576371-c7e2f5d38fd7?auto=format&fit=crop&w=1400&q=80'],

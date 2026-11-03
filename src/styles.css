@@ -211,8 +211,8 @@ h2 { font-family: var(--display); font-size: var(--fs-lg); font-weight: 600; let
 /* Э1 Хиро — первый экран целиком, тёмный фон вместо фото (фото — позже, plan.md §5).
    Заголовок — главная масса, визард под ним: панелям есть куда раскрываться вниз. */
 .hero { position: relative; isolation: isolate; margin: 0; color: var(--paper);
-  /* Фото — временно, до кадров из общего набора (plan.md §5). Лазурь сверху держит заголовок и визард */
-  background: linear-gradient(180deg, rgb(0 31 38 / .9) 0%, rgb(0 31 38 / .55) 30%, rgb(0 31 38 / 0) 58%, rgb(0 31 38 / .25) 100%), var(--hero-photo, url(/hero/elbrus.jpg)) center 25% / cover no-repeat, var(--ink); }
+  /* Лазурь слева на ширину текста держит заголовок и подсказки, справа фото открыто; лёгкая сверху — под шапку */
+  background: linear-gradient(180deg, rgb(0 31 38 / .35) 0%, rgb(0 31 38 / 0) 20%), linear-gradient(90deg, rgb(0 31 38 / .85) 0%, rgb(0 31 38 / .55) 40%, rgb(0 31 38 / 0) 65%), var(--hero-photo, url(/hero/elbrus.jpg)) center 25% / cover no-repeat, var(--ink); }
 .hero-inner { position: relative; width: 100%; min-height: calc(100svh - 72px - 72px); padding: 24px var(--gutter) 48px; display: grid; align-content: start; gap: 24px; text-align: left; }
 .hero-inner > form { width: 100%; }
 /* Подзаголовок справа от заголовка: так визард стоит выше и панели раскрываются целиком */
