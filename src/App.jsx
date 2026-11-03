@@ -999,10 +999,10 @@ const timeSlots = Array.from({ length: 48 }, (_, i) => `${String(Math.floor(i / 
 
 // Параметры поездки до подбора: цель, с кем, требования к авто
 const paramsText = (q) => [
-  ...plans.filter((p) => q.planIds.includes(p.id)).map((p) => p.label),
-  companions.find((c) => c.id === q.companion)?.label,
-  ...prefOptions.filter((o) => q.prefs.includes(o.id)).map((o) => o.label),
-].filter(Boolean).map((t, i) => (i ? t.toLowerCase() : t)).join(' · ')
+  ...plans.filter((p) => q.planIds.includes(p.id)).map((p) => ({ label: p.label, place: p.local })),
+  companions.find((c) => c.id === q.companion),
+  ...prefOptions.filter((o) => q.prefs.includes(o.id)),
+].filter(Boolean).map((t, i) => (i && !t.place ? t.label.toLowerCase() : t.label)).join(' · ') // места — с заглавной
 
 export function ParamsPicker({ query, onApply, onClose }) {
   const [planIds, setPlanIds] = useState(query.planIds)
@@ -2246,7 +2246,7 @@ export function E2({ query, setQuery, fav, onBack, onPick, openPicker }) {
   const cells = () => (
     <div className="book-tiles cells-card">
       <TripTile icon="Цель" label="Про поездку" value={paramsText(query)} empty={!paramsText(query) && 'Можно уточнить'} onClick={() => setParamsOpen(true)} />
-      <TripTile icon={location?.type ?? 'Адрес'} label="Где заберёшь" value={location && `${location.name}${query.returnMode !== 'same' ? ` · вернуть: ${returnText(query).toLowerCase()}` : ''}`} empty={!location && 'Выбери место'} onClick={() => setPlaceOpen(true)} />
+      <TripTile icon={location?.type ?? 'Адрес'} label="Где заберёшь" value={location && `${location.name}${query.returnMode !== 'same' ? ` · вернуть: ${query.returnMode === 'point' ? returnText(query) : returnText(query).toLowerCase()}` : ''}`} empty={!location && 'Выбери место'} onClick={() => setPlaceOpen(true)} />
       <TripTile icon="Даты" label="Когда" value={whenText(query)} empty={datesMissing && whenText(query)} onClick={() => setDatesOpen(true)} />
     </div>
   )
