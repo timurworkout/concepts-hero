@@ -4,9 +4,9 @@ export { cars, carDetails } from './fleet.js'
 // Типографика: короткие слова и тире не висят в конце строки — неразрывный пробел
 const SHORT = 'в|во|с|со|к|ко|у|о|об|и|а|но|да|на|по|за|из|до|от|без|для|не|ни|под|над|при|про|через'
 export const nb = (t) => t
-  .replace(new RegExp(`(^|[\\s(«])(${SHORT})\\s`, 'giu'), '$1$2\u00a0')
-  .replace(new RegExp(`(^|[\\s(«])(${SHORT})\\s`, 'giu'), '$1$2\u00a0') // второй проход: «в на ...» подряд
+  .replace(new RegExp(`(?<=^|[\\s(«])(${SHORT})\\s`, 'giu'), '$1\u00a0') // просмотр назад не съедает пробел: «и не», «в на» подряд за один проход
   .replace(/\s—/g, '\u00a0—')
+  .replace(/(\d)\s(?=\S)/g, '$1\u00a0') // число не отрывается от единицы и следующих разрядов: 200 мм, 4 020 ₽
 // Прогоняем все строки данных через nb на месте. id без пробелов, их правило не трогает
 function typo(v) {
   if (!v || typeof v !== 'object') return
@@ -212,6 +212,6 @@ export const faq = [
     a: 'При получении фотографируем машину вместе с тобой, акт приходит в телефон. Залог — блокировка на карте, снимаем её в день возврата.' },
 ]
 
-export const rub = (n) => n.toLocaleString('ru-RU') + ' ₽'
+export const rub = (n) => n.toLocaleString('ru-RU') + '\u00a0₽'
 
 for (const d of [locations, addressHints, cars, carDetails, rentTerms, cities, extras, plans, companions, prefOptions, promises, faq]) typo(d)

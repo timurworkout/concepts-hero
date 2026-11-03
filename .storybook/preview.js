@@ -1,5 +1,8 @@
 import '../public/fonts/fonts.css'
 import '../src/styles.css'
+import { watchTypography } from '../src/typo.js'
+
+watchTypography()
 
 /** Фон — White палитры «Север», как в приложении. */
 export default {
