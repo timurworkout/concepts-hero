@@ -101,3 +101,6 @@ Keep this exact landscape, composition and viewpoint: [PLACE]. Only change the p
 | `mmk-teriberka-v1.jpg` | `public/places/mmk-kola.webp` (raw GitHub) + реф `sochi-ritsa-v2` | то же, «keep the snow» (в исходнике лето — модель сохранила лето) | утверждено, на сайте |
 | `mmk-khibiny-v1.jpg` | Unsplash из `newPlacePhotos` (w=2000) + реф `sochi-ritsa-v2` | то же, «keep the snow» | утверждено, на сайте |
 | `mmk-aurora-v1.jpg` | Unsplash из `newPlacePhotos` (w=2000) + реф `sochi-ritsa-v2` | ночь оставить, только приглушить зелень и зерно | утверждено, на сайте |
+| `spb-karelia-v1.jpg` | `public/places/spb-karelia.webp` (raw GitHub) + реф `sochi-ritsa-v2` | стилизация «match the color grading» | утверждено, на сайте |
+| `spb-vyborg-v1.jpg` | новый исходник: Wikimedia `Vyborg_06-2012_Castle_06.jpg` (A.Savin) → `src/spb-vyborg.jpg` + реф `sochi-ritsa-v2` | то же | утверждено, на сайте |
+| `spb-ladoga-v1.jpg` | Unsplash из `newPlacePhotos` (w=2000) + реф `sochi-ritsa-v2` | то же | утверждено, на сайте |
