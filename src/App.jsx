@@ -383,6 +383,7 @@ export function Arrow({ dir = 'right', chevron = false }) {
   )
 }
 
+// add — раскрыть (поворот 45° при открытии), clear — закрыть/стереть, open — перейти; назад/вперёд по экранам — Arrow
 export function ActionIcon({ kind = 'open' }) {
   const d = { add: 'M10 3v14M3 10h14', open: 'M5 15 15 5M5 5h10v10', clear: 'M5 5l10 10M15 5 5 15' }[kind]
   return <svg className="arrival-icon" viewBox="0 0 20 20" aria-hidden="true"><path d={d} /></svg>
@@ -617,7 +618,7 @@ function FavSheet({ query, fav, user, onLogin, onOpen, onClose }) {
     <Sheet className="sheet-top" onClose={onClose}>
       <div className="sheet-head">
         <h2>Избранное</h2>
-        <button className="icon-btn" aria-label="Закрыть" onClick={onClose}>×</button>
+        <button className="icon-btn" aria-label="Закрыть" onClick={onClose}><ActionIcon kind="clear" /></button>
       </div>
       {list.length === 0 ? (
         <p className="muted">Пока пусто. Жми сердечко на машине — она подождёт здесь.</p>
@@ -646,7 +647,7 @@ export function LoginSheet({ forBooking, onLogin, onClose }) {
     <Sheet className="sheet-center" onClose={onClose}>
       <div className="sheet-head">
         <h2>{forBooking ? 'Войди, чтобы забронировать' : 'Вход'}</h2>
-        <button className="icon-btn" aria-label="Закрыть" onClick={onClose}>×</button>
+        <button className="icon-btn" aria-label="Закрыть" onClick={onClose}><ActionIcon kind="clear" /></button>
       </div>
       <p className="muted">{forBooking
         ? 'Бронь привяжем к номеру — по нему пришлём SMS и покажем её в «Бронированиях».'
@@ -673,7 +674,7 @@ const placeIcons = {
 
 function PlaceIcon({ type }) {
   return (
-    <svg className="place-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+    <svg className="place-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
       {placeIcons[type]}
     </svg>
   )
@@ -2014,7 +2015,7 @@ export function PickGallery({ car, prev, fav, lock }) {
         </button>)}
       </div>}
       {expanded && <Sheet className="sheet-photo" onClose={() => setExpanded(false)}>
-        <button type="button" className="photo-close" onClick={() => setExpanded(false)} aria-label="Закрыть">×</button>
+        <button type="button" className="photo-close" onClick={() => setExpanded(false)} aria-label="Закрыть"><ActionIcon kind="clear" /></button>
         <img src={`${import.meta.env.BASE_URL}${photos[active]}`} alt={`${car.model} — фото ${active + 1}`} />
         {photos.length > 1 && <div className="photo-controls"><button type="button" onClick={() => change(active - 1)} aria-label="Предыдущее фото"><Arrow dir="left" /></button><span>{active + 1} / {photos.length}</span><button type="button" onClick={() => change(active + 1)} aria-label="Следующее фото"><Arrow /></button></div>}
       </Sheet>}
@@ -2475,7 +2476,7 @@ export function E3({ query, setQuery, carId, cameFrom, fav, onBack, onPickOther,
         <button className="btn-primary" onClick={status === 'ok' ? book : scrollToWidget}>{status === 'ok' ? 'Забронировать' : 'Где и когда'}</button>
       </div>
       {showBill && <Sheet className="sheet-center e3-bill-sheet" onClose={() => setShowBill(false)}>
-        <div className="sheet-head"><h2>Расчёт поездки</h2><button type="button" onClick={() => setShowBill(false)} aria-label="Закрыть">×</button></div>
+        <div className="sheet-head"><h2>Расчёт поездки</h2><button type="button" onClick={() => setShowBill(false)} aria-label="Закрыть"><ActionIcon kind="clear" /></button></div>
         <div className="price-big">{rub(total)}</div>{bill}
       </Sheet>}
     </main>
