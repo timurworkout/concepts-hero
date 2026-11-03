@@ -2224,7 +2224,10 @@ export function E2({ query, setQuery, fav, onBack, onPick, openPicker }) {
   const togglePref = (id) => change({ prefs: query.prefs.includes(id) ? query.prefs.filter((x) => x !== id) : [...query.prefs, id] })
 
   // Рекомендации сохраняют выбранную цель, спутников и локальные планы.
-  const alternatives = car ? fit.filter((c) => c.id !== car.id && places.every((p) => p.test(c))) : []
+  // Минимум один вариант: если под места ничего нет — ослабляем фильтр, затем берём любые машины
+  const strict = car ? fit.filter((c) => c.id !== car.id && places.every((p) => p.test(c))) : []
+  const loose = car ? fit.filter((c) => c.id !== car.id) : []
+  const alternatives = strict.length ? strict : loose.length ? loose : car ? cars.filter((c) => c.id !== car.id) : []
   // Внизу Э2 — три варианта под ту же поездку: сначала с явным плюсом, потом остальные по цене
   const moreCars = car ? [...alternatives.map((c) => ({ car: c, label: goods(car, c, query)[0] || (tripTotal(c, query) < tripTotal(car, query) ? `Дешевле на ${rub(tripTotal(car, query) - tripTotal(c, query))}` : null) }))]
     .sort((a, b) => Boolean(b.label) - Boolean(a.label)).slice(0, 3) : []
