@@ -95,3 +95,9 @@ Keep this exact landscape, composition and viewpoint: [PLACE]. Only change the p
 | `road-mmk-v1.jpg` | без исходника, реф `road-sochi-v1` | дорога mmk + «same framing and color grading» | утверждено, на заставке |
 | `road-kzn-v1.jpg` | без исходника, реф `road-sochi-v1` | дорога kzn + «same framing and color grading» | утверждено, на заставке |
 | `hero-elbrus-v1.jpg` | `public/hero/elbrus.jpg` (raw GitHub) + реф `road-sochi-v1` | стилизация, заставка без города | утверждено, на заставке (заменён `public/hero/elbrus.jpg`) |
+| `kzn-sviyazhsk-v1.jpg` | `public/places/kzn-sviyazhsk.webp` (raw GitHub) + реф `sochi-ritsa-v2` | стилизация «match the color grading» | утверждено, на сайте |
+| `kzn-raifa-v1.jpg` | `public/places/kzn-raifa.webp` (raw GitHub) + реф `sochi-ritsa-v2` | то же | утверждено, на сайте |
+| `kzn-bolgar-v1.jpg` | Wikimedia → `project/img/weave/src/kzn-bolgar.jpg` (raw GitHub) + реф `sochi-ritsa-v2` | то же | утверждено, на сайте |
+| `mmk-teriberka-v1.jpg` | `public/places/mmk-kola.webp` (raw GitHub) + реф `sochi-ritsa-v2` | то же, «keep the snow» (в исходнике лето — модель сохранила лето) | утверждено, на сайте |
+| `mmk-khibiny-v1.jpg` | Unsplash из `newPlacePhotos` (w=2000) + реф `sochi-ritsa-v2` | то же, «keep the snow» | утверждено, на сайте |
+| `mmk-aurora-v1.jpg` | Unsplash из `newPlacePhotos` (w=2000) + реф `sochi-ritsa-v2` | ночь оставить, только приглушить зелень и зерно | утверждено, на сайте |

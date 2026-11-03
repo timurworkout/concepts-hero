@@ -1705,15 +1705,15 @@ const placePhoto = {
   'spb-vyborg': ['Sergey A. Demidov', 'CC BY 4.0', 'File:20240522_Vyborg_Castle_182.jpg'],
 }
 const newPlacePhotos = {
-  'mmk-teriberka': ['andreibas', 'Фотодженика', 'https://gorbilet.ru/blog/puteshestvija/beautiful-roads', `${import.meta.env.BASE_URL}places/mmk-kola.webp`],
+  'mmk-teriberka': ['andreibas', 'Фотодженика', 'https://gorbilet.ru/blog/puteshestvija/beautiful-roads', `${import.meta.env.BASE_URL}places/mmk-teriberka.webp`],
   'msk-ring': ['Aleksandr Artiushenko', 'Unsplash', 'https://unsplash.com/photos/a-snowy-landscape-with-a-church-in-the-distance-XGMZxXfY5hQ', 'https://images.unsplash.com/photo-1715252752412-6e39089fe66e?auto=format&rect=120,300,13772,8800&fit=crop&w=1400&q=80'],
   'sochi-ski': ['Ilnur Kalimullin', 'Unsplash', 'https://unsplash.com/photos/white-snow-covered-mountain-under-white-cloudy-sky-during-daytime-VMrNha7YKGc', `${import.meta.env.BASE_URL}places/sochi-ski.webp`],
-  'mmk-khibiny': ['Slava Auchynnikau', 'Unsplash', 'https://unsplash.com/photos/the-sun-is-setting-over-a-snowy-landscape-gy6V59JqqSU', 'https://images.unsplash.com/photo-1711631139867-199196f6d7e8?auto=format&fit=crop&w=1400&q=80'],
+  'mmk-khibiny': ['Slava Auchynnikau', 'Unsplash', 'https://unsplash.com/photos/the-sun-is-setting-over-a-snowy-landscape-gy6V59JqqSU', `${import.meta.env.BASE_URL}places/mmk-khibiny.webp`],
   'spb-ladoga': ['Michail Dementiev', 'Unsplash', 'https://unsplash.com/photos/an-aerial-view-of-islands-G_0vKsIdxyU', 'https://images.unsplash.com/photo-1662804118977-481122aa1d10?auto=format&fit=crop&w=1400&q=80'],
   'kgd-castles': ['Ronin', 'Unsplash', 'https://unsplash.com/photos/an-arch-in-a-brick-wall-with-a-forest-in-the-background-BVLsGAXVoQ0', 'https://images.unsplash.com/photo-1678742576371-c7e2f5d38fd7?auto=format&fit=crop&w=1400&q=80'],
   'kgd-coast': ['Юрий Баринов', 'Unsplash', 'https://unsplash.com/photos/a-view-of-the-ocean-from-a-beach-M1w9EclohO4', 'https://images.unsplash.com/photo-1702823446106-eb859af6b7ab?auto=format&fit=crop&w=1400&q=80'],
-  'mmk-aurora': ['Slava Auchynnikau', 'Unsplash', 'https://unsplash.com/photos/a-bright-green-aurora-bore-in-the-night-sky--p6KUnXkRIo', 'https://images.unsplash.com/photo-1711235606920-70f4b5bba6a5?auto=format&fit=crop&w=1400&q=80'],
-  'kzn-bolgar': ['Mike1979 Russia', 'CC BY-SA 3.0', 'https://commons.wikimedia.org/wiki/File:Bolghar_White_Mosque_2024-07-12_1203.jpg', 'https://upload.wikimedia.org/wikipedia/commons/thumb/5/5d/Bolghar_White_Mosque_2024-07-12_1203.jpg/1280px-Bolghar_White_Mosque_2024-07-12_1203.jpg'],
+  'mmk-aurora': ['Slava Auchynnikau', 'Unsplash', 'https://unsplash.com/photos/a-bright-green-aurora-bore-in-the-night-sky--p6KUnXkRIo', `${import.meta.env.BASE_URL}places/mmk-aurora.webp`],
+  'kzn-bolgar': ['Mike1979 Russia', 'CC BY-SA 3.0', 'https://commons.wikimedia.org/wiki/File:Bolghar_White_Mosque_2024-07-12_1203.jpg', `${import.meta.env.BASE_URL}places/kzn-bolgar.webp`],
 }
 const placeImage = (id) => (newPlacePhotos[id] ? `url("${newPlacePhotos[id][3]}"), ` : placePhoto[id] ? `url(${import.meta.env.BASE_URL}places/${id}.webp), ` : '') + placeGradient(id)
 
