@@ -1583,7 +1583,7 @@ function StickySearch({ shown, query, onOpen }) {
 
 
 // Фон интро: до выбора города — Эльбрус, после — кадр города (пока первое фото его «Направлений», потом общий набор, plan.md §5)
-const roadPhotos = { sochi: 'road-sochi.webp' }
+const roadPhotos = { sochi: 'road-sochi.webp', spb: 'road-spb.webp', msk: 'road-msk.webp', kgd: 'road-kgd.webp', mmk: 'road-mmk.webp', kzn: 'road-kzn.webp' }
 const heroPhoto = (cityId) => {
   if (roadPhotos[cityId]) return { '--hero-photo': `url(${import.meta.env.BASE_URL}places/${roadPhotos[cityId]})` }
   const first = cityId && cityPlans(cityId).find((p) => p.local)
@@ -1848,6 +1848,13 @@ const deliveryCopy = {
 // Доставка: пять равных точек старта — свобода выбрать, откуда начать. Клик уводит в визард с нужным типом места
 export function WhereYouAre({ onPick }) {
   const order = ['Аэропорт', 'Вокзал', 'Отель', 'Адрес', 'Парковка']
+  const list = useRef(null)
+  // Иконки мест прорисовываются штрихом один раз, когда список въезжает в экран
+  useEffect(() => {
+    const io = new IntersectionObserver(([e]) => { if (e.isIntersecting) { list.current.classList.add('drawn'); io.disconnect() } }, { threshold: 0.2 })
+    io.observe(list.current)
+    return () => io.disconnect()
+  }, [])
   return (
     <section className="delivery" id="delivery">
       <div className="delivery-grid">
@@ -1855,15 +1862,16 @@ export function WhereYouAre({ onPick }) {
           <h2>Машина там,<br />где ты</h2>
           <p>{nb('Начни поездку откуда удобно: с трапа, с перрона или от двери. Выбери точку — остальное подстроим.')}</p>
         </div>
-        <ul className="delivery-list">
-          {order.map((type) => (
-            <li key={type}>
+        <ul className="delivery-list" ref={list}>
+          {order.map((type, i) => (
+            <li key={type} style={{ '--i': i }}>
               <button type="button" onClick={() => onPick(type)}>
-                <span>
+                <PlaceIcon type={type} />
+                <span className="delivery-text">
                   <b>{deliveryCopy[type]}</b>
                   {whereCopy[type] && <small>{nb(whereCopy[type])}</small>}
                 </span>
-                <Arrow />
+                <span className="delivery-go"><Arrow /></span>
               </button>
             </li>
           ))}

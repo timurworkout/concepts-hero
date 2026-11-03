@@ -89,3 +89,9 @@ Keep this exact landscape, composition and viewpoint: [PLACE]. Only change the p
 | `sochi-ski-v1.jpg` | Unsplash из `newPlacePhotos` (w=2000) + реф `sochi-ritsa-v2` | стилизация «match the color grading of the second image» | утверждено, на сайте |
 | `sochi-lagonaki-v1.jpg` | `public/places/sochi-lagonaki.webp` (raw GitHub) + реф `sochi-ritsa-v2` | то же | утверждено, на сайте |
 | `road-sochi-v1.jpg` | без исходника, реф `sochi-ritsa-v2` | дорога Сочи + «match the color grading» | утверждено, на заставке |
+| `road-spb-v1.jpg` | без исходника, реф `road-sochi-v1` | дорога spb + «same framing and color grading» | утверждено, на заставке |
+| `road-msk-v1.jpg` | без исходника, реф `road-sochi-v1` | дорога msk + «same framing and color grading» | утверждено, на заставке |
+| `road-kgd-v1.jpg` | без исходника, реф `road-sochi-v1` | дорога kgd + «same framing and color grading» | утверждено, на заставке |
+| `road-mmk-v1.jpg` | без исходника, реф `road-sochi-v1` | дорога mmk + «same framing and color grading» | утверждено, на заставке |
+| `road-kzn-v1.jpg` | без исходника, реф `road-sochi-v1` | дорога kzn + «same framing and color grading» | утверждено, на заставке |
+| `hero-elbrus-v1.jpg` | `public/hero/elbrus.jpg` (raw GitHub) + реф `road-sochi-v1` | стилизация, заставка без города | утверждено, на заставке (заменён `public/hero/elbrus.jpg`) |

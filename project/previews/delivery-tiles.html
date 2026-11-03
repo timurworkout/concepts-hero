@@ -1,0 +1,76 @@
+<!doctype html>
+<html lang="ru"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Плитки доставки</title>
+<link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;600;700&display=swap" rel="stylesheet">
+<style>
+:root{--paper:#f9f6f6;--ink:#001f26;--muted:#4a5d62;--line:#d3dadb;--green:#a4e891;--r-ctl:12px;--fs-sm:14px;--fs-lg:20px;--lh-snug:1.25;--lh-body:1.5;--ease-focus:cubic-bezier(.16,1,.3,1);--icon-stroke:1.5px}
+body{margin:0;background:var(--paper);color:var(--ink);font-family:Manrope,system-ui,sans-serif;padding:48px 24px}
+.v{max-width:720px;margin:0 auto 96px}
+.v h2{font-size:28px;margin:0 0 6px}.v>p{color:var(--muted);margin:0 0 20px;max-width:60ch;line-height:1.5}
+.replay{font:inherit;border:1px solid var(--line);background:#fff;border-radius:var(--r-ctl);padding:8px 14px;cursor:pointer;margin-bottom:16px}
+ul{list-style:none;margin:0;padding:0;border-bottom:1px solid var(--line)}
+li{border-top:1px solid var(--line);position:relative}
+button.row{all:unset;box-sizing:border-box;display:flex;align-items:center;justify-content:space-between;gap:24px;width:100%;padding:20px 0;cursor:pointer}
+b{display:block;font-size:var(--fs-lg);font-weight:600;line-height:var(--lh-snug)}
+small{display:block;margin-top:4px;font-size:var(--fs-sm);color:var(--muted)}
+svg{fill:none;stroke:currentColor;stroke-width:var(--icon-stroke);stroke-linecap:square}
+.arr{width:24px;height:24px;transform:rotate(-45deg);flex:none}
+
+/* A — проявление по скроллу: линия прочерчивается, текст поднимается, стрелка выезжает */
+.A li{border-top-color:transparent}
+.A li::before{content:"";position:absolute;left:0;right:0;top:-1px;height:1px;background:var(--line);transform:scaleX(0);transform-origin:left}
+.A .txt{opacity:0;transform:translateY(12px)}
+.A .arr{opacity:0;translate:-12px 12px}
+.A.go li::before{animation:line .7s var(--ease-focus) forwards;animation-delay:calc(var(--i)*90ms)}
+.A.go .txt{animation:rise .6s var(--ease-focus) forwards;animation-delay:calc(var(--i)*90ms + 120ms)}
+.A.go .arr{animation:fly .6s var(--ease-focus) forwards;animation-delay:calc(var(--i)*90ms + 260ms)}
+@keyframes line{to{transform:scaleX(1)}}
+@keyframes rise{to{opacity:1;transform:none}}
+@keyframes fly{to{opacity:1;translate:0 0}}
+
+/* B — иконка места слева рисуется штрихом; стрелка в кнопке 40px с обводкой — видно, что это действие */
+.B .row{justify-content:flex-start}
+.B .ico{width:32px;height:32px;flex:none}
+.B .ico path{stroke-dasharray:1;stroke-dashoffset:1}
+.B.go .ico path{animation:draw 1s var(--ease-focus) forwards;animation-delay:calc(var(--i)*120ms)}
+@keyframes draw{to{stroke-dashoffset:0}}
+.B .txt{flex:1}
+.B .go-btn{width:40px;height:40px;border:1px solid var(--ink);border-radius:var(--r-ctl);display:grid;place-items:center;flex:none}
+.B .go-btn .arr{width:20px;height:20px}
+
+/* C — строка-маршрут: точка старта бежит по линии к стрелке, как машина, выезжающая с места */
+.C .track{position:absolute;left:0;right:0;top:-1px;height:1px}
+.C .dot{position:absolute;top:-3px;left:0;width:7px;height:7px;border-radius:50%;background:var(--ink);opacity:0}
+.C.go .dot{animation:drive 1.4s var(--ease-focus) forwards;animation-delay:calc(var(--i)*140ms)}
+@keyframes drive{0%{opacity:1;left:0}85%{opacity:1}100%{opacity:0;left:calc(100% - 7px)}}
+.C .arr{transition:none}
+.C.go .arr{animation:nudge .5s var(--ease-focus);animation-delay:calc(var(--i)*140ms + 1.1s)}
+@keyframes nudge{50%{translate:4px -4px}}
+@media (prefers-reduced-motion:reduce){*{animation:none!important}.A .txt,.A .arr{opacity:1;transform:none;translate:none}.A li::before{transform:none}.B .ico path{stroke-dashoffset:0}}
+</style></head><body>
+
+<section class="v" data-v="A"><h2>A. Проявление по скроллу</h2>
+<p>Хайрлайны прочерчиваются слева направо лесенкой, текст поднимается, стрелка влетает по своей диагонали. Один раз при входе в вьюпорт. Ничего не добавляет в макет, только движение.</p>
+<button class="replay">Повторить</button><ul class="A"></ul></section>
+
+<section class="v" data-v="B"><h2>B. Иконка места + кнопка-стрелка</h2>
+<p>Слева линейная иконка (самолёт, поезд, отель, дом, парковка) рисуется штрихом при появлении. Стрелка — в кнопке 40px с обводкой 1px, как иконки-кнопки на сайте: сразу видно, что строка кликается. Решает и «оживить», и «неочевидно».</p>
+<button class="replay">Повторить</button><ul class="B"></ul></section>
+
+<section class="v" data-v="C"><h2>C. Точка выезжает к стрелке</h2>
+<p>По хайрлайну каждой строки пробегает точка от начала к стрелке, стрелка в конце коротко кивает. Метафора «машина выехала с места». Самое сюжетное, но и самое заметное.</p>
+<button class="replay">Повторить</button><ul class="C"></ul></section>
+
+<script>
+const rows=[['Встретим в аэропорту','Прямо у терминала, без очереди к стойке','M3 14l18-6-2-2-7 2-5-4-2 1 3 5-4 1-2-1-1 1z'],
+['Ждём у вокзала','У выхода с перрона','M7 3h10v12H7zM7 10h10M9 18l-2 3M15 18l2 3'],
+['Привезём к отелю','К входу, в удобное время','M5 21V5h14v16M9 9h2M13 9h2M9 13h2M13 13h2M10 21v-4h4v4'],
+['Подъедем по твоему адресу','К подъезду или к офису','M4 11l8-7 8 7M6 9v12h12V9M10 21v-6h4v6'],
+['Заберёшь сам в центре проката','Скидка за самовывоз','M5 3h14v18H5zM9 17V7h4a3 3 0 010 6H9']];
+const arr='<svg class="arr" viewBox="0 0 24 24"><path d="M4 12h16M14 6l6 6-6 6"/></svg>';
+document.querySelectorAll('ul').forEach(ul=>{const v=ul.className;
+ul.innerHTML=rows.map(([t,s,ic],i)=>`<li style="--i:${i}">${v==='C'?'<span class="track"><span class="dot"></span></span>':''}<button class="row">${v==='B'?`<svg class="ico" viewBox="0 0 24 24"><path pathLength="1" d="${ic}"/></svg>`:''}<span class="txt"><b>${t}</b><small>${s}</small></span>${v==='B'?`<span class="go-btn">${arr}</span>`:arr}</button></li>`).join('');});
+const io=new IntersectionObserver(es=>es.forEach(e=>{if(e.isIntersecting){e.target.classList.add('go');io.unobserve(e.target)}}),{threshold:.15});
+document.querySelectorAll('ul').forEach(u=>io.observe(u));
+document.querySelectorAll('.replay').forEach(b=>b.onclick=()=>{const u=b.nextElementSibling;u.classList.remove('go');void u.offsetWidth;u.classList.add('go')});
+</script></body></html>

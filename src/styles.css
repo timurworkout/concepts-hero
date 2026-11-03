@@ -366,11 +366,19 @@ h2 { font-family: var(--display); font-size: var(--fs-lg); font-weight: 600; let
 .delivery-head p { margin: 20px 0 0; max-width: 32ch; font-size: var(--fs-md); color: var(--muted); line-height: var(--lh-body); }
 .delivery-list { grid-column: 3 / 7; list-style: none; margin: 0; padding: 0; border-bottom: 1px solid var(--line); }
 .delivery-list li { border-top: 1px solid var(--line); }
-.delivery-list button { display: flex; justify-content: space-between; align-items: center; gap: 24px; width: 100%; padding: 20px 0; text-align: left; color: inherit; transition: color var(--dur-base); }
+.delivery-list button { display: flex; align-items: center; gap: 24px; width: 100%; padding: 20px 0; text-align: left; color: inherit; transition: color var(--dur-base); }
 .delivery-list b { display: block; font-family: var(--display); font-size: var(--fs-lg); font-weight: 600; line-height: var(--lh-snug); }
 .delivery-list small { display: block; margin-top: 4px; font-size: var(--fs-sm); color: var(--muted); line-height: var(--lh-body); }
-.delivery-list button:hover { color: var(--ink); }
-.delivery-list button:hover svg { background: var(--accent); border-radius: var(--r-ctl); }
+.delivery-list .place-icon { width: 32px; height: 32px; flex: none; stroke-width: var(--icon-stroke); }
+.delivery-list .place-icon > * { stroke-dasharray: 80; stroke-dashoffset: 80; vector-effect: non-scaling-stroke; }
+.delivery-list.drawn .place-icon > * { animation: draw-stroke 1s var(--ease-focus) forwards; animation-delay: calc(var(--i) * 120ms); }
+@keyframes draw-stroke { to { stroke-dashoffset: 0; } }
+@media (prefers-reduced-motion: reduce) { .delivery-list .place-icon > * { stroke-dashoffset: 0; animation: none !important; } }
+.delivery-text { flex: 1; min-width: 0; }
+.delivery-go { display: grid; place-items: center; width: 40px; height: 40px; flex: none; border: 1px solid var(--ink); border-radius: var(--r-ctl); }
+.delivery-go .arrow-icon { width: 20px; height: 20px; transition: translate var(--dur-medium) var(--ease-focus); }
+@media (hover: hover) { .delivery-list button:hover .arrow-icon { translate: 3px -3px; } }
+.delivery-list button:active .arrow-icon { translate: 3px -3px; }
 @media (max-width: 743px) {
   .delivery-grid { grid-template-columns: 1fr; row-gap: 28px; }
   .delivery-head { grid-column: auto; position: static; }
