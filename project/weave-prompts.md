@@ -1,14 +1,43 @@
-# Промпты для Figma Weave — кадры городов
+# Weave — стандарты проекта
 
-По `plan.md` §5: по одному кадру на город. В кадре дорога в этом месте, снятая с уровня глаз. Этот же кадр идёт широко на интро и кропом в «Направления». Шаблон общий, меняется только блок `PLACE`. Порядок работы: сначала Сочи до результата, потом остальные пять.
+Читать перед любой генерацией фото или видео. Общий порядок работы — глобальный скилл `weave`; этот файл главнее его дефолтов. Всё, что пользователь утвердил (модель, эталон, промпт, критерий кадра), дописывать сюда.
 
-## Настройки
+## Модели
 
-- Формат **16:9**, на выходе от 2560 px по ширине. Важное держать в центральной трети: для «Направлений» кроп идёт до 4:3.
-- Нижняя треть кадра спокойная: асфальт, обочина. Поверх интро лежит визард.
-- Удачный первый кадр (Сочи) подать как style reference для остальных, если модель это умеет. Так серия соберётся в одну съёмку.
+| Задача | Модель | id | Параметры | Цена |
+|---|---|---|---|---|
+| Стилизация места | Nano Banana 2.1 (edit) | `bebebed5-50c1-4701-98b3-86929db21585` | `resolution: 2K`, `output_format: jpeg`, `aspect_ratio: Default` | 10 кр. |
+| Кадр дороги для заставки | Nano Banana 2.1 | тот же | то же, `aspect_ratio: 16:9` | 10 кр. |
+| Видео заставки | Kling Video 2.5 Turbo Pro | через `weave_find_model "kling 2.5 turbo"` | image-to-video, 5 с — тест, 10 с — финал | 35 / 70 кр. |
 
-## Шаблон
+Правило: каждый запуск, включая повтор, — показать цену и получить одобрение пользователя.
+
+## Эталоны стиля
+
+Подаются вторым изображением.
+
+- **Рица v2** — эталон для мест: `https://media.weavy.ai/image/upload/v1793716203/uploads/7ZQgVKi51yYJC3KcmBaYq8XFcW23/ykyfxwrgnordlmgqaxob.jpg`
+- **Дорога Сочи** — эталон для кадров заставки: `https://media.weavy.ai/image/upload/v1793717032/uploads/7ZQgVKi51yYJC3KcmBaYq8XFcW23/mgx32nka2rzngxhcscjf.jpg`
+
+## Промпты
+
+### Стилизация места
+
+Фото в «Направлениях» — виды, а не дороги. Их не переснимаем: пейзаж сохраняем, меняется только обработка. Меняется `[PLACE]`.
+
+```
+Keep the exact landscape, composition and viewpoint of the first image: [PLACE]. Only change the photographic treatment to match the color grading of the second image: late afternoon soft light, low sun from the side, gentle long shadows, muted natural palette, strongly muted greens, faded shadows, slightly lifted blacks, softer sky, visible film grain, Kodak Portra 400 look, documentary travel photography. Do not add any objects, people, cars or text.
+```
+
+Варианты:
+- снег в кадре — `soft low winter sun`, плюс `Keep the snow.`;
+- ночь (сияние) — `Keep it a night scene.`, приглушить зелень сияния и добавить зерно, свет не менять;
+- осенний или голый исходник — `Make it a warm late summer afternoon: trees in soft green leaf, grass green, low sun from the side.` Только с согласия пользователя;
+- здание вместо пейзажа — `Keep the exact building…`.
+
+### Кадр дороги для заставки
+
+По одному на город, 16:9. Нижняя треть спокойная: поверх неё лежит текст. Первый кадр серии делается с эталоном Рица v2, остальные — с эталоном «Дорога Сочи» и фразой `same framing and color grading as the second image`.
 
 ```
 Eye-level photograph from the side of an empty two-lane road, [PLACE].
@@ -20,67 +49,65 @@ Shot on 35mm lens, f/5.6, deep focus, documentary travel photography, calm and s
 Quiet, uncluttered lower third (asphalt and roadside) for UI overlay.
 ```
 
-Negative (если есть поле):
-
-```
-cars, people, text, watermark, logo, HDR, oversaturated, fisheye, drone shot, aerial view, motion blur, illustration, 3d render
-```
-
-## PLACE по городам
+Negative, если у модели есть такое поле: `cars, people, text, watermark, logo, HDR, oversaturated, fisheye, drone shot, aerial view, motion blur, illustration, 3d render`.
 
 | Город | PLACE |
 |---|---|
-| **Сочи** (первым) | `a coastal serpentine near Sochi, Black Sea on one side, green subtropical mountains of the Caucasus rising behind, cypress trees along the road` |
+| Сочи | `a coastal serpentine near Sochi, Black Sea on one side, green subtropical mountains of the Caucasus rising behind, cypress trees along the road` |
 | Петербург | `a road along the Gulf of Finland near Saint Petersburg, pine trees and granite boulders by the shore, pale northern sky` |
 | Москва | `a country road outside Moscow through birch forest and open fields, a small dacha village in the distance` |
 | Калининград | `a road through the Curonian Spit near Kaliningrad, tall pines and sand dunes, glimpse of the Baltic Sea` |
 | Мурманск | `a road across the tundra near Murmansk, low rocky hills with patches of snow, sparse dwarf birches, cold clear light` |
 | Казань | `a road above the Volga river near Kazan, wide water and gentle green hills, a white kremlin silhouette far on the horizon` |
 
-## Если не выходит
+### Видео заставки (Эльбрус, когда город не выбран)
 
-- Получилась открытка, слишком ярко → добавить `overcast hazy light, understated` и убрать `low sun`.
-- Модель рисует машину → в начало: `completely empty road`.
-- Кадр не получается за 3–4 прогона → берём настоящее фото дороги и прогоняем его через ту же обработку (image-to-image, сила ~0.4 с этим же промптом).
+Исходник — `public/hero/elbrus.jpg`. Утверждён v2: камера стоит, одна машина с переднего плана уезжает по дороге к горе. Модель не держит «машина скрывается» — машина уходит под нижний край вёрстки.
 
-## Стилизация мест
+## Исходники и рефы
 
-Для фото в `public/places/`. Это виды, а не дороги, поэтому их не переснимаем: сохраняем пейзаж и меняем только обработку. Модель — Nano Banana 2.1 (edit), 2K, Default aspect. Исходник подаём по ссылке `raw.githubusercontent.com/.../public/places/<id>.webp`: Wikimedia Weave не скачивает. Меняется только `[PLACE]`.
-
-```
-Keep this exact landscape, composition and viewpoint: [PLACE]. Only change the photographic treatment: late afternoon soft light, low sun from the side, gentle long shadows. Muted natural palette, less saturated greens, slightly lifted blacks, softer sky, fine film grain, Kodak Portra 400 look, documentary travel photography, calm and spacious. Do not add any objects, people, cars or text.
-```
-
-Первый прогон: `sochi-ritsa` → `project/img/weave/sochi-ritsa-v1.jpg`. Пейзаж сохранён, свет тёплый, но зелень сочная, зерна почти нет. Если нужно сильнее — добавить `strongly muted greens, faded shadows, visible film grain`.
-
-## Порядок работы (для агента)
-
-### 1. Откуда брать исходник
-
-Фото места на сайте берётся так (`placeImage` в `src/App.jsx`): если `id` есть в `newPlacePhotos`, то берётся оттуда (4-й элемент — URL), иначе `public/places/<id>.webp`. **Стилизовать надо ту картинку, которую видно на сайте**, — сначала проверь `newPlacePhotos`.
+- Сначала спросить пользователя, есть ли у него исходник или реф. Его рефы — `img/references/photos/`.
+- Порядок подбора: что уже на сайте → Unsplash / Pexels → Wikimedia Commons → веб.
+- **Стилизовать ту картинку, которую видно на сайте.** `placeImage` в `src/App.jsx`: если `id` есть в `newPlacePhotos`, картинка берётся оттуда (4-й элемент), иначе из `public/places/<id>.webp`.
+- **Критерии кадра** (из правок пользователя):
+  - простор и «на что посмотреть»: море, долина, вид сверху;
+  - объект целиком, а не кусок стены или развалины;
+  - узнаваемая точка места (Танцующий лес, канатка Светлогорска);
+  - смысл совпадает с карточкой: горнолыжка — склон и подъёмник, причём в Подмосковье холмы, а не горы;
+  - без людей крупным планом.
 
 | Источник | Как подать в Weave |
 |---|---|
-| `public/places/<id>.webp` (закоммичен) | `https://raw.githubusercontent.com/timurworkout/concepts-hero/main/public/places/<id>.webp` — работает |
-| Unsplash (`images.unsplash.com/...`) | URL из `newPlacePhotos` как есть, `w=2000` вместо `w=1400` |
-| Wikimedia (`upload.wikimedia.org`, `commons...`) | **Не работает** — Weave падает с «Could not generate images». Скачать к себе, положить в `project/img/weave/src/<id>.jpg`, закоммитить и запушить, подать raw-ссылкой GitHub |
-| Окно загрузки `weave_upload_asset` | В этом клиенте не показывается — не использовать |
+| `public/places/<id>.webp` (закоммичен) | `https://raw.githubusercontent.com/timurworkout/concepts-hero/main/public/places/<id>.webp` |
+| Unsplash | URL как есть, `w=2000` |
+| Wikimedia | не качается → `project/img/weave/src/<id>.jpg`, закоммитить, запушить, подать raw GitHub |
+| `weave_upload_asset` | окно в этом клиенте не показывается |
 
-Не закоммиченный файл raw-ссылкой не достать: сначала push.
+## Нейминг и папки
 
-### 2. Запуск
+- Сырые генерации: `project/img/weave/<id>-v<N>.jpg`. `<id>` — как в `src/data.js`, например `sochi-ritsa`.
+- Дороги: `project/img/weave/road-<city>-v<N>.jpg`.
+- Видео: `project/img/weave/hero-<name>-video-v<N>.mp4`.
+- Исходники для raw-подачи: `project/img/weave/src/<id>.jpg`.
 
-1. `weave_find_model` не нужен: Nano Banana 2.1 — `id bebebed5-50c1-4701-98b3-86929db21585`. Параметры: `resolution: 2K`, `output_format: jpeg`; места — `aspect_ratio: Default`, дороги — `16:9`.
-2. Вызов без `acknowledgedCost` — бесплатная цена (2K = 10 кредитов). Каждый запуск — одобрение пользователя через AskUserQuestion, даже повтор.
-3. Опрос `weave_get_model_run_output` повторными вызовами (`sleep` в Bash заблокирован). Генерация ~1–2 минуты. Упавшие запуски кредиты, похоже, не списывают.
+## Подключение
 
-### 3. Куда класть и как называть
+- **Места.** `cwebp -q 82 -resize 2000 0` → `public/places/<id>.webp`.
+  - Если `id` есть в `newPlacePhotos`, 4-м элементом поставить `` `${import.meta.env.BASE_URL}places/<id>.webp` `` или удалить запись.
+  - Подпись автора — в `placePhoto`: `[автор, лицензия, 'File:…']`.
+- **Дороги.** `cwebp … -resize 2400 0` → `public/places/road-<city>.webp`, карта `roadPhotos` в `src/App.jsx`.
+- **Видео.** Файл `public/hero/elbrus.mp4`.
+  - Обрезка 7,5 с, crf 24, без звука, ~3,6 МБ.
+  - Играет один раз после интро.
+  - На десктопе нижние 20 % уходят за край.
+- **Проверка.** Base path `/concepts-hero/`: картинки грузятся с `/concepts-hero/places/…`.
 
-- Сырые генерации: `project/img/weave/<id>-v<N>.jpg` — `<id>` как в `src/data.js` / `App.jsx` (`sochi-ritsa`), `N` — номер попытки. Дороги: `project/img/weave/road-<city>-v<N>.jpg` (`road-sochi-v1`). Исходники для GitHub: `project/img/weave/src/<id>.jpg`.
-- После каждой генерации — дописать строку в журнал ниже и отправить картинку пользователю (SendUserFile).
-- Утверждённое в сайт: сжать в webp ширина 2000 (`cwebp -q 82 -resize 2000 0`) → `public/places/<id>.webp` (дороги — `public/places/road-<city>.webp`); если `id` был в `newPlacePhotos` — убрать оттуда запись, чтобы брался локальный файл, и обновить автора в `placePhoto` на «Weave по фото <автор>». Проверить в браузере.
+## Грабли проекта
 
-### Журнал
+- В `App.jsx` два словаря с одинаковыми ключами — `placePhoto` и `newPlacePhotos`. Замена по ключу через sed или perl заденет оба. Правь строку в нужной таблице.
+- В рабочем дереве бывают чужие правки от параллельных сессий. Коммить только свои файлы, частично через `git update-index --cacheinfo`.
+
+## Журнал
 
 | Файл | Исходник | Промпт | Итог |
 |---|---|---|---|
